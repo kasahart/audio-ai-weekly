@@ -1,6 +1,12 @@
 {
   "weeks": [
     {
+      "date": "2026-0508",
+      "file": "weekly/2026-0508.json",
+      "count": 7,
+      "generated_at": "2026-05-08T17:14:47.669973+00:00"
+    },
+    {
       "date": "2026-0501",
       "file": "weekly/2026-0501.json",
       "count": 4,
@@ -121,7 +127,7 @@
       "generated_at": "2026-01-02T00:00:00+00:00"
     }
   ],
-  "generated_at": "2026-05-01T12:14:13.226497+00:00",
+  "generated_at": "2026-05-08T17:14:56.345493+00:00",
   "categories": [
     {
       "id": "foundation",
