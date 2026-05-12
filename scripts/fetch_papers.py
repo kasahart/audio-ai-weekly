@@ -43,8 +43,17 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     req = urllib.request.Request(url, headers={
         "User-Agent": SETTINGS["arxiv"]["user_agent"]
     })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return parse_atom(resp.read())
+    last_err: Exception | None = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return parse_atom(resp.read())
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+            last_err = e
+            wait = 2 ** attempt
+            print(f"[fetch] arXiv error (attempt {attempt + 1}/4): {e}; retrying in {wait}s")
+            time.sleep(wait)
+    raise last_err  # type: ignore[misc]
 
 
 def parse_atom(xml_bytes: bytes) -> list[dict]:
