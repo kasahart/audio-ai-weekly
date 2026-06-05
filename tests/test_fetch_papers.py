@@ -211,7 +211,7 @@ class TestBuildQuery:
 
         assert "cat:cs.SD" in query
         assert "cat:eess.AS" in query
-        assert "submittedDate:[202604191234+TO+202604261234]" in query
+        assert "submittedDate:[202604191234 TO 202604261234]" in query
 
 
 class DummyResponse:

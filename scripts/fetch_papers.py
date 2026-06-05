@@ -34,7 +34,7 @@ def build_query(ref_date: datetime | None = None, lookback_days: int | None = No
     start_date = ref_date - timedelta(days=lookback_days)
     date_range = (
         f"submittedDate:[{start_date.astimezone(timezone.utc):%Y%m%d%H%M}"
-        f"+TO+{ref_date.astimezone(timezone.utc):%Y%m%d%H%M}]"
+        f" TO {ref_date.astimezone(timezone.utc):%Y%m%d%H%M}]"
     )
     return f"{query} AND {date_range}"
 
