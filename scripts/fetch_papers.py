@@ -5,7 +5,9 @@ arXiv API から対象カテゴリの論文を取得し、キーワードでフ�
 """
 import argparse
 import json
+import socket
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -22,15 +24,41 @@ NS = {
     "atom": "http://www.w3.org/2005/Atom",
     "arxiv": "http://arxiv.org/schemas/atom",
 }
-
-
-def build_query() -> str:
+def build_query(ref_date: datetime | None = None, lookback_days: int | None = None) -> str:
     cats = KEYWORDS["categories"]
     cat_query = " OR ".join(f"cat:{c}" for c in cats)
-    return f"({cat_query})"
+    query = f"({cat_query})"
+    if ref_date is None or lookback_days is None:
+        return query
+
+    start_date = ref_date - timedelta(days=lookback_days)
+    date_range = (
+        f"submittedDate:[{start_date.astimezone(timezone.utc):%Y%m%d%H%M}"
+        f" TO {ref_date.astimezone(timezone.utc):%Y%m%d%H%M}]"
+    )
+    return f"{query} AND {date_range}"
+
+
+def is_retryable_fetch_error(exc: Exception) -> bool:
+    if isinstance(exc, (TimeoutError, socket.timeout)):
+        return True
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {429, 500, 502, 503, 504}
+    if isinstance(exc, urllib.error.URLError):
+        return isinstance(exc.reason, (TimeoutError, socket.timeout, ConnectionError))
+    return False
+
+
+def get_retry_max(cfg: dict) -> int:
+    retry_max = cfg.get("retry_max", 3)
+    try:
+        return max(1, int(retry_max))
+    except (TypeError, ValueError):
+        return 3
 
 
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
+    cfg = SETTINGS["arxiv"]
     params = urllib.parse.urlencode({
         "search_query": query,
         "start": start,
@@ -40,10 +68,27 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     })
     url = f"https://export.arxiv.org/api/query?{params}"
     req = urllib.request.Request(url, headers={
-        "User-Agent": SETTINGS["arxiv"]["user_agent"]
+        "User-Agent": cfg["user_agent"]
     })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return parse_atom(resp.read())
+    retry_max = get_retry_max(cfg)
+    retry_interval = cfg.get("retry_interval", 5.0)
+    timeout = cfg.get("request_timeout", 30)
+
+    for attempt in range(retry_max):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return parse_atom(resp.read())
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, socket.timeout) as exc:
+            if not is_retryable_fetch_error(exc) or attempt == retry_max - 1:
+                raise
+            wait_seconds = retry_interval * (2 ** attempt)
+            print(
+                f"[fetch] Request failed ({type(exc).__name__}: {exc}). "
+                f"Retrying in {wait_seconds:.1f}s ..."
+            )
+            time.sleep(wait_seconds)
+
+    raise RuntimeError("fetch_arxiv retry loop exited unexpectedly")
 
 
 def parse_atom(xml_bytes: bytes) -> list[dict]:
@@ -142,7 +187,7 @@ def main(dry_run: bool = False, date_str: str | None = None):
     else:
         ref_date = datetime.now(timezone.utc)
 
-    query = build_query()
+    query = build_query(ref_date, lookback_days)
     include_kws = KEYWORDS["include"]
     exclude_kws = KEYWORDS.get("exclude", [])
     ui_cats = KEYWORDS["ui_categories"]
@@ -171,7 +216,7 @@ def main(dry_run: bool = False, date_str: str | None = None):
                 try:
                     pub_dt = datetime.fromisoformat(p["published_iso"].replace("Z", "+00:00"))
                     if pub_dt < ref_date - timedelta(days=lookback_days):
-                        print(f"[fetch] Out of window, stopping.")
+                        print("[fetch] Out of window, stopping.")
                         papers = []  # force outer break
                         break
                 except Exception:

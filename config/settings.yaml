@@ -6,7 +6,10 @@
 arxiv:
   lookback_days: 7          # 取得対象期間（日数）
   max_papers: 50            # フィルタ後の最大取得件数
-  request_interval: 1.0     # API リクエスト間隔（秒）
+  request_interval: 3.0     # API リクエスト間隔（秒）
+  request_timeout: 30       # API リクエストタイムアウト（秒）
+  retry_max: 3              # API リトライ回数
+  retry_interval: 5.0       # API リトライ間隔（秒）
   user_agent: "arxiv-weekly-report/1.0 (github.com/kasahart/arxiv-weekly)"
 
 # GitHub Models 設定
