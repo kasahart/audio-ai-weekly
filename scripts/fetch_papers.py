@@ -45,8 +45,16 @@ def is_retryable_fetch_error(exc: Exception) -> bool:
     if isinstance(exc, urllib.error.HTTPError):
         return exc.code in {429, 500, 502, 503, 504}
     if isinstance(exc, urllib.error.URLError):
-        return isinstance(exc.reason, (TimeoutError, socket.timeout))
+        return isinstance(exc.reason, (TimeoutError, socket.timeout, ConnectionError))
     return False
+
+
+def get_retry_max(cfg: dict) -> int:
+    retry_max = cfg.get("retry_max", 3)
+    try:
+        return max(1, int(retry_max))
+    except (TypeError, ValueError):
+        return 3
 
 
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
@@ -62,7 +70,7 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     req = urllib.request.Request(url, headers={
         "User-Agent": cfg["user_agent"]
     })
-    retry_max = cfg.get("retry_max", 3)
+    retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
 
@@ -80,7 +88,7 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
             )
             time.sleep(wait_seconds)
 
-    return []
+    raise RuntimeError("fetch_arxiv retry loop exited unexpectedly")
 
 
 def parse_atom(xml_bytes: bytes) -> list[dict]:
