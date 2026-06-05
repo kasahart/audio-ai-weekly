@@ -1,9 +1,14 @@
 import sys
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import fetch_papers
+
 from fetch_papers import (
+    build_query,
+    fetch_arxiv,
     keyword_match,
     assign_category,
     is_within_window,
@@ -196,3 +201,49 @@ class TestParseAtom:
 <feed xmlns="http://www.w3.org/2005/Atom"></feed>"""
         result = parse_atom(empty)
         assert result == []
+
+
+class TestBuildQuery:
+    def test_includes_submitted_date_range(self):
+        ref = datetime(2026, 4, 26, 12, 34, tzinfo=timezone.utc)
+
+        query = build_query(ref, 7)
+
+        assert "cat:cs.SD" in query
+        assert "cat:eess.AS" in query
+        assert "submittedDate:[202604191234+TO+202604261234]" in query
+
+
+class DummyResponse:
+    def __init__(self, payload: bytes):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def read(self) -> bytes:
+        return self.payload
+
+
+class TestFetchArxiv:
+    def test_retries_retryable_http_error(self, monkeypatch):
+        attempts = []
+        monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "retry_max", 2)
+        monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "retry_interval", 0.0)
+        monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "request_timeout", 1)
+
+        def fake_urlopen(req, timeout):
+            attempts.append(timeout)
+            if len(attempts) == 1:
+                raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", None, None)
+            return DummyResponse(SAMPLE_ATOM)
+
+        monkeypatch.setattr(fetch_papers.urllib.request, "urlopen", fake_urlopen)
+
+        result = fetch_arxiv("(cat:cs.SD)", 0, 1)
+
+        assert len(attempts) == 2
+        assert result[0]["id"] == "2601.12345v1"
