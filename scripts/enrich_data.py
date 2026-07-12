@@ -80,7 +80,7 @@ its value:
 {{
   "<paper_id>": {{
     "abstractJa": "Complete natural Japanese abstract translation",
-    "task": "One- or two-word task classification",
+    "task": "One- or two-word Japanese task classification, such as TTS, ASR, 音源分離, 異音検知, or 音楽生成",
     "proposedMethod": "Named method or abbreviation, or null",
     "datasets": ["Dataset name 1", "Dataset name 2"]
   }}
