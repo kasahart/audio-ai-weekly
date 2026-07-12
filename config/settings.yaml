@@ -6,6 +6,8 @@
 arxiv:
   lookback_days: 7          # 取得対象期間（日数）
   max_papers: 50            # フィルタ後の最大取得件数
+  catchup_max_days: 28      # 自動遡及の最大日数（超過時は停止）
+  catchup_max_papers: 200   # 自動遡及時の最大取得件数
   request_interval: 3.0     # API リクエスト間隔（秒）
   request_timeout: 30       # API リクエストタイムアウト（秒）
   retry_max: 3              # API リトライ回数

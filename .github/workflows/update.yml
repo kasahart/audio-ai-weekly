@@ -36,6 +36,20 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Resolve catch-up window
+        id: window
+        env:
+          TARGET_DATE: ${{ github.event.inputs.target_date }}
+        run: |
+          REF_DATE="${TARGET_DATE:-$(date -u +%F)}"
+          git fetch origin gh-pages
+          git show origin/gh-pages:data/index.json > /tmp/existing_index.json 2>/dev/null \
+            || echo '{"weeks":[]}' > /tmp/existing_index.json
+          python scripts/fetch_window.py \
+            --index /tmp/existing_index.json \
+            --settings config/settings.yaml \
+            --date "$REF_DATE" >> "$GITHUB_OUTPUT"
+
       - name: Fetch papers from arXiv
         id: fetch
         run: |
@@ -43,7 +57,9 @@ jobs:
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
             DATE_ARG="--date ${{ github.event.inputs.target_date }}"
           fi
-          python scripts/fetch_papers.py $DATE_ARG
+          python scripts/fetch_papers.py $DATE_ARG \
+            --lookback-days "${{ steps.window.outputs.lookback_days }}" \
+            --max-papers "${{ steps.window.outputs.max_papers }}"
           COUNT=$(python -c "import json; print(len(json.load(open('data/raw_papers.json'))))")
           echo "paper_count=$COUNT" >> $GITHUB_OUTPUT
           echo "✅ Fetched $COUNT papers"

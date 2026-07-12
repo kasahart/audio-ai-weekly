@@ -3,6 +3,7 @@
 fetch_papers.py
 arXiv API から対象カテゴリの論文を取得し、キーワードでフィルタリングする
 """
+
 import argparse
 import json
 import socket
@@ -24,7 +25,11 @@ NS = {
     "atom": "http://www.w3.org/2005/Atom",
     "arxiv": "http://arxiv.org/schemas/atom",
 }
-def build_query(ref_date: datetime | None = None, lookback_days: int | None = None) -> str:
+
+
+def build_query(
+    ref_date: datetime | None = None, lookback_days: int | None = None
+) -> str:
     cats = KEYWORDS["categories"]
     cat_query = " OR ".join(f"cat:{c}" for c in cats)
     query = f"({cat_query})"
@@ -59,17 +64,17 @@ def get_retry_max(cfg: dict) -> int:
 
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     cfg = SETTINGS["arxiv"]
-    params = urllib.parse.urlencode({
-        "search_query": query,
-        "start": start,
-        "max_results": max_results,
-        "sortBy": "submittedDate",
-        "sortOrder": "descending",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "search_query": query,
+            "start": start,
+            "max_results": max_results,
+            "sortBy": "submittedDate",
+            "sortOrder": "descending",
+        }
+    )
     url = f"https://export.arxiv.org/api/query?{params}"
-    req = urllib.request.Request(url, headers={
-        "User-Agent": cfg["user_agent"]
-    })
+    req = urllib.request.Request(url, headers={"User-Agent": cfg["user_agent"]})
     retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
@@ -78,10 +83,15 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return parse_atom(resp.read())
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, socket.timeout) as exc:
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            TimeoutError,
+            socket.timeout,
+        ) as exc:
             if not is_retryable_fetch_error(exc) or attempt == retry_max - 1:
                 raise
-            wait_seconds = retry_interval * (2 ** attempt)
+            wait_seconds = retry_interval * (2**attempt)
             print(
                 f"[fetch] Request failed ({type(exc).__name__}: {exc}). "
                 f"Retrying in {wait_seconds:.1f}s ..."
@@ -106,30 +116,36 @@ def parse_atom(xml_bytes: bytes) -> list[dict]:
             date_str = ""
 
         authors = [
-            a.findtext("atom:name", "", NS)
-            for a in entry.findall("atom:author", NS)
+            a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)
         ]
         orgs = extract_orgs(entry)
 
-        comment = (entry.findtext("arxiv:comment", "", NS) or "").strip().replace("\n", " ")
+        comment = (
+            (entry.findtext("arxiv:comment", "", NS) or "").strip().replace("\n", " ")
+        )
         journal_ref = (entry.findtext("arxiv:journal_ref", "", NS) or "").strip()
 
-        papers.append({
-            "id": arxiv_id,
-            "title": (entry.findtext("atom:title", "", NS) or "").strip().replace("\n", " "),
-            "abstract": (entry.findtext("atom:summary", "", NS) or "").strip().replace("\n", " "),
-            "comment": comment or None,
-            "journalRef": journal_ref or None,
-            "date": date_str,
-            "published_iso": published,
-            "authors": authors[:5],
-            "org": orgs,
-            "url": f"https://arxiv.org/abs/{arxiv_id}",
-            "categories": [
-                t.get("term", "")
-                for t in entry.findall("atom:category", NS)
-            ],
-        })
+        papers.append(
+            {
+                "id": arxiv_id,
+                "title": (entry.findtext("atom:title", "", NS) or "")
+                .strip()
+                .replace("\n", " "),
+                "abstract": (entry.findtext("atom:summary", "", NS) or "")
+                .strip()
+                .replace("\n", " "),
+                "comment": comment or None,
+                "journalRef": journal_ref or None,
+                "date": date_str,
+                "published_iso": published,
+                "authors": authors[:5],
+                "org": orgs,
+                "url": f"https://arxiv.org/abs/{arxiv_id}",
+                "categories": [
+                    t.get("term", "") for t in entry.findall("atom:category", NS)
+                ],
+            }
+        )
     return papers
 
 
@@ -143,7 +159,9 @@ def extract_orgs(entry) -> str:
     if affiliations:
         return affiliations[0][:60]
     # アフィリエーション情報がない場合は著者名から省略表記
-    authors = [a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)]
+    authors = [
+        a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)
+    ]
     if len(authors) == 1:
         return authors[0]
     elif len(authors) <= 3:
@@ -152,7 +170,9 @@ def extract_orgs(entry) -> str:
         return f"{authors[0]} et al."
 
 
-def is_within_window(published_iso: str, lookback_days: int, ref_date: datetime) -> bool:
+def is_within_window(
+    published_iso: str, lookback_days: int, ref_date: datetime
+) -> bool:
     try:
         pub_dt = datetime.fromisoformat(published_iso.replace("Z", "+00:00"))
         cutoff = ref_date - timedelta(days=lookback_days)
@@ -176,11 +196,27 @@ def assign_category(paper: dict, ui_categories: list[dict]) -> str:
     return "other"
 
 
-def main(dry_run: bool = False, date_str: str | None = None):
+def main(
+    dry_run: bool = False,
+    date_str: str | None = None,
+    lookback_days_override: int | None = None,
+    max_papers_override: int | None = None,
+):
     cfg = SETTINGS["arxiv"]
-    max_papers = cfg["max_papers"]
-    lookback_days = cfg["lookback_days"]
+    max_papers = (
+        cfg["max_papers"] if max_papers_override is None else max_papers_override
+    )
+    lookback_days = (
+        cfg["lookback_days"]
+        if lookback_days_override is None
+        else lookback_days_override
+    )
     interval = cfg["request_interval"]
+
+    if lookback_days < 1:
+        raise ValueError("lookback_days must be at least 1")
+    if max_papers < 0:
+        raise ValueError("max_papers must be 0 (unlimited) or greater")
 
     if date_str:
         ref_date = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
@@ -193,14 +229,17 @@ def main(dry_run: bool = False, date_str: str | None = None):
     ui_cats = KEYWORDS["ui_categories"]
 
     print(f"[fetch] Query: {query}")
-    print(f"[fetch] Ref date: {ref_date.date()} / Lookback: {lookback_days} days / Max: {max_papers} papers")
+    print(
+        f"[fetch] Ref date: {ref_date.date()} / Lookback: {lookback_days} days / "
+        f"Max: {max_papers or 'unlimited'} papers"
+    )
 
     seen_ids: set[str] = set()
     collected: list[dict] = []
     batch = 100
     start = 0
 
-    while len(collected) < max_papers:
+    while max_papers == 0 or len(collected) < max_papers:
         print(f"[fetch] Fetching batch start={start} ...")
         papers = fetch_arxiv(query, start, batch)
         if not papers:
@@ -214,7 +253,9 @@ def main(dry_run: bool = False, date_str: str | None = None):
             if not is_within_window(p["published_iso"], lookback_days, ref_date):
                 # ref_date より新しい論文はスキップ、古い論文は打ち切り
                 try:
-                    pub_dt = datetime.fromisoformat(p["published_iso"].replace("Z", "+00:00"))
+                    pub_dt = datetime.fromisoformat(
+                        p["published_iso"].replace("Z", "+00:00")
+                    )
                     if pub_dt < ref_date - timedelta(days=lookback_days):
                         print("[fetch] Out of window, stopping.")
                         papers = []  # force outer break
@@ -226,7 +267,7 @@ def main(dry_run: bool = False, date_str: str | None = None):
             if keyword_match(p, include_kws, exclude_kws):
                 p["category"] = assign_category(p, ui_cats)
                 collected.append(p)
-                if len(collected) >= max_papers:
+                if max_papers > 0 and len(collected) >= max_papers:
                     break
 
         if not papers:
@@ -247,7 +288,25 @@ def main(dry_run: bool = False, date_str: str | None = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="取得件数のみ表示してファイル出力しない")
-    parser.add_argument("--date", type=str, default=None, help="基準日 YYYY-MM-DD（省略時は今日）")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="取得件数のみ表示してファイル出力しない"
+    )
+    parser.add_argument(
+        "--date", type=str, default=None, help="基準日 YYYY-MM-DD（省略時は今日）"
+    )
+    parser.add_argument(
+        "--lookback-days", type=int, default=None, help="取得期間（日数）の上書き"
+    )
+    parser.add_argument(
+        "--max-papers",
+        type=int,
+        default=None,
+        help="最大取得件数の上書き（0は無制限）",
+    )
     args = parser.parse_args()
-    main(dry_run=args.dry_run, date_str=args.date)
+    main(
+        dry_run=args.dry_run,
+        date_str=args.date,
+        lookback_days_override=args.lookback_days,
+        max_papers_override=args.max_papers,
+    )
