@@ -12,9 +12,9 @@ from analyze_papers import (
 
 
 def test_system_prompt_preserves_exact_japanese_terminology():
-    assert "\u97f3\u6e90\u5206\u96e2" in SYSTEM_PROMPT
-    assert "\u97f3\u97ff\u4fe1\u53f7\u51e6\u7406" in SYSTEM_PROMPT
-    assert "\u97f3\u97ff\u30a4\u30d9\u30f3\u30c8" in SYSTEM_PROMPT
+    assert "音源分離" in SYSTEM_PROMPT
+    assert "音響信号処理" in SYSTEM_PROMPT
+    assert "音響イベント" in SYSTEM_PROMPT
 
 
 def test_fallback_copy_is_english():
