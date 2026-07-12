@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 build_data.py
-解析済み論文を週次 JSON に整形し、インデックスを更新する
+Format analyzed papers as weekly JSON and update the index.
 """
 
 import json
@@ -20,10 +20,11 @@ ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
 
-TREND_PROMPT = """以下の論文リスト（タイトルと要約）をもとに、今週の音声・音響 AI 研究の技術トレンドを
-正確に 3 行で日本語にまとめてください。
-具体的な論文名や手法名を挙げながら簡潔にまとめてください。番号や記号は先頭に付けないでください。
-JSON 配列として返してください（文字列 3 要素）。コードブロック記号は不要です。"""
+TREND_PROMPT = """Based on the following paper titles and summaries, describe this
+week's technical trends in speech and audio AI research in exactly three Japanese
+lines. Be concise and mention specific paper or method names. Do not prefix the
+lines with numbers or symbols. Return a JSON array containing exactly three
+strings, without Markdown code fences."""
 
 
 def generate_trend(client: OpenAI, papers: list[dict]) -> list[str]:
@@ -34,7 +35,7 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> list[str]:
             resp = client.chat.completions.create(
                 model=cfg["model"],
                 messages=[
-                    {"role": "system", "content": "JSONのみで返答してください。"},
+                    {"role": "system", "content": "Respond with JSON only."},
                     {"role": "user", "content": f"{TREND_PROMPT}\n\n{summaries}"},
                 ],
                 **build_chat_kwargs(cfg["model"], 400, temperature=0.4),
@@ -84,14 +85,14 @@ def load_index() -> dict:
 
 
 def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
-    """Semantic Scholar と HuggingFace から被引用数・GitHub リポジトリを取得する"""
+    """Retrieve citation and repository metadata from Semantic Scholar and Hugging Face."""
     meta: dict[str, dict] = {}
     for p in papers:
         arxiv_id = p["id"].split("v")[0]
         citation_count = None
         github_repo = None
 
-        # Semantic Scholar: 被引用数
+        # Semantic Scholar citation count.
         try:
             url = f"https://api.semanticscholar.org/graph/v1/paper/arXiv:{arxiv_id}?fields=citationCount"
             req = urllib.request.Request(url, headers={"User-Agent": "arxiv-weekly/1.0"})
@@ -101,7 +102,7 @@ def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
         except Exception:
             pass
 
-        # HuggingFace Papers: GitHub リポジトリ・upvotes・projectPage
+        # Hugging Face Papers repository, upvotes, and project page.
         upvotes = None
         project_page = None
         try:
@@ -121,7 +122,7 @@ def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
             "upvotes": upvotes,
             "projectPage": project_page,
         }
-        time.sleep(0.5)  # レート制限対策
+        time.sleep(0.5)  # Respect API rate limits.
 
     found_citations = sum(1 for v in meta.values() if v["citationCount"] is not None)
     found_repos = sum(1 for v in meta.values() if v["githubRepo"])
@@ -141,7 +142,7 @@ def main(date_str: str | None = None):
     analyzed_path = ROOT / "data" / "analyzed_papers.json"
     if not analyzed_path.exists():
         raise FileNotFoundError(
-            f"{analyzed_path} が見つかりません。analyze_papers.py を先に実行してください。"
+            f"{analyzed_path} was not found. Run analyze_papers.py first."
         )
 
     papers = json.loads(analyzed_path.read_text())
@@ -149,11 +150,11 @@ def main(date_str: str | None = None):
         now = datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc)
     else:
         now = datetime.now(timezone.utc)
-    date_key = now.strftime("%Y-%m%d")  # 例: 2026-0425
+    date_key = now.strftime("%Y-%m%d")  # Example: 2026-0425
     filename = f"{date_key}.json"
     weekly_path = ROOT / SETTINGS["data"]["weekly_dir"] / filename
 
-    # 被引用数・GitHub リポジトリを取得してpapersに追加
+    # Add citation and GitHub repository metadata to the papers.
     print("[build] Fetching citation counts and GitHub repos ...")
     meta = fetch_paper_meta(papers)
     for p in papers:
@@ -164,17 +165,17 @@ def main(date_str: str | None = None):
         p["upvotes"] = m.get("upvotes")
         p["projectPage"] = m.get("projectPage")
 
-    # GitHub Models でトレンド生成
+    # Generate the trend summary with GitHub Models.
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         cfg = SETTINGS["github_models"]
         client = OpenAI(base_url=cfg["endpoint"], api_key=token)
         trend = generate_trend(client, papers)
     else:
-        print("[build] GITHUB_TOKEN 未設定のためトレンド生成をスキップします。")
+        print("[build] GITHUB_TOKEN is not set; skipping trend generation.")
         trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
 
-    # カテゴリ別に整形
+    # Group papers by category.
     categories = group_by_category(papers)
 
     weekly_data = {
@@ -185,17 +186,17 @@ def main(date_str: str | None = None):
         "trend": trend,
     }
 
-    # 週次ファイル保存
+    # Save the weekly file.
     weekly_path.parent.mkdir(parents=True, exist_ok=True)
     weekly_path.write_text(json.dumps(weekly_data, ensure_ascii=False, indent=2))
     print(f"[build] Saved weekly → {weekly_path}")
 
-    # latest.json を更新
+    # Update latest.json.
     latest_path = ROOT / SETTINGS["data"]["latest_file"]
     latest_path.write_text(json.dumps(weekly_data, ensure_ascii=False, indent=2))
     print(f"[build] Updated latest → {latest_path}")
 
-    # index.json を更新
+    # Update index.json.
     index = load_index()
     index["weeks"] = [w for w in index["weeks"] if w["date"] != date_key]
     index["weeks"].insert(
@@ -207,14 +208,14 @@ def main(date_str: str | None = None):
             "generated_at": now.isoformat(),
         },
     )
-    # カテゴリ定義を常に最新の keywords.yaml から書き込む
+    # Always write the latest category definitions from keywords.yaml.
     index["categories"] = [
         {"id": c["id"], "label": c["label"], "color": c["color"]}
         for c in KEYWORDS["ui_categories"]
     ]
     save_index(index)
 
-    # 中間ファイルを削除
+    # Remove intermediate files.
     (ROOT / "data" / "raw_papers.json").unlink(missing_ok=True)
     (ROOT / "data" / "analyzed_papers.json").unlink(missing_ok=True)
     print("[build] Done.")
@@ -223,6 +224,6 @@ def main(date_str: str | None = None):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--date", type=str, default=None, help="基準日 YYYY-MM-DD（省略時は今日）")
+    parser.add_argument("--date", type=str, default=None, help="Reference date YYYY-MM-DD (default: today)")
     args = parser.parse_args()
     main(date_str=args.date)

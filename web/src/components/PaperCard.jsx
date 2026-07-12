@@ -25,7 +25,7 @@ function Badge({ href, onClick, color, bg, children }) {
 export default function PaperCard({ paper, cat, animDelay = 0, citationCount, githubUrl, isFavorite, onToggleFavorite, isRead, onToggleRead }) {
   const [expanded, setExpanded] = useState(false)
 
-  // フロントエンドで取得した githubUrl を優先、なければ JSON の githubRepo
+  // Prefer the frontend-fetched githubUrl, then fall back to githubRepo from JSON.
   const codeUrl = githubUrl || paper.githubRepo
   const demoUrl = paper.projectPage
 
@@ -43,7 +43,7 @@ export default function PaperCard({ paper, cat, animDelay = 0, citationCount, gi
       <div onClick={() => setExpanded(e => !e)}
         style={{ padding: 'clamp(10px,3vw,13px) clamp(10px,3vw,16px) 11px', cursor: 'pointer', userSelect: 'none' }}>
 
-        {/* --- バッジ行 --- */}
+        {/* Badge row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13, padding: '2px 10px', background: cat.color,
             color: '#080c14', fontWeight: 700, letterSpacing: 1, borderRadius: 2, flexShrink: 0 }}>
@@ -94,7 +94,7 @@ export default function PaperCard({ paper, cat, animDelay = 0, citationCount, gi
           </div>
         </div>
 
-        {/* --- タイトル・著者行 --- */}
+        {/* Title and author row */}
         <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{paper.org}</div>
         <div style={{ fontSize: 'clamp(13px,3.5vw,15px)', color: '#e2e8f0', lineHeight: 1.6, fontWeight: 500 }}>{paper.title}</div>
         <div style={{ fontSize: 'clamp(12px,3vw,14px)', color: '#94a3b8', lineHeight: 1.6, marginTop: 3 }}>{paper.titleJa}</div>
@@ -114,7 +114,7 @@ export default function PaperCard({ paper, cat, animDelay = 0, citationCount, gi
       {expanded && (
         <div style={{ borderTop: `1px solid ${cat.color}18`, animation: 'fd 0.2s ease both' }}>
 
-          {/* datasets / arXivカテゴリ */}
+          {/* Datasets and arXiv categories */}
           {(paper.datasets?.length > 0 || paper.categories?.length > 0) && (
             <div style={{ padding: '10px 18px', borderBottom: `1px solid ${cat.color}10`,
               display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -157,7 +157,7 @@ export default function PaperCard({ paper, cat, animDelay = 0, citationCount, gi
             </div>
           ))}
 
-          {/* アブストラクト（日本語のみ） */}
+          {/* Japanese abstract */}
           {paper.abstractJa && (
             <div style={{ borderTop: `1px solid ${cat.color}10`, padding: '11px 18px' }}>
               <div style={{ fontSize: 11, color: '#475569', fontWeight: 600, letterSpacing: 1.5, marginBottom: 6 }}>

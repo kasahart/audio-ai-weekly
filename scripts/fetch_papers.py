@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 fetch_papers.py
-arXiv API から対象カテゴリの論文を取得し、キーワードでフィルタリングする
+Retrieve papers in target categories from the arXiv API and filter by keyword.
 """
 
 import argparse
@@ -150,7 +150,7 @@ def parse_atom(xml_bytes: bytes) -> list[dict]:
 
 
 def extract_orgs(entry) -> str:
-    """著者のアフィリエーション情報から主要機関を抽出（簡易版）"""
+    """Extract the primary organization from author affiliations."""
     affiliations = [
         a.findtext("arxiv:affiliation", "", NS)
         for a in entry.findall("atom:author", NS)
@@ -158,7 +158,7 @@ def extract_orgs(entry) -> str:
     affiliations = [a for a in affiliations if a]
     if affiliations:
         return affiliations[0][:60]
-    # アフィリエーション情報がない場合は著者名から省略表記
+    # Fall back to a compact author-based label when affiliations are absent.
     authors = [
         a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)
     ]
@@ -178,7 +178,7 @@ def is_within_window(
         cutoff = ref_date - timedelta(days=lookback_days)
         return cutoff <= pub_dt <= ref_date
     except Exception:
-        return True  # パース失敗時は含める
+        return True  # Include the paper when parsing fails.
 
 
 def keyword_match(paper: dict, include: list[str], exclude: list[str]) -> bool:
@@ -251,7 +251,7 @@ def main(
             seen_ids.add(p["id"])
 
             if not is_within_window(p["published_iso"], lookback_days, ref_date):
-                # ref_date より新しい論文はスキップ、古い論文は打ち切り
+                # Skip papers newer than ref_date and stop once papers are too old.
                 try:
                     pub_dt = datetime.fromisoformat(
                         p["published_iso"].replace("Z", "+00:00")
@@ -289,19 +289,19 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--dry-run", action="store_true", help="取得件数のみ表示してファイル出力しない"
+        "--dry-run", action="store_true", help="Show the count without writing files"
     )
     parser.add_argument(
-        "--date", type=str, default=None, help="基準日 YYYY-MM-DD（省略時は今日）"
+        "--date", type=str, default=None, help="Reference date YYYY-MM-DD (default: today)"
     )
     parser.add_argument(
-        "--lookback-days", type=int, default=None, help="取得期間（日数）の上書き"
+        "--lookback-days", type=int, default=None, help="Override retrieval window in days"
     )
     parser.add_argument(
         "--max-papers",
         type=int,
         default=None,
-        help="最大取得件数の上書き（0は無制限）",
+        help="Override maximum paper count (0 means unlimited)",
     )
     args = parser.parse_args()
     main(

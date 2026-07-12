@@ -4,8 +4,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from build_data import group_by_category
 
-# group_by_category は KEYWORDS["ui_categories"] に依存するため
-# 実際の keywords.yaml の定義を使ったテスト
+# group_by_category depends on KEYWORDS["ui_categories"], so these tests use
+# the real definitions from keywords.yaml.
 
 class TestGroupByCategory:
     def test_groups_papers_by_category(self):
@@ -27,7 +27,7 @@ class TestGroupByCategory:
         assert len(other["papers"]) == 1
 
     def test_missing_category_goes_to_other(self):
-        papers = [{"id": "1"}]  # category キーなし
+        papers = [{"id": "1"}]  # No category key.
         result = group_by_category(papers)
         other = next((c for c in result if c["id"] == "other"), None)
         assert other is not None
@@ -36,7 +36,7 @@ class TestGroupByCategory:
         papers = [{"id": "1", "category": "foundation"}]
         result = group_by_category(papers)
         cat_ids = [c["id"] for c in result]
-        # 論文のないカテゴリは含まれない
+        # Categories without papers are omitted.
         assert "separation" not in cat_ids or any(
             c["id"] == "separation" and len(c["papers"]) == 0 for c in result
         ) is False

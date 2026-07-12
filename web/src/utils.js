@@ -1,9 +1,9 @@
-/** 先頭の丸数字プレフィックス（①など）を除去する */
+/** Remove a leading circled-number prefix such as ①. */
 export function stripPrefix(text) {
   return text?.replace(/^[①-⑨]\s*/, '') ?? ''
 }
 
-/** URL クエリパラメータからフィルタ状態を読み取る */
+/** Read filter state from URL query parameters. */
 export function readUrlState(search = window.location.search) {
   const p = new URLSearchParams(search)
   return {
@@ -16,7 +16,7 @@ export function readUrlState(search = window.location.search) {
   }
 }
 
-/** フィルタ状態を URL クエリパラメータに変換する */
+/** Convert filter state to URL query parameters. */
 export function buildUrlSearch({ toDate, fromDate, activeCat, search, sortByCitations, showFavoritesOnly }) {
   const p = new URLSearchParams()
   if (toDate)              p.set('week', toDate)

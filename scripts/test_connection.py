@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GitHub Models への疎通確認スクリプト"""
+"""Test connectivity to GitHub Models."""
 
 import os
 from pathlib import Path
@@ -15,7 +15,7 @@ SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 def main():
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
-        print("❌ GITHUB_TOKEN が設定されていません")
+        print("❌ GITHUB_TOKEN is not set")
         return
     cfg = SETTINGS["github_models"]
     client = OpenAI(base_url=cfg["endpoint"], api_key=token)
@@ -25,9 +25,9 @@ def main():
             messages=[{"role": "user", "content": "Hello. Reply with just 'OK'."}],
             **build_chat_kwargs(cfg["model"], 10),
         )
-        print(f"✅ GitHub Models 接続成功: {resp.choices[0].message.content}")
+        print(f"✅ Connected to GitHub Models: {resp.choices[0].message.content}")
     except Exception as e:
-        print(f"❌ 接続失敗: {e}")
+        print(f"❌ Connection failed: {e}")
 
 
 if __name__ == "__main__":

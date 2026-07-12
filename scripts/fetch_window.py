@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""前回公開日から arXiv 取得期間と件数上限を決定する。"""
+"""Determine the arXiv retrieval window and limit from the last published date."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ import yaml
 
 
 class CatchUpWindowExceeded(ValueError):
-    """自動遡及で安全に処理できる期間を超えた。"""
+    """The required catch-up window exceeds the safe automatic limit."""
 
 
 def parse_week_date(value: str) -> date:
@@ -25,9 +25,10 @@ def resolve_fetch_window(
     catchup_max_days: int,
     catchup_max_papers: int,
 ) -> tuple[int, int]:
-    """欠損週があれば、最後に公開した週まで取得期間を広げる。
+    """Extend the retrieval window to the last published week after a missed run.
 
-    長期間の欠損は一度の実行で処理せず、週単位バックフィルに委ねる。
+    Long gaps are delegated to the weekly backfill instead of being processed
+    in a single run.
     """
     published_dates = []
     for week in index.get("weeks", []):
@@ -61,7 +62,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--index", required=True, type=Path)
     parser.add_argument("--settings", required=True, type=Path)
-    parser.add_argument("--date", required=True, help="基準日 YYYY-MM-DD")
+    parser.add_argument("--date", required=True, help="Reference date (YYYY-MM-DD)")
     args = parser.parse_args()
 
     try:
