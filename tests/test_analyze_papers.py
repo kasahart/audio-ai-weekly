@@ -2,7 +2,25 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from analyze_papers import chunk_papers, sanitize_json_text, build_next_reads
+from analyze_papers import (
+    SYSTEM_PROMPT,
+    build_next_reads,
+    chunk_papers,
+    fallback_result,
+    sanitize_json_text,
+)
+
+
+def test_system_prompt_preserves_exact_japanese_terminology():
+    assert "\u97f3\u6e90\u5206\u96e2" in SYSTEM_PROMPT
+    assert "\u97f3\u97ff\u4fe1\u53f7\u51e6\u7406" in SYSTEM_PROMPT
+    assert "\u97f3\u97ff\u30a4\u30d9\u30f3\u30c8" in SYSTEM_PROMPT
+
+
+def test_fallback_copy_remains_japanese():
+    paper = {"title": "Paper", "org": "Example University"}
+
+    assert fallback_result(paper)["what"] == "\u89e3\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
 
 
 class TestChunkPapers:

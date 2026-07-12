@@ -30,6 +30,16 @@ Write every descriptive field in natural Japanese. Apply these terminology rules
 - Translate "Audio Source Separation" as source separation, including instruments and noise.
 - Translate "Audio Signal Processing" as audio/acoustic signal processing.
 - Translate "Acoustic Event" as an acoustic or sound event.
+- Use these exact Japanese technical terms in the generated text:
+  - Audio Source Separation: \u97f3\u6e90\u5206\u96e2
+  - Audio Signal Processing: \u97f3\u97ff\u4fe1\u53f7\u51e6\u7406 or \u30aa\u30fc\u30c7\u30a3\u30aa\u4fe1\u53f7\u51e6\u7406
+  - Acoustic Event: \u97f3\u97ff\u30a4\u30d9\u30f3\u30c8 or \u97f3\u30a4\u30d9\u30f3\u30c8
+  - Speech Enhancement: \u97f3\u58f0\u5f37\u8abf
+  - Acoustic Gain: \u97f3\u97ff\u5229\u5f97
+  - Voice Activity Detection: \u97f3\u58f0\u533a\u9593\u691c\u51fa
+  - Sound Localization: \u97f3\u6e90\u5b9a\u4f4d
+  - Environmental Sound: \u74b0\u5883\u97f3
+  - Audio Foundation Model: \u97f3\u97ff\u57fa\u76e4\u30e2\u30c7\u30eb
 - Use the established Japanese technical terms for Speech Enhancement, Acoustic Gain,
   Voice Activity Detection, Sound Localization, Environmental Sound, and
   Audio Foundation Model. Reserve speech-specific Japanese terminology for
@@ -131,7 +141,7 @@ def fallback_result(paper: dict) -> dict:
         "task": None,
         "proposedMethod": None,
         "datasets": [],
-        "what": "Analysis failed.",
+        "what": "\u89e3\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002",
         "novel": "",
         "method": "",
         "validation": "",
