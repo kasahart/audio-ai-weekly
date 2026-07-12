@@ -2,16 +2,16 @@ name: Weekly arXiv Update
 
 on:
   schedule:
-    # 毎週金曜日 12:00 UTC = 21:00 JST
+    # Every Friday at 12:00 UTC / 21:00 JST.
     - cron: '0 12 * * 5'
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run（取得のみ、コミットなし）'
+        description: 'Dry run (retrieve only; do not commit)'
         required: false
         default: 'false'
       target_date:
-        description: '基準日 YYYY-MM-DD（省略時は今日）過去週のデータ生成に使用'
+        description: 'Reference date YYYY-MM-DD (default: today) for generating past weeks'
         required: false
         default: ''
 
@@ -20,7 +20,7 @@ permissions:
   models: read
 
 jobs:
-  # ─── Step 1: arXiv 論文取得 ───────────────────────────────────────────────
+  # Step 1: Retrieve papers from arXiv.
   fetch:
     runs-on: ubuntu-latest
     outputs:
@@ -71,7 +71,7 @@ jobs:
           path: data/raw_papers.json
           retention-days: 1
 
-  # ─── Step 2: GPT-4o による解析 ───────────────────────────────────────────
+  # Step 2: Analyze papers with GitHub Models.
   analyze:
     needs: fetch
     runs-on: ubuntu-latest
@@ -105,7 +105,7 @@ jobs:
           path: data/analyzed_papers.json
           retention-days: 1
 
-  # ─── Step 3: データ生成 ───────────────────────────────────────────────────
+  # Step 3: Generate data.
   build:
     needs: analyze
     runs-on: ubuntu-latest
@@ -143,7 +143,7 @@ jobs:
           path: data/
           retention-days: 1
 
-  # ─── Step 4: フロントエンドビルド・GitHub Pages デプロイ ─────────────────
+  # Step 4: Build the frontend and deploy to GitHub Pages.
   deploy:
     needs: build
     if: github.event.inputs.dry_run != 'true'
@@ -171,19 +171,19 @@ jobs:
         run: |
           git fetch origin gh-pages
           mkdir -p web/public/data/weekly
-          # 既存の weekly JSON をコピー
+          # Copy existing weekly JSON files.
           for f in $(git ls-tree -r --name-only origin/gh-pages 2>/dev/null | grep '^data/weekly/.*\.json$'); do
             git show origin/gh-pages:$f > web/public/$f 2>/dev/null || true
           done
-          # 既存の index.json を保存
+          # Preserve the existing index.json.
           git show origin/gh-pages:data/index.json > /tmp/existing_index.json 2>/dev/null \
             || echo '{"weeks":[],"generated_at":""}' > /tmp/existing_index.json
 
       - name: Merge data and copy to web/public
         run: |
-          # 新しい weekly JSON を上書きコピー
+          # Copy new weekly JSON files, replacing matching weeks.
           find data/weekly -name '*.json' -exec cp {} web/public/data/weekly/ \;
-          # index.json をマージ（既存 + 新規）
+          # Merge the existing and new index.json files.
           python3 - << 'EOF'
           import json
           existing = json.load(open('/tmp/existing_index.json'))

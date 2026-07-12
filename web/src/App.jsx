@@ -96,7 +96,7 @@ export default function App() {
                                  showFavoritesOnly: initial.showFavoritesOnly })
   const [showScrollTop, setShowScrollTop] = useState(false)
 
-  // URL に pushState するラッパー
+  // Wrapper that updates the URL with pushState.
   const pushFilter = useCallback((patch) => {
     const next = { ...filterRef.current, ...patch }
     filterRef.current = next
@@ -135,7 +135,7 @@ export default function App() {
     })
   }, [pushFilter])
 
-  // popstate (ブラウザ戻る/進む)
+  // Handle browser back and forward navigation.
   useEffect(() => {
     const onPop = () => {
       const s = readUrlState()
@@ -151,14 +151,14 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  // スクロールトップボタン
+  // Scroll-to-top button.
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // お気に入り / 既読トグル
+  // Favorite and read-state toggles.
   const toggleFavorite = useCallback((id) => {
     setFavorites(prev => {
       const next = new Set(prev)
@@ -177,7 +177,7 @@ export default function App() {
     })
   }, [])
 
-  // index.json を取得
+  // Fetch index.json.
   useEffect(() => {
     fetch(`${DATA_BASE}/index.json`)
       .then(r => r.json())
@@ -194,7 +194,7 @@ export default function App() {
       .catch(() => setLoading(false))
   }, [])
 
-  // toDate 変更時: リセット & 最初の週を読み込み
+  // Reset and load the first week when toDate changes.
   useEffect(() => {
     if (!toDate || !index) return
     const weeks = index.weeks
@@ -218,7 +218,7 @@ export default function App() {
     }).catch(() => setLoading(false))
   }, [toDate, index])
 
-  // 次の週を読み込む（無限スクロール）
+  // Load the next week for infinite scrolling.
   const loadNextWeek = useCallback(() => {
     if (!index || loadingMore || !hasMore) return
     const weeks = index.weeks
@@ -250,7 +250,7 @@ export default function App() {
     return () => observer.disconnect()
   }, [loadNextWeek])
 
-  // カテゴリ一覧（index.json 定義 + ロード済み週の論文数）
+  // Categories from index.json with counts from loaded weeks.
   const paperCountById = Object.fromEntries(
     loadedWeeks.flatMap(w => w.categories).reduce((map, c) => {
       map.set(c.id, (map.get(c.id) ?? 0) + c.papers.length)

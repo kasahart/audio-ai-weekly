@@ -37,6 +37,6 @@ describe('CategoryFilter', () => {
 
   it('renders nothing for empty categories', () => {
     const { container } = render(<CategoryFilter categories={[]} active="all" onChange={() => {}} />)
-    expect(container.querySelectorAll('button')).toHaveLength(1) // only すべて
+    expect(container.querySelectorAll('button')).toHaveLength(1) // Only the "All" button.
   })
 })

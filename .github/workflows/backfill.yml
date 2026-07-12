@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       from_date:
-        description: '開始日 YYYY-MM-DD（この日以降の金曜日を対象）'
+        description: 'Start date YYYY-MM-DD (includes Fridays on or after this date)'
         required: true
         default: '2026-01-01'
       to_date:
-        description: '終了日 YYYY-MM-DD（省略時は今日）'
+        description: 'End date YYYY-MM-DD (default: today)'
         required: false
         default: ''
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 reanalyze_data.py
-既存の週次 JSON の AI フィールドを最新プロンプトで強制上書きする
+Overwrite AI fields in existing weekly JSON using the latest prompt.
 """
 import json
 import os
@@ -34,7 +34,7 @@ AI_FIELDS = ("titleJa", "org", "task", "proposedMethod", "datasets",
 def get_client() -> OpenAI:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
-        raise EnvironmentError("GITHUB_TOKEN が設定されていません")
+        raise EnvironmentError("GITHUB_TOKEN is not set")
     cfg = SETTINGS["github_models"]
     return OpenAI(base_url=cfg["endpoint"], api_key=token)
 
@@ -77,7 +77,7 @@ def main():
     client = get_client()
     cfg = SETTINGS["github_models"]
 
-    # 全週次ファイルから全論文を収集
+    # Collect every paper from all weekly files.
     all_papers = []
     for path in sorted(WEEKLY_DIR.glob("*.json")):
         data = json.loads(path.read_text())
@@ -86,10 +86,10 @@ def main():
                 if paper.get("abstract"):
                     all_papers.append(paper)
 
-    print(f"[reanalyze] 対象論文: {len(all_papers)} 件")
-    print(f"[reanalyze] バッチサイズ: {cfg['batch_size']} → 約 {-(-len(all_papers) // cfg['batch_size'])} 回のAPI呼び出し")
+    print(f"[reanalyze] Target papers: {len(all_papers)}")
+    print(f"[reanalyze] Batch size: {cfg['batch_size']} → approximately {-(-len(all_papers) // cfg['batch_size'])} API calls")
 
-    # バッチ処理で AI フィールドを再生成
+    # Regenerate AI fields in batches.
     ai_results: dict[str, dict] = {}
     batches = chunk_papers(all_papers, cfg["batch_size"])
     last_request_at = None
@@ -104,14 +104,14 @@ def main():
             result = batch_results.get(paper["id"], fallback_result(paper))
             ai_results[arxiv_id] = result
 
-    print(f"\n[reanalyze] AI解析完了: {len(ai_results)} 件")
+    print(f"\n[reanalyze] AI analysis complete: {len(ai_results)} papers")
 
-    # 各ファイルを更新
+    # Update each file.
     for path in sorted(WEEKLY_DIR.glob("*.json")):
         print(f"\n[reanalyze] --- {path.name} ---")
         reanalyze_file(path, client, ai_results)
 
-    print("\n[reanalyze] 完了。")
+    print("\n[reanalyze] Complete.")
 
 
 if __name__ == "__main__":

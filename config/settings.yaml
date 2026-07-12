@@ -1,20 +1,20 @@
 # ============================================================
-# システム設定ファイル
+# System settings
 # ============================================================
 
-# arXiv 取得設定
+# arXiv retrieval settings
 arxiv:
-  lookback_days: 7          # 取得対象期間（日数）
-  max_papers: 50            # フィルタ後の最大取得件数
-  catchup_max_days: 28      # 自動遡及の最大日数（超過時は停止）
-  catchup_max_papers: 200   # 自動遡及時の最大取得件数
-  request_interval: 3.0     # API リクエスト間隔（秒）
-  request_timeout: 30       # API リクエストタイムアウト（秒）
-  retry_max: 3              # API リトライ回数
-  retry_interval: 5.0       # API リトライ間隔（秒）
+  lookback_days: 7          # Retrieval window in days
+  max_papers: 50            # Maximum papers after filtering
+  catchup_max_days: 28      # Maximum automatic catch-up window; fail if exceeded
+  catchup_max_papers: 200   # Maximum papers during automatic catch-up
+  request_interval: 3.0     # Interval between API requests in seconds
+  request_timeout: 30       # API request timeout in seconds
+  retry_max: 3              # Maximum API attempts
+  retry_interval: 5.0       # Initial retry interval in seconds
   user_agent: "arxiv-weekly-report/1.0 (github.com/kasahart/arxiv-weekly)"
 
-# GitHub Models 設定
+# GitHub Models settings
 github_models:
   endpoint: "https://models.inference.ai.azure.com"
   model: "openai/gpt-5"
@@ -23,9 +23,9 @@ github_models:
   batch_max_tokens: 6000
   min_request_interval: 60.0
   retry_max: 3
-  retry_interval: 5.0       # リトライ間隔（秒）
+  retry_interval: 5.0       # Retry interval in seconds
 
-# データ出力設定
+# Data output settings
 data:
   weekly_dir: "data/weekly"
   index_file: "data/index.json"

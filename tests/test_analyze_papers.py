@@ -2,7 +2,25 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from analyze_papers import chunk_papers, sanitize_json_text, build_next_reads
+from analyze_papers import (
+    SYSTEM_PROMPT,
+    build_next_reads,
+    chunk_papers,
+    fallback_result,
+    sanitize_json_text,
+)
+
+
+def test_system_prompt_preserves_exact_japanese_terminology():
+    assert "音源分離" in SYSTEM_PROMPT
+    assert "音響信号処理" in SYSTEM_PROMPT
+    assert "音響イベント" in SYSTEM_PROMPT
+
+
+def test_fallback_copy_is_english():
+    paper = {"title": "Paper", "org": "Example University"}
+
+    assert fallback_result(paper)["what"] == "Analysis failed."
 
 
 class TestChunkPapers:
