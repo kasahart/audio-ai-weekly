@@ -17,10 +17,10 @@ def test_system_prompt_preserves_exact_japanese_terminology():
     assert "\u97f3\u97ff\u30a4\u30d9\u30f3\u30c8" in SYSTEM_PROMPT
 
 
-def test_fallback_copy_remains_japanese():
+def test_fallback_copy_is_english():
     paper = {"title": "Paper", "org": "Example University"}
 
-    assert fallback_result(paper)["what"] == "\u89e3\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+    assert fallback_result(paper)["what"] == "Analysis failed."
 
 
 class TestChunkPapers:

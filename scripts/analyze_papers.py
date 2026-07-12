@@ -141,7 +141,7 @@ def fallback_result(paper: dict) -> dict:
         "task": None,
         "proposedMethod": None,
         "datasets": [],
-        "what": "\u89e3\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002",
+        "what": "Analysis failed.",
         "novel": "",
         "method": "",
         "validation": "",
