@@ -4,13 +4,14 @@ reanalyze_data.py
 Overwrite AI fields in existing weekly JSON using the latest prompt.
 """
 import json
-import os
 import sys
 import time
 from pathlib import Path
 
 import yaml
 from openai import OpenAI
+
+from model_utils import create_client, get_ai_config
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -32,11 +33,7 @@ AI_FIELDS = ("titleJa", "org", "task", "proposedMethod", "datasets",
 
 
 def get_client() -> OpenAI:
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise EnvironmentError("GITHUB_TOKEN is not set")
-    cfg = SETTINGS["github_models"]
-    return OpenAI(base_url=cfg["endpoint"], api_key=token)
+    return create_client(SETTINGS)
 
 
 def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
@@ -75,7 +72,7 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
 
 def main():
     client = get_client()
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
 
     # Collect every paper from all weekly files.
     all_papers = []

@@ -1,7 +1,9 @@
 import sys
+import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import analyze_papers
 from analyze_papers import (
     SYSTEM_PROMPT,
     build_next_reads,
@@ -9,6 +11,38 @@ from analyze_papers import (
     fallback_result,
     sanitize_json_text,
 )
+
+
+def test_analyze_batch_uses_selected_provider_model(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            content = json.dumps({"1234.5678": {}})
+            message = type("Message", (), {"content": content})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    settings = {
+        "ai": {"provider": "gemini"},
+        "gemini": {
+            "model": "gemini-3.5-flash",
+            "retry_max": 1,
+            "retry_interval": 0,
+            "min_request_interval": 0,
+            "batch_max_tokens": 1000,
+        },
+    }
+    monkeypatch.setattr(analyze_papers, "SETTINGS", settings)
+    paper = {"id": "1234.5678", "title": "Title", "abstract": "Abstract"}
+
+    analyze_papers.analyze_batch(client, [paper], None)
+
+    assert calls[0]["model"] == "gemini-3.5-flash"
+    assert calls[0]["max_tokens"] == 1000
 
 
 def test_system_prompt_preserves_exact_japanese_terminology():

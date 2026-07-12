@@ -4,7 +4,6 @@ enrich_data.py
 Add missing fields to existing weekly JSON files.
 """
 import json
-import os
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -12,6 +11,8 @@ from pathlib import Path
 
 import yaml
 from openai import OpenAI
+
+from model_utils import build_chat_kwargs, create_client, get_ai_config
 
 ROOT = Path(__file__).parent.parent
 WEEKLY_DIR = ROOT / "data" / "weekly"
@@ -71,8 +72,6 @@ def fetch_citation_count(arxiv_id: str) -> int | None:
         return None
 
 
-BATCH_SIZE = 5
-
 BATCH_PROMPT_TMPL = """Analyze the papers below and respond with a JSON object only,
 without Markdown code fences. Use the paper ID as each key and this structure as
 its value:
@@ -100,7 +99,7 @@ def build_batch_prompt(papers: list[dict]) -> str:
 
 
 def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]:
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = [p["id"].split("v")[0] for p in papers]
     fallback = {pid: {"abstractJa": "", "task": None, "proposedMethod": None, "datasets": []} for pid in paper_ids}
@@ -113,8 +112,9 @@ def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]
                     {"role": "system", "content": "Respond with JSON only."},
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=800 * len(papers),
-                temperature=0.3,
+                **build_chat_kwargs(
+                    cfg["model"], 800 * len(papers), temperature=0.3
+                ),
             )
             raw = (resp.choices[0].message.content or "").strip()
             raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
@@ -185,14 +185,17 @@ def main():
     weekly_files = sorted(WEEKLY_DIR.glob("*.json"))
     print(f"[enrich] Processing {len(weekly_files)} weekly files")
 
-    token = os.environ.get("GITHUB_TOKEN")
     ai_client = None
-    if token:
-        cfg = SETTINGS["github_models"]
-        ai_client = OpenAI(base_url=cfg["endpoint"], api_key=token)
-        print("[enrich] Enabling batched AI field enrichment with GPT-4o")
-    else:
-        print("[enrich] GITHUB_TOKEN is not set; skipping AI fields")
+    provider, cfg = get_ai_config(SETTINGS)
+    batch_size = cfg["batch_size"]
+    try:
+        ai_client = create_client(SETTINGS)
+        print(f"[enrich] Enabling batched AI field enrichment with {provider}")
+    except EnvironmentError:
+        print(
+            f"[enrich] {cfg['api_key_env']} is not set for provider {provider}; "
+            "skipping AI fields"
+        )
 
     # Collect papers with missing AI fields from every weekly file.
     ai_results: dict[str, dict] = {}
@@ -208,13 +211,13 @@ def main():
         print(f"[enrich] Papers requiring AI enrichment: {len(papers_needing_ai)}")
 
         # Process in batches.
-        for i in range(0, len(papers_needing_ai), BATCH_SIZE):
-            batch = papers_needing_ai[i:i + BATCH_SIZE]
+        for i in range(0, len(papers_needing_ai), batch_size):
+            batch = papers_needing_ai[i:i + batch_size]
             ids = [p["id"].split("v")[0] for p in batch]
-            print(f"[enrich] AI batch ({i // BATCH_SIZE + 1}/{(len(papers_needing_ai) + BATCH_SIZE - 1) // BATCH_SIZE}) ids={', '.join(ids)}")
+            print(f"[enrich] AI batch ({i // batch_size + 1}/{(len(papers_needing_ai) + batch_size - 1) // batch_size}) ids={', '.join(ids)}")
             result = fetch_ai_fields_batch(ai_client, batch)
             ai_results.update(result)
-            if i + BATCH_SIZE < len(papers_needing_ai):
+            if i + batch_size < len(papers_needing_ai):
                 time.sleep(3.0)
 
     # Write metadata back to each file.

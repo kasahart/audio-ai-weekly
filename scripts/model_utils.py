@@ -1,4 +1,45 @@
-"""GitHub Models request helpers."""
+"""Configuration and request helpers for OpenAI-compatible AI providers."""
+
+import os
+from collections.abc import Mapping
+
+from openai import OpenAI
+
+
+def get_ai_config(settings: Mapping) -> tuple[str, Mapping]:
+    """Return the selected provider name and its configuration."""
+    ai = settings.get("ai")
+    provider = ai.get("provider") if isinstance(ai, Mapping) else None
+    if not provider or provider not in settings or not isinstance(settings[provider], Mapping):
+        raise ValueError(
+            f"Unknown AI provider {provider!r}; set ai.provider to a configured provider"
+        )
+    return provider, settings[provider]
+
+
+def get_api_key(
+    provider: str, config: Mapping, environ: Mapping[str, str] | None = None
+) -> str:
+    """Read the selected provider's API key from its configured environment variable."""
+    env_name = config.get("api_key_env")
+    if not env_name:
+        raise ValueError(f"AI provider {provider!r} has no api_key_env setting")
+    environment = os.environ if environ is None else environ
+    api_key = environment.get(env_name)
+    if not api_key:
+        raise EnvironmentError(
+            f"AI provider {provider!r} requires environment variable {env_name}"
+        )
+    return api_key
+
+
+def create_client(settings: Mapping, environ: Mapping[str, str] | None = None) -> OpenAI:
+    """Create an OpenAI client for the provider selected in settings."""
+    provider, config = get_ai_config(settings)
+    return OpenAI(
+        base_url=config["endpoint"],
+        api_key=get_api_key(provider, config, environ),
+    )
 
 
 def supports_custom_temperature(model: str) -> bool:

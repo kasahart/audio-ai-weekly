@@ -1,8 +1,37 @@
 import sys
+import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import build_data
 from build_data import group_by_category
+
+
+def test_generate_trend_uses_selected_provider_model(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            message = type("Message", (), {"content": json.dumps(["a", "b", "c"])})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    settings = {
+        "ai": {"provider": "gemini"},
+        "gemini": {
+            "model": "gemini-3.5-flash",
+            "retry_max": 1,
+            "retry_interval": 0,
+        },
+    }
+    monkeypatch.setattr(build_data, "SETTINGS", settings)
+
+    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == ["a", "b", "c"]
+    assert calls[0]["model"] == "gemini-3.5-flash"
+    assert calls[0]["max_tokens"] == 400
 
 # group_by_category depends on KEYWORDS["ui_categories"], so these tests use
 # the real definitions from keywords.yaml.

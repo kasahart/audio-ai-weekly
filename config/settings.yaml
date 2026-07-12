@@ -14,10 +14,27 @@ arxiv:
   retry_interval: 5.0       # Initial retry interval in seconds
   user_agent: "arxiv-weekly-report/1.0 (github.com/kasahart/arxiv-weekly)"
 
+# AI provider selection
+ai:
+  provider: "github_models"  # "github_models" or "gemini"
+
 # GitHub Models settings
 github_models:
+  api_key_env: "GITHUB_TOKEN"
   endpoint: "https://models.inference.ai.azure.com"
   model: "openai/gpt-5"
+  max_tokens: 1500
+  batch_size: 5
+  batch_max_tokens: 6000
+  min_request_interval: 60.0
+  retry_max: 3
+  retry_interval: 5.0       # Retry interval in seconds
+
+# Gemini settings (OpenAI-compatible API)
+gemini:
+  api_key_env: "GEMINI_API_KEY"
+  endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  model: "gemini-3.5-flash"
   max_tokens: 1500
   batch_size: 5
   batch_max_tokens: 6000

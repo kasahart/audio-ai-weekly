@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """
 analyze_papers.py
-Analyze each paper in Japanese from six perspectives using GitHub Models.
+Analyze each paper in Japanese from six perspectives using the configured AI provider.
 """
 
 import json
-import os
 import time
 from pathlib import Path
 
 import yaml
 from openai import APIError, OpenAI
 
-from model_utils import build_chat_kwargs
+from model_utils import build_chat_kwargs, create_client, get_ai_config
 
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
@@ -68,11 +67,7 @@ Write all descriptions in Japanese."""
 
 
 def get_client() -> OpenAI:
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise EnvironmentError("GITHUB_TOKEN is not set")
-    cfg = SETTINGS["github_models"]
-    return OpenAI(base_url=cfg["endpoint"], api_key=token)
+    return create_client(SETTINGS)
 
 
 def sanitize_json_text(raw: str) -> str:
@@ -154,7 +149,7 @@ def fallback_result(paper: dict) -> dict:
 def analyze_batch(
     client: OpenAI, papers: list[dict], last_request_at: float | None
 ) -> tuple[dict[str, dict], float | None]:
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = {paper["id"] for paper in papers}
 
@@ -226,7 +221,7 @@ def main():
     print(f"[analyze] Analyzing {len(papers)} papers ...")
 
     client = get_client()
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
     analyzed = []
     batches = chunk_papers(papers, cfg["batch_size"])
     last_request_at = None

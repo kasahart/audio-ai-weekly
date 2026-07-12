@@ -39,6 +39,7 @@ jobs:
       - name: Backfill weekly data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           TO_ARG=""
           if [ -n "${{ github.event.inputs.to_date }}" ]; then

@@ -21,13 +21,36 @@ Open the repository in VS Code and select **Reopen in Container**.
 ### 3. Verify the setup
 
 ```bash
-python scripts/test_connection.py        # Test the GitHub Models connection
+python scripts/test_connection.py        # Test the configured AI connection
 python scripts/fetch_papers.py --dry-run # Test arXiv retrieval
 ```
 
 ### 4. Run manually
 
 Open the **Actions** tab, select **Weekly arXiv Update**, and choose **Run workflow**.
+
+## AI Provider
+
+Select one provider for all AI processing in `config/settings.yaml`:
+
+```yaml
+ai:
+  provider: github_models  # or gemini
+```
+
+For local runs, export the API key used by the selected provider:
+
+```bash
+export GITHUB_TOKEN="..."     # github_models
+export GEMINI_API_KEY="..."   # gemini
+```
+
+GitHub Models is the default and keeps the existing behavior. Gemini uses its
+official [OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
+with [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash);
+the existing `openai` SDK is used for both providers. When selecting Gemini in GitHub
+Actions, add `GEMINI_API_KEY` under **Settings → Secrets and variables → Actions
+→ New repository secret**. `GITHUB_TOKEN` remains in use for deployment.
 
 ## Adding or Removing Keywords
 
@@ -47,7 +70,7 @@ data/
   weekly/            # Weekly JSON files (YYYY-MMDD.json)
 scripts/
   fetch_papers.py    # Retrieve papers from arXiv
-  analyze_papers.py  # Analyze papers with GitHub Models
+  analyze_papers.py  # Analyze papers with the configured AI provider
   build_data.py      # Generate data and update the index
   test_connection.py # Test connectivity
 web/                 # React frontend

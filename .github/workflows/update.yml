@@ -71,7 +71,7 @@ jobs:
           path: data/raw_papers.json
           retention-days: 1
 
-  # Step 2: Analyze papers with GitHub Models.
+  # Step 2: Analyze papers with the configured AI provider.
   analyze:
     needs: fetch
     runs-on: ubuntu-latest
@@ -93,9 +93,10 @@ jobs:
           name: raw-papers
           path: data/
 
-      - name: Analyze papers with GitHub Models (GPT-4o)
+      - name: Analyze papers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/analyze_papers.py
 
       - name: Upload analyzed papers
@@ -129,6 +130,7 @@ jobs:
       - name: Build weekly JSON and update index
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           DATE_ARG=""
           if [ -n "${{ github.event.inputs.target_date }}" ]; then
