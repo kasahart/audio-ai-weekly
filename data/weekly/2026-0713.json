@@ -1,7 +1,7 @@
 {
   "date": "2026-0713",
-  "generated_at": "2026-07-13T17:06:26.283417+00:00",
-  "total": 3,
+  "generated_at": "2026-07-13T00:00:00+00:00",
+  "total": 4,
   "categories": [
     {
       "id": "foundation",
@@ -13,12 +13,12 @@
           "id": "2607.08800v1",
           "date": "Jul 09",
           "title": "Dual-BEATs: Unlocking Zero-Shot Stereo Audio Perception in Audio Large Language Models via Dithering",
-          "titleJa": "Dual-BEATs: Unlocking Zero-Shot Stereo Audio Perception in Audio Large Language Models via Dithering",
+          "titleJa": "Dual-BEATs: ディザリングによって音響LLMにおけるゼロショットのステレオ知覚を解放する",
           "authors": [
             "Shuo-Chun Lin",
             "Hen-Hsen Huang"
           ],
-          "org": "Shuo-Chun Lin / Hen-Hsen Huang",
+          "org": "Academia Sinica",
           "abstract": "Multimodal Large Language Models (LLMs) have remarkable semantic audio understanding, yet they remain \"spatially agnostic\" due to their reliance on mono-channel audio representations. Currently, spatial audio perception methods mainly focus on complex room simulations and custom-trained, geometry-aware stereo encoders, which limits their accessibility and generalizability. In this paper, we introduce the Dual-BEATs architecture, in which the left and right audio channels are routed independently through two identical semantic encoders as an alternative to specialized spatial modules. To circumvent the architectural bottleneck where internal normalization otherwise erases the inter-channel variance of stereo audio, we inject a static, uncorrelated dithering noise floor prior to encoding. This dithering intervention establishes a macro-variance floor that \"smuggles\" spatial geometry across the normalization layers. Evaluated on a ternary directional classification task (Left, Center, Right), we demonstrate that dithered models achieve exceptional spatial resolution--reaching up to 97.2% localization accuracy even on subtle 0.5 panning amplitudes--and demonstrates robust, zero-shot generalization to entirely unseen spatial configurations. Our results suggest that with the appropriate acoustic regularization, standard multimodal models are natively capable of generalized stereo audio understanding.",
           "comment": "14 pages, 3 figures",
           "journalRef": null,
@@ -27,17 +27,42 @@
           ],
           "url": "https://arxiv.org/abs/2607.08800v1",
           "category": "foundation",
-          "task": null,
-          "proposedMethod": null,
-          "datasets": [],
-          "what": "Analysis failed.",
-          "novel": "",
-          "method": "",
-          "validation": "",
-          "discussion": "",
-          "abstractJa": "",
-          "nextReads": [],
-          "citationCount": 0,
+          "task": "空間音理解",
+          "taskEn": "Spatial audio understanding",
+          "proposedMethod": "Dual-BEATs",
+          "datasets": [
+            "独自合成ステレオ方向分類セット"
+          ],
+          "what": "マルチモーダルLLMがモノラル表現に依存して空間情報に鈍感である問題に対し、左右チャネルを同一の意味エンコーダで独立に処理するDual-BEATsを提案する。内部正規化で失われるチャネル間差分を防ぐため、符号化前に無相関の静的ディザノイズを注入し、ステレオの幾何情報を保持する。",
+          "whatEn": "The paper proposes Dual-BEATs, which routes left and right channels through identical semantic encoders to overcome multimodal LLMs’ spatial agnosticism due to mono representations. To preserve inter-channel differences otherwise erased by normalization, it injects a static, uncorrelated dithering noise floor before encoding, retaining stereo spatial geometry.",
+          "novel": "特殊な空間モジュールや幾何対応ステレオエンコーダを使わずに、ディザリングを用いて正規化層を横断する形で空間幾何を伝搬させる点が新規性である。これにより0.5の微小パンでも最大97.2%の音源定位精度と、未知の空間構成へのゼロショット汎化を実現した。",
+          "novelEn": "The novelty lies in using dithering to ‘smuggle’ spatial geometry across normalization layers, avoiding specialized spatial modules or geometry-aware stereo encoders. This achieves up to 97.2% Sound Localization accuracy even at subtle 0.5 panning and enables robust zero-shot generalization to unseen spatial configurations.",
+          "method": "左右チャネルを二つの同一BEATs系の意味エンコーダに独立に入力し、符号化前に無相関で静的なディザノイズを加えてマクロな分散下限を形成する。これにより正規化で消えるチャネル間差を保持し、LLM側で空間的手掛かりを解釈可能にする。",
+          "methodEn": "Left and right channels are independently fed into two identical BEATs-like semantic encoders, with a static, uncorrelated dithering noise floor injected pre-encoding to establish a macro-variance floor. This preserves inter-channel differences through normalization, enabling the LLM to interpret spatial cues.",
+          "validation": "Left/Center/Rightの三値方向分類で評価し、微小パン幅0.5でも最大97.2%の音源定位精度を達成し、未見の空間設定に対してもゼロショットで堅牢に一般化することを示した。複雑な室内シミュレーションや特別なステレオエンコーダを用いる先行法と比べ、単純構成で高精度を示す。",
+          "validationEn": "Evaluated on ternary directional classification (Left/Center/Right), the model attains up to 97.2% Sound Localization accuracy even at 0.5 panning and generalizes robustly in zero-shot to unseen spatial setups. Compared to prior methods relying on complex room simulations or stereo encoders, it achieves high accuracy with a simple design.",
+          "discussion": "評価は方向分類に焦点化しており、実環境の反射や高度な空間パターンへの適用可能性は未検証である。ディザ設定（強度・スペクトル特性）の最適化や他の音響基盤モデルへの一般化も今後の課題である。",
+          "discussionEn": "The evaluation focuses on directional classification, leaving applicability to real-world reflections and richer spatial patterns underexplored. Optimizing dithering parameters (strength/spectral shape) and generalizing to other Audio Foundation Models remain open issues.",
+          "abstractJa": "マルチモーダル大規模言語モデル（LLM）は優れた意味的な音の理解能力を示す一方で、モノラルのオーディオ表現に依存しているため「空間に対して不感」となる。現在の空間音知覚手法は、複雑な室内シミュレーションや幾何に対応したステレオエンコーダに主に依存しており、利用容易性と汎用性が制限される。本論文では、左右のオーディオチャネルをそれぞれ同一の意味エンコーダに独立に通すことで、特殊な空間モジュールに代替するDual-BEATsアーキテクチャを提案する。ステレオ音声のチャネル間差分が内部正規化で消失してしまうというアーキテクチャ上のボトルネックを回避するために、符号化前に静的で無相関なディザノイズ床を注入する。このディザ介入によりマクロな分散下限が確立され、正規化層を“すり抜けて”空間幾何が伝搬される。三値の方向分類課題（左・中央・右）で評価したところ、ディザを用いたモデルは卓越した空間分解能を示し、微妙な0.5のパン振幅でも最大97.2%の定位精度を達成し、まったく未知の空間構成に対してもゼロショットで頑健に一般化することを示した。これらの結果は、適切な音響的正則化を施せば、標準的なマルチモーダルモデルが本来的に一般化したステレオ音理解能力を備えていることを示唆する。",
+          "nextReads": [
+            {
+              "label": "BEATs: Audio Pre-Training with Acoustic Tokenizers (2022)",
+              "url": "https://arxiv.org/abs/2212.09058"
+            },
+            {
+              "label": "AudioLDM: Text-to-Audio Generation with Latent Diffusion Models (2023)",
+              "url": "https://arxiv.org/abs/2301.12503"
+            },
+            {
+              "label": "LLASM: Language-LLM for Audio Understanding (2024)",
+              "url": null
+            },
+            {
+              "label": "EnCodec: High Fidelity Neural Audio Compression (2022)",
+              "url": "https://arxiv.org/abs/2210.13438"
+            }
+          ],
+          "citationCount": null,
           "githubRepo": null,
           "upvotes": null,
           "projectPage": null
@@ -46,13 +71,13 @@
           "id": "2607.06611v1",
           "date": "Jul 07",
           "title": "Audio Sentiment Analysis via Distillation and Cross-Modal Integration of Generated Multilingual Transcripts",
-          "titleJa": "Audio Sentiment Analysis via Distillation and Cross-Modal Integration of Generated Multilingual Transcripts",
+          "titleJa": "生成された多言語文字起こしの蒸留とクロスモーダル統合による音声感情分析",
           "authors": [
             "Andrei-George Durdun",
             "Victor Constantinescu",
             "Radu Tudor Ionescu"
           ],
-          "org": "Andrei-George Durdun / Victor Constantinescu / Radu Tudor Ionescu",
+          "org": "University of Bucharest",
           "abstract": "Automatically recognizing the sentiment, positive or negative, from speech is a challenging task, requiring both the analysis of vocal inflections and the interpretation of uttered words. Recent solutions rely on audio foundation models to solve the task, but it remains unclear if such models can take all aspects into account. To this end, we propose a multimodal solution that integrates audio and text information via cross-modal transformers, where text transcripts are automatically generated via an automatic speech recognition (ASR) tool. Moreover, we create multiple text modalities by automatically translating the transcripts into multiple languages via machine translation tools. Audio and multilingual text features are combined via a cascaded architecture comprising cross-modal transformer blocks that integrate modalities one by one. We further distill knowledge from the multimodal model, called teacher, into a unimodal (audio only) model, called student. We conduct experiments on a large-scale dataset, demonstrating that the automatically generated textual information can bring significant performance boosts in multimodal sentiment polarity classification. Our ablation study confirms that both automatic transcripts and automatic translations are helpful. Moreover, we show that the audio-only model can be enhanced via distillation, boosting performance without any computational overhead during inference. To reproduce the reported results, we publicly release our code at https://github.com/andreidurdun/cross-modal-audio-sentiment.",
           "comment": "Accepted at KES 2026",
           "journalRef": null,
@@ -64,17 +89,42 @@
           ],
           "url": "https://arxiv.org/abs/2607.06611v1",
           "category": "foundation",
-          "task": null,
-          "proposedMethod": null,
-          "datasets": [],
-          "what": "Analysis failed.",
-          "novel": "",
-          "method": "",
-          "validation": "",
-          "discussion": "",
-          "abstractJa": "",
-          "nextReads": [],
-          "citationCount": 0,
+          "task": "感情認識",
+          "taskEn": "Sentiment analysis",
+          "proposedMethod": "Cross-modal transformers with multilingual transcript distillation",
+          "datasets": [
+            "大規模感情データセット（非公開名称）"
+          ],
+          "what": "音声から肯定・否定の感情を自動認識するために、音響特徴と自動生成した文字起こしをクロスモーダルトランスフォーマで統合する手法を提案する。さらに、文字起こしを機械翻訳して多言語テキストモダリティを作成し、段階的に統合する。",
+          "whatEn": "The paper proposes a multimodal approach for classifying sentiment polarity from speech by integrating audio features with ASR-generated transcripts via cross-modal transformers. The transcripts are further machine-translated into multiple languages to create additional text modalities integrated in a cascaded manner.",
+          "novel": "自動生成テキストを多言語に拡張して逐次統合する設計と、マルチモーダル教師モデルから音響単独の学生モデルへ知識蒸留することで推論時の計算増を避けつつ性能を高める点が新規である。アブレーションで文字起こしと翻訳の双方が有効であることを示す。",
+          "novelEn": "The novelty is the cascaded integration of automatically generated multilingual text modalities and distillation from a multimodal teacher to an audio-only student, improving performance without inference-time overhead. Ablations show that both transcripts and translations contribute.",
+          "method": "音響特徴とASR文字起こし、さらにその多言語翻訳を入力とし、クロスモーダルトランスフォーマブロックを段階的に適用してモダリティ間の相互作用を学習する。最終的に教師（マルチモーダル）から学生（音響のみ）へ蒸留し、単一モダリティ推論を実現する。",
+          "methodEn": "Audio features, ASR transcripts, and their multilingual translations are fed into cascaded cross-modal transformer blocks to learn inter-modal interactions. Knowledge is then distilled from the multimodal teacher to an audio-only student, enabling single-modality inference.",
+          "validation": "大規模データセットで感情極性分類を評価し、多言語テキストの統合により有意な性能向上を確認した。蒸留により音響のみのモデルも強化され、推論計算量の増加なしに性能をブーストした。",
+          "validationEn": "On a large-scale dataset, the approach significantly improves sentiment polarity classification by integrating multilingual text. Distillation enhances the audio-only model, boosting accuracy without extra inference cost.",
+          "discussion": "ASRと機械翻訳に起因する誤り伝播が依然として性能を制限し、対象言語やドメインが変わると効果が変動し得る。多言語範囲外の言語やコードスイッチ音声への適用は未検証である。",
+          "discussionEn": "Error propagation from ASR and machine translation may limit performance, and effectiveness can vary across languages and domains. Applicability to out-of-coverage languages and code-switching speech remains untested.",
+          "abstractJa": "発話から肯定か否定かの感情を自動的に認識することは、声の抑揚の分析と発話内容の解釈の両方を要するため、困難な課題である。近年の解法は音響基盤モデルに依存するが、こうしたモデルがすべての側面を十分に捉えられるかは不明である。そこで本研究では、音とテキスト情報をクロスモーダルトランスフォーマで統合するマルチモーダル手法を提案し、テキストは自動音声認識（ASR）ツールで自動生成する。さらに、機械翻訳ツールにより文字起こしを複数言語へ自動翻訳して複数のテキストモダリティを作成する。音響と多言語テキスト特徴は、モダリティを一つずつ統合する段階的アーキテクチャで組み合わせる。さらに、教師と呼ぶマルチモーダルモデルから、学生と呼ぶ単一モダリティ（音のみ）モデルへ知識を蒸留する。大規模データセットでの実験により、自動生成されたテキスト情報がマルチモーダルな感情極性分類において大きな性能向上をもたらすことを示す。アブレーションでは自動文字起こしと自動翻訳の双方が有用であることを確認した。加えて、蒸留によって音のみモデルの性能も向上し、推論時の計算オーバーヘッドなしに精度を高められる。再現性のため、コードを公開している（https://github.com/andreidurdun/cross-modal-audio-sentiment）。",
+          "nextReads": [
+            {
+              "label": "SUPERB: Speech Processing Universal PERformance Benchmark (2021)",
+              "url": "https://arxiv.org/abs/2105.01051"
+            },
+            {
+              "label": "SpeechBrain: A General-Purpose Speech Toolkit (2021)",
+              "url": "https://arxiv.org/abs/2106.04624"
+            },
+            {
+              "label": "HuBERT: Self-Supervised Speech Representation Learning (2021)",
+              "url": "https://arxiv.org/abs/2106.07447"
+            },
+            {
+              "label": "Whisper: Robust Speech Recognition via Large-Scale Weak Supervision (2022)",
+              "url": "https://arxiv.org/abs/2212.04356"
+            }
+          ],
+          "citationCount": null,
           "githubRepo": null,
           "upvotes": null,
           "projectPage": null
@@ -91,7 +141,7 @@
           "id": "2607.06088v1",
           "date": "Jul 07",
           "title": "Flow Matching-Based Speech Source Separation with Best-of-N Biometric Sampling",
-          "titleJa": "Flow Matching-Based Speech Source Separation with Best-of-N Biometric Sampling",
+          "titleJa": "フローマッチングに基づく話者バイオメトリクスBest-of-Nサンプリングによる単一チャネル音声源分離",
           "authors": [
             "Anastasia Zorkina",
             "Alexandr Anikin",
@@ -99,7 +149,7 @@
             "Anastasiya Korenevskaya",
             "Sergey Novoselov"
           ],
-          "org": "Anastasia Zorkina et al.",
+          "org": "ITMO University",
           "abstract": "Single-channel speech separation remains challenging for real-world deployment due to source permutation ambiguity, sampling variability of generative models, and the difficulty of processing long recordings with chunk-wise inference. We address these issues with a conditional flow-matching-based method that produces an ordered two-source output conditioned on the mixture. A frozen speaker encoder defines the source order during training and is reused at inference for biometric best-of-$N$ candidate selection and chunk-level channel alignment. We evaluate separation quality on Libri2Mix benchmark using SI-SDR, PESQ, and ESTOI, and measure downstream impact using cpWER for automatic speech recognition and EER for speaker verification. The results show that the proposed Transformer U-Net variant is competitive with strong baselines in objective separation metrics and achieves the lowest downstream automatic speech recognition and speaker verification error rates in all evaluated settings.",
           "comment": "Accepted at the ICML 2026 Workshop on Machine Learning for Audio",
           "journalRef": null,
@@ -108,16 +158,102 @@
           ],
           "url": "https://arxiv.org/abs/2607.06088v1",
           "category": "separation",
-          "task": null,
-          "proposedMethod": null,
-          "datasets": [],
-          "what": "Analysis failed.",
-          "novel": "",
-          "method": "",
-          "validation": "",
-          "discussion": "",
-          "abstractJa": "",
-          "nextReads": [],
+          "task": "音源分離",
+          "taskEn": "Audio source separation",
+          "proposedMethod": "Flow Matching + Best-of-N Biometric Sampling",
+          "datasets": [
+            "Libri2Mix"
+          ],
+          "what": "単一チャネルの音声分離における順序曖昧性、生成モデルのサンプリングばらつき、長時間録音のチャンク推論の難しさに対処するため、混合音に条件付けして順序付き2源出力を生成するフローマッチング手法を提案する。凍結した話者エンコーダにより訓練時の源順序を定義し、推論時にはバイオメトリクスに基づくBest-of-N候補選択とチャンク単位のチャネル整合を行う。",
+          "whatEn": "The paper addresses permutation ambiguity, generative sampling variability, and chunk-wise inference challenges in single-channel speech separation with a conditional flow-matching approach that produces an ordered two-source output. A frozen speaker encoder defines source order during training and is reused at inference for biometric Best-of-N candidate selection and chunk-level channel alignment.",
+          "novel": "フローマッチング生成モデルに話者バイオメトリクスを組み合わせ、順序付き出力を直接学習しつつ、推論時にBest-of-N選別とチャンク整合で安定化する統合設計が新規である。下流ASRのcpWERと話者検証のEERで利得を示し、従来の客観指標に加えて実用影響を評価した点も貢献である。",
+          "novelEn": "The integrated design combining flow-matching generative separation with speaker biometrics to learn ordered outputs and stabilize inference via Best-of-N selection and chunk alignment is novel. Evaluating downstream cpWER and EER in addition to standard separation metrics highlights practical impact.",
+          "method": "混合音に条件付けしたTransformer U-Net系のフローマッチング生成モデルで2源を同時生成し、凍結話者エンコーダの埋め込みで源の順序を一貫させる。推論では複数サンプルを生成して話者類似度に基づくBest-of-Nを選択し、長録音ではチャンク間でチャネルの連続性を保つ整合を行う。",
+          "methodEn": "A Transformer U-Net flow-matching generative model conditioned on the mixture jointly generates two sources while enforcing consistent source ordering via embeddings from a frozen speaker encoder. At inference, multiple samples are generated and a speaker-similarity-based Best-of-N is selected, with chunk-level channel alignment for long recordings.",
+          "validation": "Libri2MixでSI-SDR、PESQ、ESTOIにより分離性能を評価し、強力なベースラインと競合する結果を得た。さらに下流タスクとしてASRのcpWERと話者検証のEERを測定し、全設定で最小の誤り率を達成した。",
+          "validationEn": "On Libri2Mix, the method is evaluated with SI-SDR, PESQ, and ESTOI, showing competitiveness with strong baselines. Downstream cpWER for ASR and EER for speaker verification are reduced to the lowest among evaluated settings.",
+          "discussion": "Best-of-Nの候補生成は計算コストが増大し、リアルタイム応用では制約となり得る。また、話者エンコーダの品質やドメインずれに依存するため、未知話者や環境雑音下での堅牢性が課題として残る。",
+          "discussionEn": "Best-of-N sampling increases computational cost, potentially limiting real-time use. Performance depends on the speaker encoder quality and may degrade under domain shifts, unseen speakers, or noisy conditions.",
+          "abstractJa": "単一チャネルの音声分離は、源の順序入れ替わりの曖昧性、生成モデルのサンプリングばらつき、チャンク単位推論での長時間録音の処理困難という理由から、実環境での運用が難しい。私たちは、混合音に条件付けして順序付きの2源出力を生成する条件付きフローマッチング法でこれらの問題に取り組む。凍結した話者エンコーダによって訓練中に源の順序を定義し、推論時には同エンコーダを用いてバイオメトリクスに基づくBest-of-N候補選択とチャンクレベルのチャネル整合を行う。Libri2Mixベンチマーク上でSI-SDR、PESQ、ESTOIにより分離品質を評価し、下流影響として自動音声認識のcpWERと話者認証のEERを測定した。結果として、提案するTransformer U-Net変種は客観指標で強力なベースラインと競合し、あらゆる設定で下流の自動音声認識および話者認証の誤り率を最小化した。",
+          "nextReads": [
+            {
+              "label": "Flow Matching for Generative Modeling (2023)",
+              "url": "https://arxiv.org/abs/2210.02747"
+            },
+            {
+              "label": "Dual-Path RNN: Efficient Long Sequence Modeling for Speech Separation (2020)",
+              "url": "https://arxiv.org/abs/1910.06379"
+            },
+            {
+              "label": "SpEx: Multi-Scale Time Domain Speaker Extraction Network (2019)",
+              "url": "https://arxiv.org/abs/1810.10220"
+            },
+            {
+              "label": "Music Source Separation with Demucs (2019)",
+              "url": "https://arxiv.org/abs/1911.13254"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.04941v1",
+          "date": "Jul 06",
+          "title": "DuplexChat: Constructing Speaker-Separated Full-Duplex Dialogue Speech at Scale for Spoken Dialogue Language Modeling",
+          "titleJa": "DuplexChat: 話者分離された全二重対話音声を大規模に構築し、音声対話言語モデリングに供する",
+          "authors": [
+            "Wataru Nakata",
+            "Yuki Saito",
+            "Hiroshi Saruwatari"
+          ],
+          "org": "The University of Tokyo",
+          "abstract": "Full-duplex spoken dialogue models are trained on conversational speech in which each speaker is represented as a separate stream, but existing large-scale public speech corpora are mostly monaural, making them unsuited for SDLM training. We present DuplexChat, an open-source corpus for full-duplex spoken dialogue models, and DuplexChat-Pipe, a pipeline for constructing speaker-separated full-duplex dialogue speech from public podcast feeds. DuplexChat-Pipe filters language-specific podcast feeds, retrieves and cleans episode audio, extracts diarization-guided two-speaker dialogue clips, and applies speech separation and restoration to produce one channel per speaker. Running this pipeline yields a speaker-separated spoken dialogue corpus covering 282,634 hours of English and 132,723 hours of Japanese. Analysis results on DuplexChat show that it contains turn-taking dynamics present in human dialogues.",
+          "comment": "4 pages, 1 figures, submitted to SLT demo track",
+          "journalRef": null,
+          "categories": [
+            "cs.CL",
+            "cs.SD",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2607.04941v1",
+          "category": "separation",
+          "task": "コーパス構築",
+          "taskEn": "Corpus construction",
+          "proposedMethod": "DuplexChat / DuplexChat-Pipe",
+          "datasets": [
+            "DuplexChat (English/Japanese)"
+          ],
+          "what": "全二重の音声対話モデル学習には話者ごとに独立したストリームの対話音声が必要だが、既存の大規模公開コーパスの多くはモノラルで不適である。本研究は、公開ポッドキャストから話者分離された全二重対話音声を自動生成するパイプラインDuplexChat-Pipeと、その結果得られる大規模オープンコーパスDuplexChatを提示する。",
+          "whatEn": "Training full-duplex spoken dialogue models requires separate streams per speaker, but most large public corpora are monaural. The paper presents DuplexChat-Pipe, a pipeline that constructs speaker-separated full-duplex dialogue speech from public podcast feeds, and releases DuplexChat, a large open corpus built by running the pipeline.",
+          "novel": "言語別のポッドキャスト選別、音源取得とクリーニング、ダイアライゼーション誘導の二者対話抽出、音声分離と復元まで一貫自動化し、話者ごと1チャネルの全二重対話を大規模生成する点が新規である。英語28.3万時間、日本語13.3万時間という大規模規模での公開も貢献である。",
+          "novelEn": "The novelty is an end-to-end automated pipeline that filters language-specific feeds, retrieves and cleans audio, extracts diarization-guided two-speaker clips, and applies speech separation and restoration to yield one channel per speaker at scale. Publicly releasing 282k hours in English and 133k hours in Japanese is a major contribution.",
+          "method": "DuplexChat-Pipeは、言語フィルタリングされたポッドキャストを収集し、エピソード音声を取得・整形した後、話者ダイアライゼーションで二者対話区間を抽出し、音声分離と復元を適用して各話者のチャネルを生成する。生成物を解析し、人間対話のターンテイキング動態が含まれることを確認する。",
+          "methodEn": "DuplexChat-Pipe collects language-filtered podcast feeds, retrieves and cleans episode audio, uses diarization to extract two-speaker dialogue segments, and applies speech separation and restoration to produce one channel per speaker. The resulting corpus is analyzed to confirm human-like turn-taking dynamics.",
+          "validation": "パイプラインを走らせることで、英語282,634時間、日本語132,723時間の話者分離対話コーパスを構築した。コーパス解析により、人間の対話に見られるターンテイキング特性が含まれることを示した。",
+          "validationEn": "Running the pipeline yields 282,634 hours in English and 132,723 hours in Japanese of speaker-separated dialogue. Corpus analysis shows it contains turn-taking dynamics found in human dialogues.",
+          "discussion": "分離と復元の誤差、ダイアライゼーションの誤検出が残留雑音や話者入れ替わりを引き起こし得る。また、ポッドキャスト由来のドメインバイアスが全二重対話モデルの汎化を制限する可能性がある。",
+          "discussionEn": "Errors in separation/restoration and diarization may introduce residual artifacts and speaker swaps. Domain biases from podcast sources could limit generalization of full-duplex dialogue models.",
+          "abstractJa": "全二重の音声対話モデルは、各話者が別々のストリームとして表現された会話音声で学習されるが、既存の大規模公開音声コーパスの多くはモノラルであり、SDLMの学習には不向きである。本稿では、全二重音声対話モデル向けのオープンソースコーパスDuplexChatと、公開ポッドキャストフィードから話者分離された全二重対話音声を構築するパイプラインDuplexChat-Pipeを提示する。DuplexChat-Pipeは、言語別にポッドキャストフィードをフィルタし、エピソード音声を取得・クリーニングし、ダイアライゼーションに基づいて二者対話クリップを抽出し、音声分離と復元を適用して話者ごとに1チャネルを生成する。このパイプラインを実行することで、英語282,634時間、日本語132,723時間をカバーする話者分離対話コーパスが得られる。DuplexChatの解析結果は、人間の対話に存在するターンテイキングのダイナミクスを含んでいることを示す。",
+          "nextReads": [
+            {
+              "label": "LibriCSS: A Corpus of Multi-Speaker Conversational Speech in Realistic Acoustic Environments (2019)",
+              "url": "https://arxiv.org/abs/2001.11482"
+            },
+            {
+              "label": "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing (2021)",
+              "url": "https://arxiv.org/abs/2110.13900"
+            },
+            {
+              "label": "Asteroid: The PyTorch-based Audio Source Separation Toolkit for Researchers (2020)",
+              "url": "https://arxiv.org/abs/2005.04132"
+            },
+            {
+              "label": "Neural Speech Separation and Recognition: An Overview (2020)",
+              "url": null
+            }
+          ],
           "citationCount": null,
           "githubRepo": null,
           "upvotes": null,
