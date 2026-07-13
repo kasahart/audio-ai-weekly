@@ -190,7 +190,19 @@ def analyze_batch(
                 ),
             )
             last_request_at = time.monotonic()
-            raw = sanitize_json_text(resp.choices[0].message.content or "")
+            choice = resp.choices[0]
+            raw = sanitize_json_text(choice.message.content or "")
+            if not raw:
+                usage = getattr(resp, "usage", None)
+                details = getattr(usage, "completion_tokens_details", None)
+                diagnostics = (
+                    f"finish_reason={getattr(choice, 'finish_reason', None)}, "
+                    f"completion_tokens={getattr(usage, 'completion_tokens', None)}, "
+                    f"reasoning_tokens={getattr(details, 'reasoning_tokens', None)}"
+                )
+                raise json.JSONDecodeError(
+                    f"Empty model response ({diagnostics})", raw, 0
+                )
             result = json.loads(raw)
             if not isinstance(result, dict):
                 raise json.JSONDecodeError(
@@ -212,7 +224,9 @@ def analyze_batch(
             print(f"  [warn] API error (attempt {attempt + 1}): {e}")
         time.sleep(cfg["retry_interval"] * (2**attempt))
 
-    return {paper["id"]: fallback_result(paper) for paper in papers}, last_request_at
+    raise RuntimeError(
+        f"AI analysis failed after {cfg['retry_max']} attempts; refusing to publish fallback data"
+    )
 
 
 def chunk_papers(papers: list[dict], batch_size: int) -> list[list[dict]]:
