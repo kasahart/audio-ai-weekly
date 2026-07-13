@@ -20,7 +20,8 @@ SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 
 NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
-AI_FIELDS = ("abstractJa", "task", "taskEn", "proposedMethod", "datasets")
+AI_FIELDS = ("abstractJa", "task", "taskEn", "proposedMethod", "datasets",
+             "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn")
 
 
 def fetch_arxiv_meta(arxiv_id: str) -> dict:
@@ -82,11 +83,16 @@ its value:
     "task": "One- or two-word Japanese task classification, such as TTS, ASR, 音源分離, 異音検知, or 音楽生成",
     "taskEn": "Equivalent one- or two-word English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
-    "datasets": ["Dataset name 1", "Dataset name 2"]
+    "datasets": ["Dataset name 1", "Dataset name 2"],
+    "whatEn": "One- or two-sentence English overview",
+    "novelEn": "One- or two-sentence English novelty summary",
+    "methodEn": "One- or two-sentence English technical summary",
+    "validationEn": "One- or two-sentence English validation summary",
+    "discussionEn": "One- or two-sentence English limitations summary"
   }}
 }}
 
-List up to five datasets. Write task in Japanese and taskEn in English.
+List up to five datasets. Write task in Japanese and every field ending in En in English.
 
 {papers}
 """
@@ -103,7 +109,7 @@ def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]
     _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = [p["id"].split("v")[0] for p in papers]
-    fallback = {pid: {"abstractJa": "", "task": None, "taskEn": None, "proposedMethod": None, "datasets": []} for pid in paper_ids}
+    fallback = {pid: {field: None for field in AI_FIELDS} for pid in paper_ids}
 
     for attempt in range(cfg["retry_max"]):
         try:

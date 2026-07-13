@@ -23,6 +23,7 @@ from analyze_papers import (
     chunk_papers,
     fallback_result,
 )
+from build_data import generate_trend
 
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 WEEKLY_DIR = ROOT / "data" / "weekly"
@@ -58,6 +59,16 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
             if new_reads and paper.get("nextReads") != new_reads:
                 paper["nextReads"] = new_reads
                 changed = True
+
+    papers = [paper for cat in data.get("categories", []) for paper in cat.get("papers", [])]
+    if papers:
+        trend, trend_en = generate_trend(client, papers)
+        if data.get("trend") != trend:
+            data["trend"] = trend
+            changed = True
+        if data.get("trendEn") != trend_en:
+            data["trendEn"] = trend_en
+            changed = True
 
     if changed:
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
