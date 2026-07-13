@@ -50,6 +50,32 @@ def test_generate_trend_rejects_non_array_language_values(monkeypatch):
     assert ja == []
     assert en == []
 
+
+def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "analyzed_papers.json").write_text("[]")
+    monkeypatch.setattr(build_data, "ROOT", tmp_path)
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "gemini": {"api_key_env": "GEMINI_API_KEY"},
+        "data": {
+            "weekly_dir": "data/weekly",
+            "index_file": "data/index.json",
+            "latest_file": "data/latest.json",
+        },
+    })
+    monkeypatch.setattr(build_data, "KEYWORDS", {"ui_categories": []})
+    monkeypatch.setattr(build_data, "fetch_paper_meta", lambda papers: {})
+    monkeypatch.setattr(build_data, "create_client", lambda settings: object())
+    monkeypatch.setattr(build_data, "generate_trend", lambda client, papers: ([], []))
+
+    build_data.main(date_str="2026-07-10")
+
+    weekly = json.loads((data_dir / "latest.json").read_text())
+    assert weekly["trend"]
+    assert "trendEn" not in weekly
+
 # group_by_category depends on KEYWORDS["ui_categories"], so these tests use
 # the real definitions from keywords.yaml.
 

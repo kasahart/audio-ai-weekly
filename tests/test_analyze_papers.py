@@ -51,11 +51,11 @@ def test_system_prompt_preserves_exact_japanese_terminology():
     assert "音響イベント" in SYSTEM_PROMPT
 
 
-def test_fallback_copy_is_english():
+def test_fallback_keeps_failed_english_overview_retryable():
     paper = {"title": "Paper", "org": "Example University", "abstract": "Original abstract"}
 
     assert fallback_result(paper)["what"] == "Analysis failed."
-    assert fallback_result(paper)["whatEn"] == "Original abstract"
+    assert fallback_result(paper)["whatEn"] == ""
     assert "taskEn" in fallback_result(paper)
 
 

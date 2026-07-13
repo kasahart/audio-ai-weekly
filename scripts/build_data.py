@@ -179,15 +179,13 @@ def main(date_str: str | None = None):
         trend, trend_en = generate_trend(client, papers)
         if not trend:
             trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
-        if not trend_en:
-            trend_en = ["No trend data available."] * 3
     except EnvironmentError:
         print(
             f"[build] {cfg['api_key_env']} is not set for provider {provider}; "
             "skipping trend generation."
         )
         trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
-        trend_en = ["No trend data available."] * 3
+        trend_en = []
 
     # Group papers by category.
     categories = group_by_category(papers)
@@ -198,8 +196,9 @@ def main(date_str: str | None = None):
         "total": len(papers),
         "categories": categories,
         "trend": trend,
-        "trendEn": trend_en,
     }
+    if trend_en:
+        weekly_data["trendEn"] = trend_en
 
     # Save the weekly file.
     weekly_path.parent.mkdir(parents=True, exist_ok=True)
