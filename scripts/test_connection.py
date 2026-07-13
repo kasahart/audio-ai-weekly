@@ -21,7 +21,7 @@ def main():
         resp = client.chat.completions.create(
             model=cfg["model"],
             messages=[{"role": "user", "content": "Hello. Reply with just 'OK'."}],
-            **build_chat_kwargs(cfg["model"], 10),
+            **build_chat_kwargs(cfg["model"], 500),
         )
         print(f"✅ Connected to {provider}: {resp.choices[0].message.content}")
     except Exception as e:

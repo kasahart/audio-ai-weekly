@@ -21,7 +21,7 @@ ai:
 # GitHub Models settings
 github_models:
   api_key_env: "GITHUB_TOKEN"
-  endpoint: "https://models.inference.ai.azure.com"
+  endpoint: "https://models.github.ai/inference"
   model: "openai/gpt-5"
   max_tokens: 1500
   batch_size: 5

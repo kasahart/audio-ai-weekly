@@ -43,11 +43,13 @@ def create_client(settings: Mapping, environ: Mapping[str, str] | None = None) -
 
 
 def supports_custom_temperature(model: str) -> bool:
-    return not model.startswith("gpt-5")
+    model_name = model.rsplit("/", 1)[-1]
+    return not model_name.startswith("gpt-5")
 
 
 def build_token_kwargs(model: str, max_tokens: int) -> dict:
-    if model.startswith(("gpt-5", "o1", "o3", "o4")):
+    model_name = model.rsplit("/", 1)[-1]
+    if model_name.startswith(("gpt-5", "o1", "o3", "o4")):
         return {"max_completion_tokens": max_tokens}
     return {"max_tokens": max_tokens}
 

@@ -136,9 +136,9 @@ ArXiv 音声研究週報 自動更新システム（Sound Research Weekly Report
 
 | 項目 | 値 |
 |---|---|
-| エンドポイント | `https://models.inference.ai.azure.com` |
+| エンドポイント | `https://models.github.ai/inference` |
 | 認証 | `Authorization: Bearer $GITHUB_TOKEN` |
-| 使用モデル | `claude-3-7-sonnet`（settings.yaml で変更可能） |
+| 使用モデル | `openai/gpt-5`（settings.yaml で変更可能） |
 | SDK | `openai` Python パッケージ（base_url を GitHub Models に向ける） |
 | レート制限 | GitHub Pro: 50 req/day, 10 req/min |
 | コスト | GitHub Pro / Team / Enterprise に含まれる |
