@@ -22,6 +22,7 @@ from analyze_papers import (
     build_next_reads,
     chunk_papers,
     fallback_result,
+    wait_for_next_request,
 )
 from build_data import generate_trend
 
@@ -113,9 +114,12 @@ def main():
     print(f"\n[reanalyze] AI analysis complete: {len(ai_results)} papers")
 
     # Update each file.
+    last_trend_request_at = last_request_at
     for path in sorted(WEEKLY_DIR.glob("*.json")):
         print(f"\n[reanalyze] --- {path.name} ---")
+        wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
         reanalyze_file(path, client, ai_results)
+        last_trend_request_at = time.monotonic()
 
     print("\n[reanalyze] Complete.")
 

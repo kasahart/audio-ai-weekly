@@ -404,7 +404,9 @@ export default function App() {
                 <div key={cat.id} style={{ marginBottom: 36 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                     <span style={{ fontSize: 15, color: cat.color, fontWeight: 600, letterSpacing: 2 }}>
-                      {lang === 'en' ? (cat.labelEn || cat.label) : cat.label}
+                      {lang === 'en'
+                        ? (allCategories.find(definition => definition.id === cat.id)?.labelEn || cat.labelEn || cat.label)
+                        : cat.label}
                     </span>
                     <div style={{ flex: 1, height: 1, background: `${cat.color}25` }} />
                     <span style={{ fontSize: 11, color: '#334155' }}>{t(lang).papers(cat.papers.length)}</span>

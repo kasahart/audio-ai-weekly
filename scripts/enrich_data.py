@@ -17,6 +17,7 @@ from model_utils import build_chat_kwargs, create_client, get_ai_config
 ROOT = Path(__file__).parent.parent
 WEEKLY_DIR = ROOT / "data" / "weekly"
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
+KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
 
 NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
@@ -191,6 +192,16 @@ def enrich_file(path: Path, ai_client: OpenAI | None, ai_results: dict) -> bool:
 def main():
     weekly_files = sorted(WEEKLY_DIR.glob("*.json"))
     print(f"[enrich] Processing {len(weekly_files)} weekly files")
+
+    # Refresh public category definitions even when the source index predates
+    # the bilingual schema.
+    index_path = ROOT / SETTINGS["data"]["index_file"]
+    index = json.loads(index_path.read_text()) if index_path.exists() else {"weeks": []}
+    index["categories"] = [
+        {"id": c["id"], "label": c["label"], "labelEn": c["labelEn"], "color": c["color"]}
+        for c in KEYWORDS["ui_categories"]
+    ]
+    index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2))
 
     ai_client = None
     provider, cfg = get_ai_config(SETTINGS)
