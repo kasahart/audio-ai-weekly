@@ -27,8 +27,8 @@ from analyze_papers import (
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 WEEKLY_DIR = ROOT / "data" / "weekly"
 
-AI_FIELDS = ("titleJa", "org", "task", "proposedMethod", "datasets",
-             "what", "novel", "method", "validation", "discussion",
+AI_FIELDS = ("titleJa", "org", "task", "taskEn", "proposedMethod", "datasets",
+             "what", "whatEn", "novel", "novelEn", "method", "methodEn", "validation", "validationEn", "discussion", "discussionEn",
              "abstractJa", "nextReads")
 
 
@@ -47,9 +47,7 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
                 continue
 
             result = ai_results[arxiv_id]
-            for field in ("titleJa", "org", "task", "proposedMethod",
-                          "datasets", "what", "novel", "method",
-                          "validation", "discussion", "abstractJa"):
+            for field in AI_FIELDS[:-1]:
                 new_val = result.get(field)
                 if new_val is not None and new_val != "":
                     if paper.get(field) != new_val:

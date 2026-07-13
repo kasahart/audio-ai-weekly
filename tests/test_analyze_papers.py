@@ -52,9 +52,16 @@ def test_system_prompt_preserves_exact_japanese_terminology():
 
 
 def test_fallback_copy_is_english():
-    paper = {"title": "Paper", "org": "Example University"}
+    paper = {"title": "Paper", "org": "Example University", "abstract": "Original abstract"}
 
     assert fallback_result(paper)["what"] == "Analysis failed."
+    assert fallback_result(paper)["whatEn"] == "Original abstract"
+    assert "taskEn" in fallback_result(paper)
+
+
+def test_prompt_requests_bilingual_analysis_fields():
+    for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
+        assert field in SYSTEM_PROMPT
 
 
 class TestChunkPapers:

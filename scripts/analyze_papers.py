@@ -21,7 +21,7 @@ SYSTEM_PROMPT = """You are a research-paper analyst specializing in speech and a
 Analyze the supplied title and abstract and respond only with the JSON structure below.
 Do not include a preamble, explanation, or Markdown code fences.
 
-Write every descriptive field in natural Japanese. Apply these terminology rules strictly:
+Write the base descriptive fields in natural Japanese and every field ending in En in natural English. Apply these terminology rules strictly to Japanese:
 - Translate "Speech" as the Japanese term specifically meaning human speech.
 - Translate "Sound" and "Acoustic" using Japanese terms for general sound or acoustics.
 - Translate "Audio" as audio or an audio/acoustic signal, not as human speech.
@@ -48,13 +48,19 @@ Write every descriptive field in natural Japanese. Apply these terminology rules
   "titleJa": "A natural Japanese translation of the paper title",
   "org": "Primary author affiliation, such as MIT / Google",
   "task": "One- or two-word task classification",
+  "taskEn": "One- or two-word task classification in English",
   "proposedMethod": "Named method or abbreviation, or null",
   "datasets": ["Dataset name 1", "Dataset name 2"],
   "what": "A one- or two-sentence overview",
+  "whatEn": "The same overview in English",
   "novel": "A one- or two-sentence explanation of novelty and contributions",
+  "novelEn": "The same novelty explanation in English",
   "method": "A one- or two-sentence explanation of the technical core",
+  "methodEn": "The same technical explanation in English",
   "validation": "A one- or two-sentence summary of datasets, metrics, and comparisons",
+  "validationEn": "The same validation summary in English",
   "discussion": "A one- or two-sentence discussion of limitations and open issues",
+  "discussionEn": "The same discussion in English",
   "abstractJa": "A complete, natural Japanese translation of the abstract",
   "nextReads": [
     {"label": "Related paper title (year)", "id": "arXiv ID or null"}
@@ -63,7 +69,7 @@ Write every descriptive field in natural Japanese. Apply these terminology rules
 
 Return three or four nextReads entries. Use null when the arXiv ID is unknown.
 List up to five datasets used for training or evaluation.
-Write all descriptions in Japanese."""
+Keep the Japanese and English descriptions equivalent in meaning."""
 
 
 def get_client() -> OpenAI:
@@ -108,13 +114,19 @@ key and the following structure as its value:
     "titleJa": "Natural Japanese title translation",
     "org": "Primary author affiliation",
     "task": "One- or two-word task classification",
+    "taskEn": "English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
     "datasets": ["Dataset name 1", "Dataset name 2"],
     "what": "One- or two-sentence overview",
+    "whatEn": "Equivalent English overview",
     "novel": "One- or two-sentence novelty summary",
+    "novelEn": "Equivalent English novelty summary",
     "method": "One- or two-sentence technical summary",
+    "methodEn": "Equivalent English technical summary",
     "validation": "One- or two-sentence validation summary",
+    "validationEn": "Equivalent English validation summary",
     "discussion": "One- or two-sentence limitations summary",
+    "discussionEn": "Equivalent English limitations summary",
     "abstractJa": "Complete natural Japanese abstract translation",
     "nextReads": [
       {{"label": "Related paper title (year)", "id": "arXiv ID or null"}}
@@ -124,7 +136,7 @@ key and the following structure as its value:
 
 Return three or four nextReads entries per paper and use null for unknown arXiv IDs.
 List up to five training or evaluation datasets.
-Write all descriptions in Japanese.
+Write base fields in Japanese and fields ending in En in English.
 
 {joined}"""
 
@@ -134,13 +146,19 @@ def fallback_result(paper: dict) -> dict:
         "titleJa": paper["title"],
         "org": paper.get("org", ""),
         "task": None,
+        "taskEn": None,
         "proposedMethod": None,
         "datasets": [],
         "what": "Analysis failed.",
+        "whatEn": paper.get("abstract", "") or "Analysis failed.",
         "novel": "",
+        "novelEn": "",
         "method": "",
+        "methodEn": "",
         "validation": "",
+        "validationEn": "",
         "discussion": "",
+        "discussionEn": "",
         "abstractJa": "",
         "nextReads": [],
     }
@@ -250,13 +268,19 @@ def main():
                     "url": paper["url"],
                     "category": paper.get("category", "other"),
                     "task": result.get("task"),
+                    "taskEn": result.get("taskEn") or result.get("task"),
                     "proposedMethod": result.get("proposedMethod"),
                     "datasets": result.get("datasets", []),
                     "what": result.get("what", ""),
+                    "whatEn": result.get("whatEn") or result.get("what") or paper.get("abstract", ""),
                     "novel": result.get("novel", ""),
+                    "novelEn": result.get("novelEn") or result.get("novel", ""),
                     "method": result.get("method", ""),
+                    "methodEn": result.get("methodEn") or result.get("method", ""),
                     "validation": result.get("validation", ""),
+                    "validationEn": result.get("validationEn") or result.get("validation", ""),
                     "discussion": result.get("discussion", ""),
+                    "discussionEn": result.get("discussionEn") or result.get("discussion", ""),
                     "abstractJa": result.get("abstractJa", ""),
                     "nextReads": build_next_reads(result.get("nextReads", [])),
                 }

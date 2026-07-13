@@ -4,6 +4,7 @@ import WeekSelector from './components/WeekSelector'
 import CategoryFilter from './components/CategoryFilter'
 import PaperCard from './components/PaperCard'
 import TrendSummary from './components/TrendSummary'
+import { LANGUAGE_STORAGE_KEY, t } from './i18n.js'
 
 const DATA_BASE = './data'
 const LS_FAVORITES = 'arxiv-favorites'
@@ -70,6 +71,7 @@ export default function App() {
   const initial = readUrlState()
 
   const [index,            setIndex]            = useState(null)
+  const [lang,             setLangRaw]           = useState(initial.lang)
   const [loadedWeeks,      setLoadedWeeks]      = useState([])
   const [toDate,           setToDateRaw]        = useState(initial.toDate)
   const [fromDate,         setFromDateRaw]      = useState(initial.fromDate)
@@ -90,7 +92,7 @@ export default function App() {
     () => new Set(JSON.parse(localStorage.getItem(LS_READ) || '[]'))
   )
   const sentinelRef   = useRef(null)
-  const filterRef     = useRef({ toDate: initial.toDate, fromDate: initial.fromDate,
+  const filterRef     = useRef({ lang: initial.lang, toDate: initial.toDate, fromDate: initial.fromDate,
                                  activeCat: initial.activeCat, search: initial.search,
                                  sortByCitations: initial.sortByCitations,
                                  showFavoritesOnly: initial.showFavoritesOnly })
@@ -105,6 +107,12 @@ export default function App() {
 
   const setToDate = useCallback((v) => {
     setToDateRaw(v); pushFilter({ toDate: v, fromDate: null }); setFromDateRaw(null)
+  }, [pushFilter])
+
+  const setLang = useCallback((value) => {
+    setLangRaw(value)
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, value)
+    pushFilter({ lang: value })
   }, [pushFilter])
 
   const setFromDate = useCallback((v) => {
@@ -140,6 +148,7 @@ export default function App() {
     const onPop = () => {
       const s = readUrlState()
       filterRef.current = s
+      setLangRaw(s.lang)
       setToDateRaw(s.toDate)
       setFromDateRaw(s.fromDate)
       setActiveCatRaw(s.activeCat)
@@ -150,6 +159,12 @@ export default function App() {
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+    document.documentElement.lang = lang
+    document.title = t(lang).pageTitle
+  }, [lang])
 
   // Scroll-to-top button.
   useEffect(() => {
@@ -306,7 +321,7 @@ export default function App() {
         }
       `}</style>
 
-      <Header total={totalPapers} loading={loading} />
+      <Header total={totalPapers} loading={loading} lang={lang} onLanguageChange={setLang} />
 
       <div className="toolbar">
         <div className="toolbar-row">
@@ -316,31 +331,32 @@ export default function App() {
             fromDate={fromDate}
             onToChange={setToDate}
             onFromChange={setFromDate}
+            lang={lang}
           />
           <input
             className="search-input"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="キーワード検索..."
+            placeholder={t(lang).search}
           />
           <button className={`ctrlBtn${sortByCitations ? ' active' : ''}`}
             onClick={() => setSortByCitations(s => !s)}>
-            {sortByCitations ? '引用数順' : '日付順'}
+            {sortByCitations ? t(lang).citations : t(lang).date}
           </button>
           <button className={`ctrlBtn${showFavoritesOnly ? ' active' : ''}`}
             onClick={() => setShowFavoritesOnly(s => !s)}>
-            {showFavoritesOnly ? '★ お気に入り' : '☆ お気に入り'}
+            {showFavoritesOnly ? '★' : '☆'} {t(lang).favorites}
           </button>
         </div>
         <div className="toolbar-row">
-          <CategoryFilter categories={allCategories} active={activeCat} onChange={setActiveCat} />
+          <CategoryFilter categories={allCategories} active={activeCat} onChange={setActiveCat} lang={lang} />
         </div>
       </div>
 
       <div className="content">
         {loading && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#38bdf8', letterSpacing: 3 }}>
-            loading...
+            {t(lang).loading}
           </div>
         )}
 
@@ -354,7 +370,7 @@ export default function App() {
                 if (showFavoritesOnly && !favorites.has(id)) return false
                 if (search) {
                   const q = search.toLowerCase()
-                  return `${p.title} ${p.titleJa ?? ''} ${p.what ?? ''}`.toLowerCase().includes(q)
+                  return `${p.title} ${p.titleJa ?? ''} ${p.abstract ?? ''} ${p.abstractJa ?? ''} ${p.task ?? ''} ${p.taskEn ?? ''} ${p.what ?? ''} ${p.whatEn ?? ''}`.toLowerCase().includes(q)
                 }
                 return true
               }),
@@ -373,31 +389,31 @@ export default function App() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16,
                 paddingBottom: 10, borderBottom: '1px solid #1e293b' }}>
                 <span style={{ fontSize: 13, color: '#38bdf8', fontWeight: 600, letterSpacing: 2 }}>
-                  WEEK {week.date}
+                  {t(lang).week} {week.date}
                 </span>
                 <span style={{ fontSize: 11, color: '#334155' }}>
-                  {week.categories.reduce((s, c) => s + c.papers.length, 0)} papers
+                  {t(lang).papers(week.categories.reduce((s, c) => s + c.papers.length, 0))}
                 </span>
               </div>
 
               {activeCat === 'all' && !showFavoritesOnly && !search && (
-                <TrendSummary trend={week.trend} />
+                <TrendSummary trend={lang === 'en' ? (week.trendEn || week.trend) : (week.trend || week.trendEn)} lang={lang} />
               )}
 
               {filteredCats.map((cat, ci) => (
                 <div key={cat.id} style={{ marginBottom: 36 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                     <span style={{ fontSize: 15, color: cat.color, fontWeight: 600, letterSpacing: 2 }}>
-                      {cat.label}
+                      {lang === 'en' ? (cat.labelEn || cat.label) : cat.label}
                     </span>
                     <div style={{ flex: 1, height: 1, background: `${cat.color}25` }} />
-                    <span style={{ fontSize: 11, color: '#334155' }}>{cat.papers.length} papers</span>
+                    <span style={{ fontSize: 11, color: '#334155' }}>{t(lang).papers(cat.papers.length)}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {cat.papers.map((paper, pi) => {
                       const id = paper.id.split('v')[0]
                       return (
-                        <PaperCard key={paper.id} paper={paper} cat={cat}
+                        <PaperCard key={paper.id} paper={paper} cat={cat} lang={lang}
                           animDelay={ci * 0.05 + pi * 0.04}
                           citationCount={citationMap[id]}
                           githubUrl={githubMap[id]}
@@ -417,17 +433,17 @@ export default function App() {
         <div ref={sentinelRef} style={{ height: 1 }} />
         {loadingMore && (
           <div style={{ textAlign: 'center', padding: '24px 0', color: '#334155', fontSize: 12, letterSpacing: 2 }}>
-            loading older weeks...
+            {t(lang).loadingOlder}
           </div>
         )}
         {!hasMore && loadedWeeks.length > 0 && (
           <div style={{ textAlign: 'center', padding: '24px 0', color: '#1e293b', fontSize: 11, letterSpacing: 2 }}>
-            - all weeks loaded -
+            {t(lang).allLoaded}
           </div>
         )}
         <div style={{ marginTop: 22, fontSize: 11, color: '#1e293b', letterSpacing: 1,
           borderTop: '1px solid #1e293b', paddingTop: 14 }}>
-          音響AI週報 - arXiv cs.SD / eess.AS - POWERED BY GitHub Models (GPT-4o) - 毎週金曜更新
+          {t(lang).footer}
         </div>
       </div>
 
@@ -439,7 +455,7 @@ export default function App() {
             color: '#38bdf8', fontSize: 18, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-          title="トップへ戻る">▴</button>
+          title={t(lang).scrollTop}>▴</button>
       )}
     </div>
   )

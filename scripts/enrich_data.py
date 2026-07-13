@@ -20,7 +20,7 @@ SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 
 NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
-AI_FIELDS = ("abstractJa", "task", "proposedMethod", "datasets")
+AI_FIELDS = ("abstractJa", "task", "taskEn", "proposedMethod", "datasets")
 
 
 def fetch_arxiv_meta(arxiv_id: str) -> dict:
@@ -80,12 +80,13 @@ its value:
   "<paper_id>": {{
     "abstractJa": "Complete natural Japanese abstract translation",
     "task": "One- or two-word Japanese task classification, such as TTS, ASR, 音源分離, 異音検知, or 音楽生成",
+    "taskEn": "Equivalent one- or two-word English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
     "datasets": ["Dataset name 1", "Dataset name 2"]
   }}
 }}
 
-List up to five datasets. Write all descriptive fields in Japanese.
+List up to five datasets. Write task in Japanese and taskEn in English.
 
 {papers}
 """
@@ -102,7 +103,7 @@ def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]
     _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = [p["id"].split("v")[0] for p in papers]
-    fallback = {pid: {"abstractJa": "", "task": None, "proposedMethod": None, "datasets": []} for pid in paper_ids}
+    fallback = {pid: {"abstractJa": "", "task": None, "taskEn": None, "proposedMethod": None, "datasets": []} for pid in paper_ids}
 
     for attempt in range(cfg["retry_max"]):
         try:

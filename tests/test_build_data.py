@@ -29,7 +29,7 @@ def test_generate_trend_uses_selected_provider_model(monkeypatch):
     }
     monkeypatch.setattr(build_data, "SETTINGS", settings)
 
-    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == ["a", "b", "c"]
+    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == (["a", "b", "c"], ["a", "b", "c"])
     assert calls[0]["model"] == "gemini-3.5-flash"
     assert calls[0]["max_tokens"] == 400
 
@@ -78,3 +78,4 @@ class TestGroupByCategory:
         assert "label" in cat
         assert "color" in cat
         assert "papers" in cat
+        assert "labelEn" in cat

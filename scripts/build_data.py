@@ -20,13 +20,13 @@ SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
 
 TREND_PROMPT = """Based on the following paper titles and summaries, describe this
-week's technical trends in speech and audio AI research in exactly three Japanese
-lines. Be concise and mention specific paper or method names. Do not prefix the
-lines with numbers or symbols. Return a JSON array containing exactly three
-strings, without Markdown code fences."""
+week's technical trends in speech and audio AI research in exactly three concise
+Japanese lines and three equivalent English lines. Mention specific paper or method
+names and do not prefix lines with numbers or symbols. Return JSON only in this form:
+{"ja": ["...", "...", "..."], "en": ["...", "...", "..."]}."""
 
 
-def generate_trend(client: OpenAI, papers: list[dict]) -> list[str]:
+def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[str]]:
     _, cfg = get_ai_config(SETTINGS)
     summaries = "\n".join(f"- {p['title']}: {p['what']}" for p in papers[:20])
     for attempt in range(cfg["retry_max"]):
@@ -42,27 +42,36 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> list[str]:
             raw = (resp.choices[0].message.content or "").strip()
             raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
             result = json.loads(raw)
+            if isinstance(result, dict) and len(result.get("ja", [])) == 3 and len(result.get("en", [])) == 3:
+                return result["ja"], result["en"]
+            # Accept the legacy response shape so transient model deviations remain usable.
             if isinstance(result, list) and len(result) == 3:
-                return result
+                return result, result
         except Exception as e:
             print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
         time.sleep(cfg["retry_interval"] * (2**attempt))
-    return [
+    ja = [
         "① 今週の音声基盤モデル研究のトレンドを解析中です。",
         "② 音源分離・異音検知の最新手法が多数投稿されました。",
         "③ 詳細は各論文をご参照ください。",
+    ]
+    return ja, [
+        "This week's audio foundation-model trends are being analyzed.",
+        "New source-separation and anomalous-sound-detection methods were published.",
+        "See each paper for details.",
     ]
 
 
 def group_by_category(papers: list[dict]) -> list[dict]:
     ui_cats = KEYWORDS["ui_categories"]
     cat_map = {
-        c["id"]: {"id": c["id"], "label": c["label"], "color": c["color"], "papers": []}
+        c["id"]: {"id": c["id"], "label": c["label"], "labelEn": c["labelEn"], "color": c["color"], "papers": []}
         for c in ui_cats
     }
     cat_map["other"] = {
         "id": "other",
         "label": "その他",
+        "labelEn": "Other",
         "color": "#94a3b8",
         "papers": [],
     }
@@ -168,13 +177,14 @@ def main(date_str: str | None = None):
     provider, cfg = get_ai_config(SETTINGS)
     try:
         client = create_client(SETTINGS)
-        trend = generate_trend(client, papers)
+        trend, trend_en = generate_trend(client, papers)
     except EnvironmentError:
         print(
             f"[build] {cfg['api_key_env']} is not set for provider {provider}; "
             "skipping trend generation."
         )
         trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
+        trend_en = ["No trend data available."] * 3
 
     # Group papers by category.
     categories = group_by_category(papers)
@@ -185,6 +195,7 @@ def main(date_str: str | None = None):
         "total": len(papers),
         "categories": categories,
         "trend": trend,
+        "trendEn": trend_en,
     }
 
     # Save the weekly file.
@@ -211,7 +222,7 @@ def main(date_str: str | None = None):
     )
     # Always write the latest category definitions from keywords.yaml.
     index["categories"] = [
-        {"id": c["id"], "label": c["label"], "color": c["color"]}
+        {"id": c["id"], "label": c["label"], "labelEn": c["labelEn"], "color": c["color"]}
         for c in KEYWORDS["ui_categories"]
     ]
     save_index(index)

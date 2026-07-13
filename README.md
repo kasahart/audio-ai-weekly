@@ -2,6 +2,18 @@
 
 This system automatically collects and analyzes papers from the arXiv `cs.SD` and `eess.AS` categories every Friday and publishes the results on GitHub Pages.
 
+## Display language and data schema
+
+The web UI supports Japanese and English. `?lang=ja|en` takes precedence over the
+saved `arxiv-language` value, which in turn takes precedence over the browser
+language. Changing the header's `JA / EN` control updates both the URL and saved
+preference without resetting other filters.
+
+Category objects contain `label` (Japanese) and `labelEn`. Paper analysis keeps
+the Japanese fields and adds `taskEn`, `whatEn`, `novelEn`, `methodEn`,
+`validationEn`, and `discussionEn`; the original `title` and `abstract` supply
+English title and abstract copy. Weekly data contains `trend` and `trendEn`.
+
 ## Research Areas
 
 - Audio foundation models
