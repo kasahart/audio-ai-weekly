@@ -1,6 +1,12 @@
 {
   "weeks": [
     {
+      "date": "2026-0713",
+      "file": "weekly/2026-0713.json",
+      "count": 3,
+      "generated_at": "2026-07-13T17:06:26.283417+00:00"
+    },
+    {
       "date": "2026-0712",
       "file": "weekly/2026-0712.json",
       "count": 5,
@@ -187,21 +193,24 @@
       "generated_at": "2026-01-02T00:00:00+00:00"
     }
   ],
-  "generated_at": "2026-07-12T16:20:17.710062+00:00",
+  "generated_at": "2026-07-13T17:10:01.900012+00:00",
   "categories": [
     {
       "id": "foundation",
       "label": "音の基盤モデル",
+      "labelEn": "Audio Foundation Models",
       "color": "#38bdf8"
     },
     {
       "id": "separation",
       "label": "音源分離",
+      "labelEn": "Source Separation",
       "color": "#4ade80"
     },
     {
       "id": "anomaly",
       "label": "異音検知",
+      "labelEn": "Anomalous Sound Detection",
       "color": "#fb923c"
     }
   ]
