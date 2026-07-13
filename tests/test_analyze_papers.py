@@ -1,7 +1,9 @@
 import sys
+import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import analyze_papers
 from analyze_papers import (
     SYSTEM_PROMPT,
     build_next_reads,
@@ -11,16 +13,55 @@ from analyze_papers import (
 )
 
 
+def test_analyze_batch_uses_selected_provider_model(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            content = json.dumps({"1234.5678": {}})
+            message = type("Message", (), {"content": content})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    settings = {
+        "ai": {"provider": "gemini"},
+        "gemini": {
+            "model": "gemini-3.5-flash",
+            "retry_max": 1,
+            "retry_interval": 0,
+            "min_request_interval": 0,
+            "batch_max_tokens": 1000,
+        },
+    }
+    monkeypatch.setattr(analyze_papers, "SETTINGS", settings)
+    paper = {"id": "1234.5678", "title": "Title", "abstract": "Abstract"}
+
+    analyze_papers.analyze_batch(client, [paper], None)
+
+    assert calls[0]["model"] == "gemini-3.5-flash"
+    assert calls[0]["max_tokens"] == 1000
+
+
 def test_system_prompt_preserves_exact_japanese_terminology():
     assert "音源分離" in SYSTEM_PROMPT
     assert "音響信号処理" in SYSTEM_PROMPT
     assert "音響イベント" in SYSTEM_PROMPT
 
 
-def test_fallback_copy_is_english():
-    paper = {"title": "Paper", "org": "Example University"}
+def test_fallback_keeps_failed_english_overview_retryable():
+    paper = {"title": "Paper", "org": "Example University", "abstract": "Original abstract"}
 
     assert fallback_result(paper)["what"] == "Analysis failed."
+    assert fallback_result(paper)["whatEn"] == ""
+    assert "taskEn" in fallback_result(paper)
+
+
+def test_prompt_requests_bilingual_analysis_fields():
+    for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
+        assert field in SYSTEM_PROMPT
 
 
 class TestChunkPapers:

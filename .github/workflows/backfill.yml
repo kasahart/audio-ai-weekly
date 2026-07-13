@@ -39,6 +39,7 @@ jobs:
       - name: Backfill weekly data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           TO_ARG=""
           if [ -n "${{ github.event.inputs.to_date }}" ]; then
@@ -81,6 +82,7 @@ jobs:
               merged[w['date']] = w
           existing['weeks'] = sorted(merged.values(), key=lambda x: x['date'], reverse=True)
           existing['generated_at'] = new.get('generated_at', existing.get('generated_at', ''))
+          existing['categories'] = new.get('categories', existing.get('categories', []))
           json.dump(existing, open('web/public/data/index.json', 'w'), ensure_ascii=False, indent=2)
           print(f"[deploy] Merged index: {len(existing['weeks'])} weeks")
           EOF

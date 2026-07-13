@@ -1,8 +1,80 @@
 import sys
+import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import build_data
 from build_data import group_by_category
+
+
+def test_generate_trend_uses_selected_provider_model(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            message = type("Message", (), {"content": json.dumps(["a", "b", "c"])})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    settings = {
+        "ai": {"provider": "gemini"},
+        "gemini": {
+            "model": "gemini-3.5-flash",
+            "retry_max": 1,
+            "retry_interval": 0,
+        },
+    }
+    monkeypatch.setattr(build_data, "SETTINGS", settings)
+
+    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == (["a", "b", "c"], [])
+    assert calls[0]["model"] == "gemini-3.5-flash"
+    assert calls[0]["max_tokens"] == 400
+
+
+def test_generate_trend_rejects_non_array_language_values(monkeypatch):
+    class Completions:
+        def create(self, **kwargs):
+            message = type("Message", (), {"content": json.dumps({"ja": "abc", "en": "xyz"})})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+    client = type("Client", (), {"chat": type("Chat", (), {"completions": Completions()})()})()
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "gemini": {"model": "x", "retry_max": 1, "retry_interval": 0},
+    })
+    ja, en = build_data.generate_trend(client, [{"title": "T", "what": "W"}])
+    assert isinstance(ja, list)
+    assert isinstance(en, list)
+    assert ja == []
+    assert en == []
+
+
+def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "analyzed_papers.json").write_text("[]")
+    monkeypatch.setattr(build_data, "ROOT", tmp_path)
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "gemini": {"api_key_env": "GEMINI_API_KEY"},
+        "data": {
+            "weekly_dir": "data/weekly",
+            "index_file": "data/index.json",
+            "latest_file": "data/latest.json",
+        },
+    })
+    monkeypatch.setattr(build_data, "KEYWORDS", {"ui_categories": []})
+    monkeypatch.setattr(build_data, "fetch_paper_meta", lambda papers: {})
+    monkeypatch.setattr(build_data, "create_client", lambda settings: object())
+    monkeypatch.setattr(build_data, "generate_trend", lambda client, papers: ([], []))
+
+    build_data.main(date_str="2026-07-10")
+
+    weekly = json.loads((data_dir / "latest.json").read_text())
+    assert weekly["trend"]
+    assert "trendEn" not in weekly
 
 # group_by_category depends on KEYWORDS["ui_categories"], so these tests use
 # the real definitions from keywords.yaml.
@@ -49,3 +121,4 @@ class TestGroupByCategory:
         assert "label" in cat
         assert "color" in cat
         assert "papers" in cat
+        assert "labelEn" in cat

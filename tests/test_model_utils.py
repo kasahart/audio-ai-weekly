@@ -2,7 +2,92 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from model_utils import supports_custom_temperature, build_token_kwargs, build_chat_kwargs
+import pytest
+import yaml
+
+import model_utils
+from model_utils import (
+    build_chat_kwargs,
+    build_token_kwargs,
+    create_client,
+    get_ai_config,
+    get_api_key,
+    supports_custom_temperature,
+)
+
+
+SETTINGS = {
+    "ai": {"provider": "github_models"},
+    "github_models": {
+        "api_key_env": "GITHUB_TOKEN",
+        "endpoint": "https://models.example/v1",
+        "model": "openai/gpt-5",
+    },
+    "gemini": {
+        "api_key_env": "GEMINI_API_KEY",
+        "endpoint": "https://gemini.example/openai/",
+        "model": "gemini-3.5-flash",
+    },
+}
+
+
+class TestProviderConfiguration:
+    def test_repository_settings_define_both_providers(self):
+        root = Path(__file__).parent.parent
+        settings = yaml.safe_load((root / "config/settings.yaml").read_text())
+        assert settings["ai"]["provider"] == "github_models"
+        assert settings["github_models"]["api_key_env"] == "GITHUB_TOKEN"
+        assert settings["gemini"] == {
+            "api_key_env": "GEMINI_API_KEY",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "model": "gemini-3.5-flash",
+            "max_tokens": 1500,
+            "batch_size": 5,
+            "batch_max_tokens": 6000,
+            "min_request_interval": 60.0,
+            "retry_max": 3,
+            "retry_interval": 5.0,
+        }
+
+    def test_selects_github_models(self):
+        provider, config = get_ai_config(SETTINGS)
+        assert provider == "github_models"
+        assert config["model"] == "openai/gpt-5"
+        assert config["endpoint"] == "https://models.example/v1"
+        assert get_api_key(provider, config, {"GITHUB_TOKEN": "github-key"}) == "github-key"
+
+    def test_selects_gemini(self):
+        settings = {**SETTINGS, "ai": {"provider": "gemini"}}
+        provider, config = get_ai_config(settings)
+        assert provider == "gemini"
+        assert config["model"] == "gemini-3.5-flash"
+        assert config["endpoint"] == "https://gemini.example/openai/"
+        assert get_api_key(provider, config, {"GEMINI_API_KEY": "gemini-key"}) == "gemini-key"
+
+    def test_unknown_provider_is_an_explicit_error(self):
+        settings = {**SETTINGS, "ai": {"provider": "unknown"}}
+        with pytest.raises(ValueError, match="Unknown AI provider 'unknown'"):
+            get_ai_config(settings)
+
+    def test_missing_key_names_provider_and_environment_variable(self):
+        provider, config = get_ai_config(SETTINGS)
+        with pytest.raises(EnvironmentError, match="github_models.*GITHUB_TOKEN"):
+            get_api_key(provider, config, {})
+
+    def test_create_client_uses_selected_endpoint_and_key(self, monkeypatch):
+        captured = {}
+
+        def fake_openai(**kwargs):
+            captured.update(kwargs)
+            return object()
+
+        monkeypatch.setattr(model_utils, "OpenAI", fake_openai)
+        settings = {**SETTINGS, "ai": {"provider": "gemini"}}
+        create_client(settings, {"GEMINI_API_KEY": "secret"})
+        assert captured == {
+            "base_url": "https://gemini.example/openai/",
+            "api_key": "secret",
+        }
 
 
 class TestSupportsCustomTemperature:
@@ -63,3 +148,7 @@ class TestBuildChatKwargs:
     def test_temperature_none_is_excluded(self):
         result = build_chat_kwargs("gpt-4o", 800, temperature=None)
         assert "temperature" not in result
+
+    def test_gemini_uses_max_tokens_and_temperature(self):
+        result = build_chat_kwargs("gemini-3.5-flash", 1000, temperature=0.3)
+        assert result == {"max_tokens": 1000, "temperature": 0.3}

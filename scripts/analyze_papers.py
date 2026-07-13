@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """
 analyze_papers.py
-Analyze each paper in Japanese from six perspectives using GitHub Models.
+Analyze each paper in Japanese from six perspectives using the configured AI provider.
 """
 
 import json
-import os
 import time
 from pathlib import Path
 
 import yaml
 from openai import APIError, OpenAI
 
-from model_utils import build_chat_kwargs
+from model_utils import build_chat_kwargs, create_client, get_ai_config
 
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
@@ -22,7 +21,7 @@ SYSTEM_PROMPT = """You are a research-paper analyst specializing in speech and a
 Analyze the supplied title and abstract and respond only with the JSON structure below.
 Do not include a preamble, explanation, or Markdown code fences.
 
-Write every descriptive field in natural Japanese. Apply these terminology rules strictly:
+Write the base descriptive fields in natural Japanese and every field ending in En in natural English. Apply these terminology rules strictly to Japanese:
 - Translate "Speech" as the Japanese term specifically meaning human speech.
 - Translate "Sound" and "Acoustic" using Japanese terms for general sound or acoustics.
 - Translate "Audio" as audio or an audio/acoustic signal, not as human speech.
@@ -49,30 +48,34 @@ Write every descriptive field in natural Japanese. Apply these terminology rules
   "titleJa": "A natural Japanese translation of the paper title",
   "org": "Primary author affiliation, such as MIT / Google",
   "task": "One- or two-word task classification",
+  "taskEn": "One- or two-word task classification in English",
   "proposedMethod": "Named method or abbreviation, or null",
   "datasets": ["Dataset name 1", "Dataset name 2"],
   "what": "A one- or two-sentence overview",
+  "whatEn": "The same overview in English",
   "novel": "A one- or two-sentence explanation of novelty and contributions",
+  "novelEn": "The same novelty explanation in English",
   "method": "A one- or two-sentence explanation of the technical core",
+  "methodEn": "The same technical explanation in English",
   "validation": "A one- or two-sentence summary of datasets, metrics, and comparisons",
+  "validationEn": "The same validation summary in English",
   "discussion": "A one- or two-sentence discussion of limitations and open issues",
+  "discussionEn": "The same discussion in English",
   "abstractJa": "A complete, natural Japanese translation of the abstract",
   "nextReads": [
     {"label": "Related paper title (year)", "id": "arXiv ID or null"}
   ]
 }
 
-Return three or four nextReads entries. Use null when the arXiv ID is unknown.
+Return three or four nextReads entries. Keep nextReads labels as original English
+paper titles (plus year), even though the surrounding base fields are Japanese.
+Use null when the arXiv ID is unknown.
 List up to five datasets used for training or evaluation.
-Write all descriptions in Japanese."""
+Keep the Japanese and English descriptions equivalent in meaning."""
 
 
 def get_client() -> OpenAI:
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise EnvironmentError("GITHUB_TOKEN is not set")
-    cfg = SETTINGS["github_models"]
-    return OpenAI(base_url=cfg["endpoint"], api_key=token)
+    return create_client(SETTINGS)
 
 
 def sanitize_json_text(raw: str) -> str:
@@ -113,13 +116,19 @@ key and the following structure as its value:
     "titleJa": "Natural Japanese title translation",
     "org": "Primary author affiliation",
     "task": "One- or two-word task classification",
+    "taskEn": "English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
     "datasets": ["Dataset name 1", "Dataset name 2"],
     "what": "One- or two-sentence overview",
+    "whatEn": "Equivalent English overview",
     "novel": "One- or two-sentence novelty summary",
+    "novelEn": "Equivalent English novelty summary",
     "method": "One- or two-sentence technical summary",
+    "methodEn": "Equivalent English technical summary",
     "validation": "One- or two-sentence validation summary",
+    "validationEn": "Equivalent English validation summary",
     "discussion": "One- or two-sentence limitations summary",
+    "discussionEn": "Equivalent English limitations summary",
     "abstractJa": "Complete natural Japanese abstract translation",
     "nextReads": [
       {{"label": "Related paper title (year)", "id": "arXiv ID or null"}}
@@ -127,9 +136,10 @@ key and the following structure as its value:
   }}
 }}
 
-Return three or four nextReads entries per paper and use null for unknown arXiv IDs.
+Return three or four nextReads entries per paper, keep their labels as original
+English paper titles, and use null for unknown arXiv IDs.
 List up to five training or evaluation datasets.
-Write all descriptions in Japanese.
+Write base fields in Japanese and fields ending in En in English.
 
 {joined}"""
 
@@ -139,13 +149,19 @@ def fallback_result(paper: dict) -> dict:
         "titleJa": paper["title"],
         "org": paper.get("org", ""),
         "task": None,
+        "taskEn": None,
         "proposedMethod": None,
         "datasets": [],
         "what": "Analysis failed.",
+        "whatEn": "",
         "novel": "",
+        "novelEn": "",
         "method": "",
+        "methodEn": "",
         "validation": "",
+        "validationEn": "",
         "discussion": "",
+        "discussionEn": "",
         "abstractJa": "",
         "nextReads": [],
     }
@@ -154,7 +170,7 @@ def fallback_result(paper: dict) -> dict:
 def analyze_batch(
     client: OpenAI, papers: list[dict], last_request_at: float | None
 ) -> tuple[dict[str, dict], float | None]:
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = {paper["id"] for paper in papers}
 
@@ -226,7 +242,7 @@ def main():
     print(f"[analyze] Analyzing {len(papers)} papers ...")
 
     client = get_client()
-    cfg = SETTINGS["github_models"]
+    _, cfg = get_ai_config(SETTINGS)
     analyzed = []
     batches = chunk_papers(papers, cfg["batch_size"])
     last_request_at = None
@@ -255,17 +271,26 @@ def main():
                     "url": paper["url"],
                     "category": paper.get("category", "other"),
                     "task": result.get("task"),
+                    "taskEn": result.get("taskEn") or None,
                     "proposedMethod": result.get("proposedMethod"),
                     "datasets": result.get("datasets", []),
                     "what": result.get("what", ""),
+                    "whatEn": result.get("whatEn") or "",
                     "novel": result.get("novel", ""),
+                    "novelEn": result.get("novelEn") or "",
                     "method": result.get("method", ""),
+                    "methodEn": result.get("methodEn") or "",
                     "validation": result.get("validation", ""),
+                    "validationEn": result.get("validationEn") or "",
                     "discussion": result.get("discussion", ""),
+                    "discussionEn": result.get("discussionEn") or "",
                     "abstractJa": result.get("abstractJa", ""),
                     "nextReads": build_next_reads(result.get("nextReads", [])),
                 }
             )
+            for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
+                if not analyzed[-1].get(field):
+                    analyzed[-1].pop(field, None)
 
     out_path = ROOT / "data" / "analyzed_papers.json"
     out_path.write_text(json.dumps(analyzed, ensure_ascii=False, indent=2))
