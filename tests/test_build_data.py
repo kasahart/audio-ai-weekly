@@ -51,6 +51,46 @@ def test_generate_trend_rejects_non_array_language_values(monkeypatch):
     assert en == []
 
 
+def test_generate_trend_waits_for_provider_interval_before_retry(monkeypatch):
+    attempts = 0
+
+    class Completions:
+        def create(self, **kwargs):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise RuntimeError("rate limited")
+            message = type(
+                "Message",
+                (),
+                {"content": json.dumps({"ja": ["日1", "日2", "日3"], "en": ["E1", "E2", "E3"]})},
+            )()
+            return type(
+                "Response", (), {"choices": [type("Choice", (), {"message": message})()]}
+            )()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "github_models"},
+        "github_models": {
+            "model": "openai/gpt-5",
+            "retry_max": 2,
+            "min_request_interval": 60.0,
+        },
+    })
+    monotonic_values = iter([100.0, 100.0, 160.0])
+    monkeypatch.setattr(build_data.time, "monotonic", lambda: next(monotonic_values))
+    sleeps = []
+    monkeypatch.setattr(build_data.time, "sleep", sleeps.append)
+
+    result = build_data.generate_trend(client, [{"title": "T", "what": "W"}])
+
+    assert result == (["日1", "日2", "日3"], ["E1", "E2", "E3"])
+    assert sleeps == [60.0]
+
+
 def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()

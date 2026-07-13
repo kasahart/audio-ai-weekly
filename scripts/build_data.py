@@ -32,7 +32,17 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
         f"- {p['title']}: {p.get('whatEn') or p.get('what') or p.get('abstract', '')}"
         for p in papers[:20]
     )
+    last_request_at = None
     for attempt in range(cfg["retry_max"]):
+        if last_request_at is not None:
+            elapsed = time.monotonic() - last_request_at
+            remaining = cfg["min_request_interval"] - elapsed
+            if remaining > 0:
+                print(
+                    f"  [build] waiting {remaining:.1f}s before retrying trend generation ..."
+                )
+                time.sleep(remaining)
+        request_started_at = time.monotonic()
         try:
             resp = client.chat.completions.create(
                 model=cfg["model"],
@@ -55,9 +65,10 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             if (isinstance(result, list) and len(result) == 3
                     and all(isinstance(line, str) for line in result)):
                 return result, []
+            raise ValueError("trend response does not match the expected JSON shape")
         except Exception as e:
+            last_request_at = request_started_at
             print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
-        time.sleep(cfg["retry_interval"] * (2**attempt))
     return [], []
 
 
