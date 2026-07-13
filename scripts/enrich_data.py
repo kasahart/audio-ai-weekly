@@ -174,7 +174,7 @@ def enrich_file(path: Path, ai_client: OpenAI | None, ai_results: dict) -> bool:
             if arxiv_id in ai_results:
                 result = ai_results[arxiv_id]
                 for k, v in result.items():
-                    if k not in paper and v is not None:
+                    if k not in paper:
                         paper[k] = v
                         paper_changed = True
 
