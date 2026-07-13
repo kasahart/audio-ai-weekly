@@ -37,6 +37,8 @@ class TestProviderConfiguration:
         settings = yaml.safe_load((root / "config/settings.yaml").read_text())
         assert settings["ai"]["provider"] == "github_models"
         assert settings["github_models"]["api_key_env"] == "GITHUB_TOKEN"
+        assert settings["github_models"]["endpoint"] == "https://models.github.ai/inference"
+        assert settings["github_models"]["model"] == "openai/gpt-5"
         assert settings["gemini"] == {
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -103,6 +105,9 @@ class TestSupportsCustomTemperature:
     def test_gpt5_turbo_does_not_support_temperature(self):
         assert supports_custom_temperature("gpt-5-turbo") is False
 
+    def test_provider_prefixed_gpt5_does_not_support_temperature(self):
+        assert supports_custom_temperature("openai/gpt-5") is False
+
     def test_o1_supports_temperature(self):
         # o1 does not start with gpt-5, so supports temperature
         assert supports_custom_temperature("o1") is True
@@ -115,6 +120,10 @@ class TestBuildTokenKwargs:
 
     def test_gpt5_uses_max_completion_tokens(self):
         result = build_token_kwargs("gpt-5", 500)
+        assert result == {"max_completion_tokens": 500}
+
+    def test_provider_prefixed_gpt5_uses_max_completion_tokens(self):
+        result = build_token_kwargs("openai/gpt-5", 500)
         assert result == {"max_completion_tokens": 500}
 
     def test_o1_uses_max_completion_tokens(self):
@@ -144,6 +153,10 @@ class TestBuildChatKwargs:
         result = build_chat_kwargs("gpt-5", 500, temperature=0.5)
         assert result == {"max_completion_tokens": 500}
         assert "temperature" not in result
+
+    def test_provider_prefixed_gpt5_ignores_temperature(self):
+        result = build_chat_kwargs("openai/gpt-5", 500, temperature=0.5)
+        assert result == {"max_completion_tokens": 500}
 
     def test_temperature_none_is_excluded(self):
         result = build_chat_kwargs("gpt-4o", 800, temperature=None)
