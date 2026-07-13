@@ -236,11 +236,10 @@ def main():
             batch = papers_needing_ai[i:i + batch_size]
             ids = [p["id"].split("v")[0] for p in batch]
             print(f"[enrich] AI batch ({i // batch_size + 1}/{(len(papers_needing_ai) + batch_size - 1) // batch_size}) ids={', '.join(ids)}")
+            wait_for_next_request(last_ai_request_at, cfg["min_request_interval"])
             result = fetch_ai_fields_batch(ai_client, batch)
             last_ai_request_at = time.monotonic()
             ai_results.update(result)
-            if i + batch_size < len(papers_needing_ai):
-                time.sleep(3.0)
 
     # Write metadata back to each file.
     last_trend_request_at = last_ai_request_at

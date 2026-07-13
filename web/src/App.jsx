@@ -405,7 +405,7 @@ export default function App() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                     <span style={{ fontSize: 15, color: cat.color, fontWeight: 600, letterSpacing: 2 }}>
                       {lang === 'en'
-                        ? (allCategories.find(definition => definition.id === cat.id)?.labelEn || cat.labelEn || cat.label)
+                        ? (allCategories.find(definition => definition.id === cat.id)?.labelEn || cat.labelEn || (cat.id === 'other' ? 'Other' : cat.label))
                         : cat.label}
                     </span>
                     <div style={{ flex: 1, height: 1, background: `${cat.color}25` }} />

@@ -45,10 +45,15 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             raw = (resp.choices[0].message.content or "").strip()
             raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
             result = json.loads(raw)
-            if isinstance(result, dict) and len(result.get("ja", [])) == 3 and len(result.get("en", [])) == 3:
-                return result["ja"], result["en"]
+            if isinstance(result, dict):
+                ja, en = result.get("ja"), result.get("en")
+                if (isinstance(ja, list) and isinstance(en, list)
+                        and len(ja) == 3 and len(en) == 3
+                        and all(isinstance(line, str) for line in ja + en)):
+                    return ja, en
             # Accept the legacy response shape so transient model deviations remain usable.
-            if isinstance(result, list) and len(result) == 3:
+            if (isinstance(result, list) and len(result) == 3
+                    and all(isinstance(line, str) for line in result)):
                 return result, result
         except Exception as e:
             print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
