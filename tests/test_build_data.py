@@ -29,7 +29,7 @@ def test_generate_trend_uses_selected_provider_model(monkeypatch):
     }
     monkeypatch.setattr(build_data, "SETTINGS", settings)
 
-    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == (["a", "b", "c"], ["a", "b", "c"])
+    assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == (["a", "b", "c"], [])
     assert calls[0]["model"] == "gemini-3.5-flash"
     assert calls[0]["max_tokens"] == 400
 
@@ -47,6 +47,8 @@ def test_generate_trend_rejects_non_array_language_values(monkeypatch):
     ja, en = build_data.generate_trend(client, [{"title": "T", "what": "W"}])
     assert isinstance(ja, list)
     assert isinstance(en, list)
+    assert ja == []
+    assert en == []
 
 # group_by_category depends on KEYWORDS["ui_categories"], so these tests use
 # the real definitions from keywords.yaml.

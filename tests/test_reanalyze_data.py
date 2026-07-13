@@ -16,5 +16,5 @@ def test_reanalyze_file_writes_bilingual_trends(tmp_path, monkeypatch):
 
     assert reanalyze_data.reanalyze_file(path, object(), {}) is True
     data = json.loads(path.read_text())
-    assert data["trend"] == ["日1", "日2", "日3"]
+    assert data["trend"] == ["old"]
     assert data["trendEn"] == ["E1", "E2", "E3"]

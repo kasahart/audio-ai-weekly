@@ -54,20 +54,11 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             # Accept the legacy response shape so transient model deviations remain usable.
             if (isinstance(result, list) and len(result) == 3
                     and all(isinstance(line, str) for line in result)):
-                return result, result
+                return result, []
         except Exception as e:
             print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
         time.sleep(cfg["retry_interval"] * (2**attempt))
-    ja = [
-        "① 今週の音声基盤モデル研究のトレンドを解析中です。",
-        "② 音源分離・異音検知の最新手法が多数投稿されました。",
-        "③ 詳細は各論文をご参照ください。",
-    ]
-    return ja, [
-        "This week's audio foundation-model trends are being analyzed.",
-        "New source-separation and anomalous-sound-detection methods were published.",
-        "See each paper for details.",
-    ]
+    return [], []
 
 
 def group_by_category(papers: list[dict]) -> list[dict]:
@@ -186,6 +177,10 @@ def main(date_str: str | None = None):
     try:
         client = create_client(SETTINGS)
         trend, trend_en = generate_trend(client, papers)
+        if not trend:
+            trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
+        if not trend_en:
+            trend_en = ["No trend data available."] * 3
     except EnvironmentError:
         print(
             f"[build] {cfg['api_key_env']} is not set for provider {provider}; "

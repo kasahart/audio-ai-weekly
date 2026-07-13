@@ -67,7 +67,9 @@ Write the base descriptive fields in natural Japanese and every field ending in 
   ]
 }
 
-Return three or four nextReads entries. Use null when the arXiv ID is unknown.
+Return three or four nextReads entries. Keep nextReads labels as original English
+paper titles (plus year), even though the surrounding base fields are Japanese.
+Use null when the arXiv ID is unknown.
 List up to five datasets used for training or evaluation.
 Keep the Japanese and English descriptions equivalent in meaning."""
 
@@ -134,7 +136,8 @@ key and the following structure as its value:
   }}
 }}
 
-Return three or four nextReads entries per paper and use null for unknown arXiv IDs.
+Return three or four nextReads entries per paper, keep their labels as original
+English paper titles, and use null for unknown arXiv IDs.
 List up to five training or evaluation datasets.
 Write base fields in Japanese and fields ending in En in English.
 
@@ -285,6 +288,9 @@ def main():
                     "nextReads": build_next_reads(result.get("nextReads", [])),
                 }
             )
+            for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
+                if not analyzed[-1].get(field):
+                    analyzed[-1].pop(field, None)
 
     out_path = ROOT / "data" / "analyzed_papers.json"
     out_path.write_text(json.dumps(analyzed, ensure_ascii=False, indent=2))

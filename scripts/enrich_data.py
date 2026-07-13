@@ -253,11 +253,13 @@ def main():
                 wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
                 trend, trend_en = generate_trend(ai_client, papers)
                 last_trend_request_at = time.monotonic()
-                if not data.get("trend"):
+                if trend and not data.get("trend"):
                     data["trend"] = trend
-                data["trendEn"] = trend_en
-                path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
-                print(f"[enrich] Added bilingual trends -> {path.name}")
+                if trend_en:
+                    data["trendEn"] = trend_en
+                if trend or trend_en:
+                    path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+                    print(f"[enrich] Added bilingual trends -> {path.name}")
 
     if weekly_files:
         latest_path = ROOT / SETTINGS["data"]["latest_file"]

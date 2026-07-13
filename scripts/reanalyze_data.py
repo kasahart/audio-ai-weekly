@@ -64,10 +64,10 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
     papers = [paper for cat in data.get("categories", []) for paper in cat.get("papers", [])]
     if papers:
         trend, trend_en = generate_trend(client, papers)
-        if data.get("trend") != trend:
+        if trend and not data.get("trend"):
             data["trend"] = trend
             changed = True
-        if data.get("trendEn") != trend_en:
+        if trend_en and data.get("trendEn") != trend_en:
             data["trendEn"] = trend_en
             changed = True
 
