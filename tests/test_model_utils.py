@@ -151,12 +151,18 @@ class TestBuildChatKwargs:
 
     def test_gpt5_ignores_temperature(self):
         result = build_chat_kwargs("gpt-5", 500, temperature=0.5)
-        assert result == {"max_completion_tokens": 500}
+        assert result == {
+            "max_completion_tokens": 500,
+            "reasoning_effort": "minimal",
+        }
         assert "temperature" not in result
 
     def test_provider_prefixed_gpt5_ignores_temperature(self):
         result = build_chat_kwargs("openai/gpt-5", 500, temperature=0.5)
-        assert result == {"max_completion_tokens": 500}
+        assert result == {
+            "max_completion_tokens": 500,
+            "reasoning_effort": "minimal",
+        }
 
     def test_temperature_none_is_excluded(self):
         result = build_chat_kwargs("gpt-4o", 800, temperature=None)

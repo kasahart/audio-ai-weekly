@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 import analyze_papers
+import pytest
 from analyze_papers import (
     SYSTEM_PROMPT,
     build_next_reads,
@@ -43,6 +44,44 @@ def test_analyze_batch_uses_selected_provider_model(monkeypatch):
 
     assert calls[0]["model"] == "gemini-3.5-flash"
     assert calls[0]["max_tokens"] == 1000
+
+
+def test_analyze_batch_fails_closed_after_empty_response(monkeypatch, capsys):
+    class Completions:
+        def create(self, **kwargs):
+            message = type("Message", (), {"content": ""})()
+            choice = type(
+                "Choice", (), {"message": message, "finish_reason": "length"}
+            )()
+            details = type("Details", (), {"reasoning_tokens": 1000})()
+            usage = type(
+                "Usage",
+                (),
+                {"completion_tokens": 1000, "completion_tokens_details": details},
+            )()
+            return type("Response", (), {"choices": [choice], "usage": usage})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    monkeypatch.setattr(analyze_papers, "SETTINGS", {
+        "ai": {"provider": "github_models"},
+        "github_models": {
+            "model": "openai/gpt-5",
+            "retry_max": 1,
+            "retry_interval": 0,
+            "min_request_interval": 0,
+            "batch_max_tokens": 1000,
+        },
+    })
+    paper = {"id": "1234.5678", "title": "Title", "abstract": "Abstract"}
+
+    with pytest.raises(RuntimeError, match="refusing to publish fallback data"):
+        analyze_papers.analyze_batch(client, [paper], None)
+
+    output = capsys.readouterr().out
+    assert "finish_reason=length" in output
+    assert "reasoning_tokens=1000" in output
 
 
 def test_system_prompt_preserves_exact_japanese_terminology():
