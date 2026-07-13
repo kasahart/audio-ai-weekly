@@ -13,6 +13,8 @@ import yaml
 from openai import OpenAI
 
 from model_utils import build_chat_kwargs, create_client, get_ai_config
+from analyze_papers import wait_for_next_request
+from build_data import generate_trend
 
 ROOT = Path(__file__).parent.parent
 WEEKLY_DIR = ROOT / "data" / "weekly"
@@ -110,7 +112,7 @@ def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]
     _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = [p["id"].split("v")[0] for p in papers]
-    fallback = {pid: {field: None for field in AI_FIELDS} for pid in paper_ids}
+    fallback = {pid: {} for pid in paper_ids}
 
     for attempt in range(cfg["retry_max"]):
         try:
@@ -172,7 +174,7 @@ def enrich_file(path: Path, ai_client: OpenAI | None, ai_results: dict) -> bool:
             if arxiv_id in ai_results:
                 result = ai_results[arxiv_id]
                 for k, v in result.items():
-                    if k not in paper:
+                    if k not in paper and v is not None:
                         paper[k] = v
                         paper_changed = True
 
@@ -239,9 +241,21 @@ def main():
                 time.sleep(3.0)
 
     # Write metadata back to each file.
+    last_trend_request_at = None
     for path in weekly_files:
         print(f"\n[enrich] --- {path.name} ---")
         enrich_file(path, ai_client, ai_results)
+        if ai_client:
+            data = json.loads(path.read_text())
+            papers = [paper for cat in data.get("categories", []) for paper in cat.get("papers", [])]
+            if papers and not data.get("trendEn"):
+                wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
+                trend, trend_en = generate_trend(ai_client, papers)
+                last_trend_request_at = time.monotonic()
+                data["trend"] = trend
+                data["trendEn"] = trend_en
+                path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+                print(f"[enrich] Added bilingual trends -> {path.name}")
 
     print("\n[enrich] Complete.")
 

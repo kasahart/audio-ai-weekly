@@ -28,7 +28,10 @@ names and do not prefix lines with numbers or symbols. Return JSON only in this 
 
 def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[str]]:
     _, cfg = get_ai_config(SETTINGS)
-    summaries = "\n".join(f"- {p['title']}: {p['what']}" for p in papers[:20])
+    summaries = "\n".join(
+        f"- {p['title']}: {p.get('whatEn') or p.get('what') or p.get('abstract', '')}"
+        for p in papers[:20]
+    )
     for attempt in range(cfg["retry_max"]):
         try:
             resp = client.chat.completions.create(
