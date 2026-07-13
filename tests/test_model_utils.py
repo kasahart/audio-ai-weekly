@@ -38,7 +38,7 @@ class TestProviderConfiguration:
         assert settings["ai"]["provider"] == "github_models"
         assert settings["github_models"]["api_key_env"] == "GITHUB_TOKEN"
         assert settings["github_models"]["endpoint"] == "https://models.github.ai/inference"
-        assert settings["github_models"]["model"] == "openai/gpt-5"
+        assert settings["github_models"]["model"] == "gpt-4o"
         assert settings["gemini"] == {
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
