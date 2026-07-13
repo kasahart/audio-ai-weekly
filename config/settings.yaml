@@ -22,7 +22,7 @@ ai:
 github_models:
   api_key_env: "GITHUB_TOKEN"
   endpoint: "https://models.github.ai/inference"
-  model: "openai/gpt-5"
+  model: "gpt-4o"
   max_tokens: 1500
   batch_size: 5
   batch_max_tokens: 6000
