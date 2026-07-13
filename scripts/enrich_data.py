@@ -13,14 +13,18 @@ import yaml
 from openai import OpenAI
 
 from model_utils import build_chat_kwargs, create_client, get_ai_config
+from analyze_papers import wait_for_next_request
+from build_data import generate_trend
 
 ROOT = Path(__file__).parent.parent
 WEEKLY_DIR = ROOT / "data" / "weekly"
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
+KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
 
 NS = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
-AI_FIELDS = ("abstractJa", "task", "proposedMethod", "datasets")
+AI_FIELDS = ("abstractJa", "task", "taskEn", "proposedMethod", "datasets",
+             "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn")
 
 
 def fetch_arxiv_meta(arxiv_id: str) -> dict:
@@ -80,12 +84,18 @@ its value:
   "<paper_id>": {{
     "abstractJa": "Complete natural Japanese abstract translation",
     "task": "One- or two-word Japanese task classification, such as TTS, ASR, 音源分離, 異音検知, or 音楽生成",
+    "taskEn": "Equivalent one- or two-word English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
-    "datasets": ["Dataset name 1", "Dataset name 2"]
+    "datasets": ["Dataset name 1", "Dataset name 2"],
+    "whatEn": "One- or two-sentence English overview",
+    "novelEn": "One- or two-sentence English novelty summary",
+    "methodEn": "One- or two-sentence English technical summary",
+    "validationEn": "One- or two-sentence English validation summary",
+    "discussionEn": "One- or two-sentence English limitations summary"
   }}
 }}
 
-List up to five datasets. Write all descriptive fields in Japanese.
+List up to five datasets. Write task in Japanese and every field ending in En in English.
 
 {papers}
 """
@@ -102,7 +112,7 @@ def fetch_ai_fields_batch(client: OpenAI, papers: list[dict]) -> dict[str, dict]
     _, cfg = get_ai_config(SETTINGS)
     prompt = build_batch_prompt(papers)
     paper_ids = [p["id"].split("v")[0] for p in papers]
-    fallback = {pid: {"abstractJa": "", "task": None, "proposedMethod": None, "datasets": []} for pid in paper_ids}
+    fallback = {pid: {} for pid in paper_ids}
 
     for attempt in range(cfg["retry_max"]):
         try:
@@ -164,7 +174,7 @@ def enrich_file(path: Path, ai_client: OpenAI | None, ai_results: dict) -> bool:
             if arxiv_id in ai_results:
                 result = ai_results[arxiv_id]
                 for k, v in result.items():
-                    if k not in paper:
+                    if k not in paper and v is not None:
                         paper[k] = v
                         paper_changed = True
 
@@ -185,6 +195,16 @@ def main():
     weekly_files = sorted(WEEKLY_DIR.glob("*.json"))
     print(f"[enrich] Processing {len(weekly_files)} weekly files")
 
+    # Refresh public category definitions even when the source index predates
+    # the bilingual schema.
+    index_path = ROOT / SETTINGS["data"]["index_file"]
+    index = json.loads(index_path.read_text()) if index_path.exists() else {"weeks": []}
+    index["categories"] = [
+        {"id": c["id"], "label": c["label"], "labelEn": c["labelEn"], "color": c["color"]}
+        for c in KEYWORDS["ui_categories"]
+    ]
+    index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2))
+
     ai_client = None
     provider, cfg = get_ai_config(SETTINGS)
     batch_size = cfg["batch_size"]
@@ -199,6 +219,7 @@ def main():
 
     # Collect papers with missing AI fields from every weekly file.
     ai_results: dict[str, dict] = {}
+    last_ai_request_at = None
     if ai_client:
         papers_needing_ai = []
         for path in weekly_files:
@@ -215,15 +236,35 @@ def main():
             batch = papers_needing_ai[i:i + batch_size]
             ids = [p["id"].split("v")[0] for p in batch]
             print(f"[enrich] AI batch ({i // batch_size + 1}/{(len(papers_needing_ai) + batch_size - 1) // batch_size}) ids={', '.join(ids)}")
+            wait_for_next_request(last_ai_request_at, cfg["min_request_interval"])
             result = fetch_ai_fields_batch(ai_client, batch)
+            last_ai_request_at = time.monotonic()
             ai_results.update(result)
-            if i + batch_size < len(papers_needing_ai):
-                time.sleep(3.0)
 
     # Write metadata back to each file.
+    last_trend_request_at = last_ai_request_at
     for path in weekly_files:
         print(f"\n[enrich] --- {path.name} ---")
         enrich_file(path, ai_client, ai_results)
+        if ai_client:
+            data = json.loads(path.read_text())
+            papers = [paper for cat in data.get("categories", []) for paper in cat.get("papers", [])]
+            if papers and not data.get("trendEn"):
+                wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
+                trend, trend_en = generate_trend(ai_client, papers)
+                last_trend_request_at = time.monotonic()
+                if trend and not data.get("trend"):
+                    data["trend"] = trend
+                if trend_en:
+                    data["trendEn"] = trend_en
+                if trend or trend_en:
+                    path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+                    print(f"[enrich] Added bilingual trends -> {path.name}")
+
+    if weekly_files:
+        latest_path = ROOT / SETTINGS["data"]["latest_file"]
+        latest_path.write_text(max(weekly_files).read_text())
+        print(f"[enrich] Refreshed latest -> {latest_path}")
 
     print("\n[enrich] Complete.")
 

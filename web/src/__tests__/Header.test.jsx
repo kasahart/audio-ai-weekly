@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import Header from '../components/Header'
 
 describe('Header', () => {
@@ -26,5 +26,14 @@ describe('Header', () => {
   it('renders subtitle text', () => {
     render(<Header total={0} loading={false} />)
     expect(screen.getByText(/音の基盤モデル/)).toBeInTheDocument()
+  })
+
+  it('renders English copy and switches language', () => {
+    const onLanguageChange = vi.fn()
+    render(<Header total={2} loading={false} lang="en" onLanguageChange={onLanguageChange} />)
+    expect(screen.getByText('Audio AI Weekly')).toBeInTheDocument()
+    expect(screen.getByText('Showing 2 papers')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('JA'))
+    expect(onLanguageChange).toHaveBeenCalledWith('ja')
   })
 })

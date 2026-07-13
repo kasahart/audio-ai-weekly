@@ -46,6 +46,7 @@ exclude:
 ui_categories:
   - id: foundation
     label: 音の基盤モデル
+    labelEn: Audio Foundation Models
     color: "#38bdf8"
     keywords:
       - audio foundation model
@@ -59,6 +60,7 @@ ui_categories:
 
   - id: separation
     label: 音源分離
+    labelEn: Source Separation
     color: "#4ade80"
     keywords:
       - source separation
@@ -71,6 +73,7 @@ ui_categories:
 
   - id: anomaly
     label: 異音検知
+    labelEn: Anomalous Sound Detection
     color: "#fb923c"
     keywords:
       - anomalous sound detection

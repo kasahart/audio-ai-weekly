@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { stripPrefix, readUrlState, buildUrlSearch } from '../utils.js'
+import { browserLanguage, resolveLanguage } from '../i18n.js'
+
+describe('language resolution', () => {
+  it('uses the primary browser language when no preference exists', () => {
+    expect(browserLanguage(['ja-JP', 'en-US'])).toBe('ja')
+    expect(browserLanguage(['en-US', 'ja-JP'])).toBe('en')
+  })
+  it('prioritizes query, then storage, then browser', () => {
+    expect(resolveLanguage('en', 'ja', ['ja-JP'])).toBe('en')
+    expect(resolveLanguage(null, 'ja', ['en-US'])).toBe('ja')
+    expect(resolveLanguage('invalid', 'invalid', ['ja-JP'])).toBe('ja')
+  })
+})
 
 describe('stripPrefix', () => {
   it('removes circled number prefix ①', () => {
@@ -59,6 +72,16 @@ describe('readUrlState', () => {
     expect(readUrlState('?fav=1').showFavoritesOnly).toBe(true)
     expect(readUrlState('').showFavoritesOnly).toBe(false)
   })
+
+  it('uses a valid lang query before stored language', () => {
+    localStorage.setItem('arxiv-language', 'ja')
+    expect(readUrlState('?lang=en').lang).toBe('en')
+  })
+
+  it('ignores an invalid lang query and uses stored language', () => {
+    localStorage.setItem('arxiv-language', 'ja')
+    expect(readUrlState('?lang=xx').lang).toBe('ja')
+  })
 })
 
 describe('buildUrlSearch', () => {
@@ -85,7 +108,7 @@ describe('buildUrlSearch', () => {
   })
 
   it('roundtrips through readUrlState', () => {
-    const original = { toDate: '2026-0426', fromDate: '2026-0109', activeCat: 'foundation', search: 'separation', sortByCitations: true, showFavoritesOnly: false }
+    const original = { lang: 'en', toDate: '2026-0426', fromDate: '2026-0109', activeCat: 'foundation', search: 'separation', sortByCitations: true, showFavoritesOnly: false }
     const search = buildUrlSearch(original)
     const restored = readUrlState(search)
     expect(restored.toDate).toBe(original.toDate)
@@ -93,5 +116,6 @@ describe('buildUrlSearch', () => {
     expect(restored.activeCat).toBe(original.activeCat)
     expect(restored.search).toBe(original.search)
     expect(restored.sortByCitations).toBe(original.sortByCitations)
+    expect(restored.lang).toBe(original.lang)
   })
 })

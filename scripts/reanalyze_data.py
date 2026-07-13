@@ -22,13 +22,15 @@ from analyze_papers import (
     build_next_reads,
     chunk_papers,
     fallback_result,
+    wait_for_next_request,
 )
+from build_data import generate_trend
 
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 WEEKLY_DIR = ROOT / "data" / "weekly"
 
-AI_FIELDS = ("titleJa", "org", "task", "proposedMethod", "datasets",
-             "what", "novel", "method", "validation", "discussion",
+AI_FIELDS = ("titleJa", "org", "task", "taskEn", "proposedMethod", "datasets",
+             "what", "whatEn", "novel", "novelEn", "method", "methodEn", "validation", "validationEn", "discussion", "discussionEn",
              "abstractJa", "nextReads")
 
 
@@ -47,9 +49,7 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
                 continue
 
             result = ai_results[arxiv_id]
-            for field in ("titleJa", "org", "task", "proposedMethod",
-                          "datasets", "what", "novel", "method",
-                          "validation", "discussion", "abstractJa"):
+            for field in AI_FIELDS[:-1]:
                 new_val = result.get(field)
                 if new_val is not None and new_val != "":
                     if paper.get(field) != new_val:
@@ -60,6 +60,16 @@ def reanalyze_file(path: Path, client: OpenAI, ai_results: dict) -> bool:
             if new_reads and paper.get("nextReads") != new_reads:
                 paper["nextReads"] = new_reads
                 changed = True
+
+    papers = [paper for cat in data.get("categories", []) for paper in cat.get("papers", [])]
+    if papers:
+        trend, trend_en = generate_trend(client, papers)
+        if trend and not data.get("trend"):
+            data["trend"] = trend
+            changed = True
+        if trend_en and data.get("trendEn") != trend_en:
+            data["trendEn"] = trend_en
+            changed = True
 
     if changed:
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
@@ -104,9 +114,12 @@ def main():
     print(f"\n[reanalyze] AI analysis complete: {len(ai_results)} papers")
 
     # Update each file.
+    last_trend_request_at = last_request_at
     for path in sorted(WEEKLY_DIR.glob("*.json")):
         print(f"\n[reanalyze] --- {path.name} ---")
+        wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
         reanalyze_file(path, client, ai_results)
+        last_trend_request_at = time.monotonic()
 
     print("\n[reanalyze] Complete.")
 
