@@ -219,6 +219,7 @@ def main():
 
     # Collect papers with missing AI fields from every weekly file.
     ai_results: dict[str, dict] = {}
+    last_ai_request_at = None
     if ai_client:
         papers_needing_ai = []
         for path in weekly_files:
@@ -236,12 +237,13 @@ def main():
             ids = [p["id"].split("v")[0] for p in batch]
             print(f"[enrich] AI batch ({i // batch_size + 1}/{(len(papers_needing_ai) + batch_size - 1) // batch_size}) ids={', '.join(ids)}")
             result = fetch_ai_fields_batch(ai_client, batch)
+            last_ai_request_at = time.monotonic()
             ai_results.update(result)
             if i + batch_size < len(papers_needing_ai):
                 time.sleep(3.0)
 
     # Write metadata back to each file.
-    last_trend_request_at = None
+    last_trend_request_at = last_ai_request_at
     for path in weekly_files:
         print(f"\n[enrich] --- {path.name} ---")
         enrich_file(path, ai_client, ai_results)
@@ -252,10 +254,16 @@ def main():
                 wait_for_next_request(last_trend_request_at, cfg["min_request_interval"])
                 trend, trend_en = generate_trend(ai_client, papers)
                 last_trend_request_at = time.monotonic()
-                data["trend"] = trend
+                if not data.get("trend"):
+                    data["trend"] = trend
                 data["trendEn"] = trend_en
                 path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
                 print(f"[enrich] Added bilingual trends -> {path.name}")
+
+    if weekly_files:
+        latest_path = ROOT / SETTINGS["data"]["latest_file"]
+        latest_path.write_text(max(weekly_files).read_text())
+        print(f"[enrich] Refreshed latest -> {latest_path}")
 
     print("\n[enrich] Complete.")
 
