@@ -21,6 +21,7 @@ permissions:
 
 concurrency:
   group: github-pages
+  queue: max
   cancel-in-progress: false
 
 jobs:
