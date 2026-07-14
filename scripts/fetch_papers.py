@@ -48,7 +48,7 @@ def is_retryable_fetch_error(exc: Exception) -> bool:
     if isinstance(exc, (TimeoutError, socket.timeout)):
         return True
     if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in {429, 500, 502, 503, 504}
+        return exc.code in SETTINGS["arxiv"]["retryable_http_statuses"]
     if isinstance(exc, urllib.error.URLError):
         return isinstance(exc.reason, (TimeoutError, socket.timeout, ConnectionError))
     return False
@@ -138,7 +138,7 @@ def parse_atom(xml_bytes: bytes) -> list[dict]:
                 "journalRef": journal_ref or None,
                 "date": date_str,
                 "published_iso": published,
-                "authors": authors[:5],
+                "authors": authors[: SETTINGS["arxiv"]["max_authors"]],
                 "org": orgs,
                 "url": f"https://arxiv.org/abs/{arxiv_id}",
                 "categories": [
@@ -157,7 +157,7 @@ def extract_orgs(entry) -> str:
     ]
     affiliations = [a for a in affiliations if a]
     if affiliations:
-        return affiliations[0][:60]
+        return affiliations[0][: SETTINGS["arxiv"]["max_affiliation_length"]]
     # Fall back to a compact author-based label when affiliations are absent.
     authors = [
         a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)
@@ -236,7 +236,7 @@ def main(
 
     seen_ids: set[str] = set()
     collected: list[dict] = []
-    batch = 100
+    batch = cfg["page_size"]
     start = 0
 
     while max_papers == 0 or len(collected) < max_papers:

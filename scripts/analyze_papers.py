@@ -15,63 +15,10 @@ from model_utils import build_chat_kwargs, create_client, get_ai_config
 
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
-KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
-
-SYSTEM_PROMPT = """You are a research-paper analyst specializing in speech and audio AI.
-Analyze the supplied title and abstract and respond only with the JSON structure below.
-Do not include a preamble, explanation, or Markdown code fences.
-
-Write the base descriptive fields in natural Japanese and every field ending in En in natural English. Apply these terminology rules strictly to Japanese:
-- Translate "Speech" as the Japanese term specifically meaning human speech.
-- Translate "Sound" and "Acoustic" using Japanese terms for general sound or acoustics.
-- Translate "Audio" as audio or an audio/acoustic signal, not as human speech.
-- Translate "Voice" using the Japanese term for the biological voice or singing voice.
-- Translate "Audio Source Separation" as source separation, including instruments and noise.
-- Translate "Audio Signal Processing" as audio/acoustic signal processing.
-- Translate "Acoustic Event" as an acoustic or sound event.
-- Use these exact Japanese technical terms in the generated text:
-  - Audio Source Separation: 音源分離
-  - Audio Signal Processing: 音響信号処理 or オーディオ信号処理
-  - Acoustic Event: 音響イベント or 音イベント
-  - Speech Enhancement: 音声強調
-  - Acoustic Gain: 音響利得
-  - Voice Activity Detection: 音声区間検出
-  - Sound Localization: 音源定位
-  - Environmental Sound: 環境音
-  - Audio Foundation Model: 音響基盤モデル
-- Use the established Japanese technical terms for Speech Enhancement, Acoustic Gain,
-  Voice Activity Detection, Sound Localization, Environmental Sound, and
-  Audio Foundation Model. Reserve speech-specific Japanese terminology for
-  contexts that actually concern human speech.
-
-{
-  "titleJa": "A natural Japanese translation of the paper title",
-  "org": "Primary author affiliation, such as MIT / Google",
-  "task": "One- or two-word task classification",
-  "taskEn": "One- or two-word task classification in English",
-  "proposedMethod": "Named method or abbreviation, or null",
-  "datasets": ["Dataset name 1", "Dataset name 2"],
-  "what": "A one- or two-sentence overview",
-  "whatEn": "The same overview in English",
-  "novel": "A one- or two-sentence explanation of novelty and contributions",
-  "novelEn": "The same novelty explanation in English",
-  "method": "A one- or two-sentence explanation of the technical core",
-  "methodEn": "The same technical explanation in English",
-  "validation": "A one- or two-sentence summary of datasets, metrics, and comparisons",
-  "validationEn": "The same validation summary in English",
-  "discussion": "A one- or two-sentence discussion of limitations and open issues",
-  "discussionEn": "The same discussion in English",
-  "abstractJa": "A complete, natural Japanese translation of the abstract",
-  "nextReads": [
-    {"label": "Related paper title (year)", "id": "arXiv ID or null"}
-  ]
-}
-
-Return three or four nextReads entries. Keep nextReads labels as original English
-paper titles (plus year), even though the surrounding base fields are Japanese.
-Use null when the arXiv ID is unknown.
-List up to five datasets used for training or evaluation.
-Keep the Japanese and English descriptions equivalent in meaning."""
+ANALYSIS_SETTINGS = SETTINGS["analysis"]
+PROMPT_DIR = ROOT / "config" / "prompts"
+SYSTEM_PROMPT = (PROMPT_DIR / "analyze_system.txt").read_text().strip()
+BATCH_PROMPT_TEMPLATE = (PROMPT_DIR / "analyze_batch.txt").read_text().strip()
 
 
 def get_client() -> OpenAI:
@@ -98,7 +45,7 @@ def build_batch_prompt(papers: list[dict]) -> str:
         paper_blocks.append(
             f"""ID: {paper["id"]}
 Title: {paper["title"]}
-Authors: {", ".join(paper.get("authors", [])[:3])}
+Authors: {", ".join(paper.get("authors", [])[: ANALYSIS_SETTINGS["prompt_authors"]])}
 Categories: {", ".join(paper.get("categories", []))}
 Published: {paper.get("date", "")}
 
@@ -106,65 +53,7 @@ Abstract:
 {paper["abstract"]}"""
         )
 
-    joined = "\n\n---\n\n".join(paper_blocks)
-    return f"""Analyze the papers below.
-Return one result per paper ID as a JSON object only. Use the paper ID as each
-key and the following structure as its value:
-
-{{
-  "<paper_id>": {{
-    "titleJa": "Natural Japanese title translation",
-    "org": "Primary author affiliation",
-    "task": "One- or two-word task classification",
-    "taskEn": "English task classification",
-    "proposedMethod": "Named method or abbreviation, or null",
-    "datasets": ["Dataset name 1", "Dataset name 2"],
-    "what": "One- or two-sentence overview",
-    "whatEn": "Equivalent English overview",
-    "novel": "One- or two-sentence novelty summary",
-    "novelEn": "Equivalent English novelty summary",
-    "method": "One- or two-sentence technical summary",
-    "methodEn": "Equivalent English technical summary",
-    "validation": "One- or two-sentence validation summary",
-    "validationEn": "Equivalent English validation summary",
-    "discussion": "One- or two-sentence limitations summary",
-    "discussionEn": "Equivalent English limitations summary",
-    "abstractJa": "Complete natural Japanese abstract translation",
-    "nextReads": [
-      {{"label": "Related paper title (year)", "id": "arXiv ID or null"}}
-    ]
-  }}
-}}
-
-Return three or four nextReads entries per paper, keep their labels as original
-English paper titles, and use null for unknown arXiv IDs.
-List up to five training or evaluation datasets.
-Write base fields in Japanese and fields ending in En in English.
-
-{joined}"""
-
-
-def fallback_result(paper: dict) -> dict:
-    return {
-        "titleJa": paper["title"],
-        "org": paper.get("org", ""),
-        "task": None,
-        "taskEn": None,
-        "proposedMethod": None,
-        "datasets": [],
-        "what": "Analysis failed.",
-        "whatEn": "",
-        "novel": "",
-        "novelEn": "",
-        "method": "",
-        "methodEn": "",
-        "validation": "",
-        "validationEn": "",
-        "discussion": "",
-        "discussionEn": "",
-        "abstractJa": "",
-        "nextReads": [],
-    }
+    return BATCH_PROMPT_TEMPLATE.replace("{{papers}}", "\n\n---\n\n".join(paper_blocks))
 
 
 def analyze_batch(
@@ -187,7 +76,8 @@ def analyze_batch(
                 ],
                 response_format={"type": "json_object"},
                 **build_chat_kwargs(
-                    cfg["model"], cfg["batch_max_tokens"], temperature=0.3
+                    cfg["model"], cfg["batch_max_tokens"],
+                    temperature=ANALYSIS_SETTINGS["temperature"],
                 ),
             )
             last_request_at = time.monotonic()
@@ -270,7 +160,7 @@ def main():
         batch_results, last_request_at = analyze_batch(client, batch, last_request_at)
 
         for paper in batch:
-            result = batch_results.get(paper["id"], fallback_result(paper))
+            result = batch_results[paper["id"]]
             analyzed.append(
                 {
                     "id": paper["id"],

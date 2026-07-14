@@ -41,7 +41,7 @@
 ### 2.3 バックエンドスクリプト（Python 3.11）
 - ✅ `scripts/fetch_papers.py` — arXiv API 取得・キーワードフィルタ・カテゴリ分類
 - ✅ `scripts/analyze_papers.py` — GitHub Models (Claude) で 6 観点日本語解析
-- ✅ `scripts/build_data.py` — 週次 JSON 生成・`index.json` 更新・`latest.json` 更新
+- ✅ `scripts/build_data.py` — 週次 JSON 生成・`index.json` 更新
 - ✅ `scripts/test_connection.py` — GitHub Models 疎通確認ツール
 - ✅ `requirements.txt` — `openai`, `pyyaml`
 
@@ -139,7 +139,6 @@ https://YOUR_ORG.github.io/arxiv-weekly/
 | `config/keywords.yaml` | フィルタキーワード（追加・削除はここだけ） | ✅ 実装済 |
 | `config/settings.yaml` | `max_papers=50` 等のシステム設定 | ✅ 実装済 |
 | `data/index.json` | 全週インデックス（初期は空） | ✅ 実装済 |
-| `data/latest.json` | 最新週データ（初期はプレースホルダー） | ✅ 実装済 |
 | `data/weekly/YYYY-MMDD.json` | 週次論文データ | ☐ Actions 実行後に自動生成 |
 | `scripts/fetch_papers.py` | arXiv 取得・フィルタ・カテゴリ分類 | ✅ 実装済 |
 | `scripts/analyze_papers.py` | GitHub Models で 6 観点解析 | ✅ 実装済 |
@@ -177,7 +176,6 @@ https://YOUR_ORG.github.io/arxiv-weekly/
 │    build    │  build_data.py
 │ 週次 JSON   │  → data/weekly/YYYY-MMDD.json
 │ index 更新  │  → data/index.json
-│ latest 更新 │  → data/latest.json
 │ git push    │
 └──────┬──────┘
        │

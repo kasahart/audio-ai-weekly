@@ -13,6 +13,34 @@ arxiv:
   retry_max: 3              # Maximum API attempts
   retry_interval: 5.0       # Initial retry interval in seconds
   user_agent: "arxiv-weekly-report/1.0 (github.com/kasahart/arxiv-weekly)"
+  page_size: 100             # Papers requested per arXiv API page
+  max_authors: 5             # Authors retained in published data
+  max_affiliation_length: 60
+  retryable_http_statuses: [429, 500, 502, 503, 504]
+
+# External metadata API settings
+metadata:
+  user_agent: "arxiv-weekly/1.0"
+  request_timeout: 10
+  arxiv_request_timeout: 15
+  paper_interval: 0.5
+  huggingface_interval: 0.3
+
+# Analysis and report-generation settings
+analysis:
+  prompt_authors: 3
+  temperature: 0.3
+  enrichment_tokens_per_paper: 800
+  trend_paper_limit: 20
+  trend_line_count: 3
+  trend_temperature: 0.4
+  connection_max_tokens: 500
+
+# Historical backfill settings
+backfill:
+  weekday: 4                 # Monday=0, Friday=4
+  interval_days: 7
+  week_interval: 90.0
 
 # AI provider selection
 ai:
@@ -46,4 +74,3 @@ gemini:
 data:
   weekly_dir: "data/weekly"
   index_file: "data/index.json"
-  latest_file: "data/latest.json"

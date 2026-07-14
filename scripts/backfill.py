@@ -17,17 +17,19 @@ import analyze_papers
 import build_data as build_data_module
 import fetch_papers
 
+BACKFILL_SETTINGS = fetch_papers.SETTINGS["backfill"]
+
 
 def fridays_between(from_date: datetime, to_date: datetime) -> list[datetime]:
     """Return every Friday from from_date through to_date."""
     dates = []
     # Find the first Friday on or after from_date.
-    days_ahead = (4 - from_date.weekday()) % 7  # Friday is weekday 4.
+    days_ahead = (BACKFILL_SETTINGS["weekday"] - from_date.weekday()) % BACKFILL_SETTINGS["interval_days"]
     first_friday = from_date + timedelta(days=days_ahead)
     d = first_friday
     while d <= to_date:
         dates.append(d)
-        d += timedelta(days=7)
+        d += timedelta(days=BACKFILL_SETTINGS["interval_days"])
     return dates
 
 
@@ -82,8 +84,9 @@ def main():
 
         # Wait between weeks to respect rate limits.
         if i < len(dates):
-            print("[backfill] Waiting 90 seconds before the next week...")
-            time.sleep(90)
+            interval = BACKFILL_SETTINGS["week_interval"]
+            print(f"[backfill] Waiting {interval:g} seconds before the next week...")
+            time.sleep(interval)
 
     print("\n[backfill] Complete.")
 

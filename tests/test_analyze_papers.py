@@ -6,10 +6,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import analyze_papers
 import pytest
 from analyze_papers import (
+    BATCH_PROMPT_TEMPLATE,
     SYSTEM_PROMPT,
     build_next_reads,
     chunk_papers,
-    fallback_result,
     sanitize_json_text,
 )
 
@@ -91,17 +91,9 @@ def test_system_prompt_preserves_exact_japanese_terminology():
     assert "音響イベント" in SYSTEM_PROMPT
 
 
-def test_fallback_keeps_failed_english_overview_retryable():
-    paper = {"title": "Paper", "org": "Example University", "abstract": "Original abstract"}
-
-    assert fallback_result(paper)["what"] == "Analysis failed."
-    assert fallback_result(paper)["whatEn"] == ""
-    assert "taskEn" in fallback_result(paper)
-
-
 def test_prompt_requests_bilingual_analysis_fields():
     for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
-        assert field in SYSTEM_PROMPT
+        assert field in BATCH_PROMPT_TEMPLATE
 
 
 class TestChunkPapers:

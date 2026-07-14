@@ -86,8 +86,6 @@ jobs:
           json.dump(existing, open('web/public/data/index.json', 'w'), ensure_ascii=False, indent=2)
           print(f"[deploy] Merged index: {len(existing['weeks'])} weeks")
           EOF
-          cp data/latest.json web/public/data/ 2>/dev/null || true
-
       - name: Build frontend
         working-directory: web
         run: |
