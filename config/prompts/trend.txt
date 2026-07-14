@@ -1,0 +1,1 @@
+Based on the following paper titles and summaries, describe this week's technical trends in speech and audio AI research in exactly {line_count} concise Japanese lines and {line_count} equivalent English lines. Mention specific paper or method names and do not prefix lines with numbers or symbols. Return JSON only in this form: {"ja": ["..."], "en": ["..."]}.

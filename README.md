@@ -75,10 +75,10 @@ Edit the `include` list in `config/keywords.yaml`. No code changes are required.
 .github/workflows/   # GitHub Actions workflows
 config/
   keywords.yaml      # Editable filtering keywords
+  prompts/           # Editable AI prompt templates
   settings.yaml      # System settings
 data/
   index.json         # Index of all published weeks
-  latest.json        # Latest weekly data
   weekly/            # Weekly JSON files (YYYY-MMDD.json)
 scripts/
   fetch_papers.py    # Retrieve papers from arXiv

@@ -41,9 +41,7 @@ def test_enrichment_preserves_explicit_null_ai_field(tmp_path):
     }
     path.write_text(json.dumps({"categories": [{"papers": [paper]}]}))
 
-    changed = enrich_data.enrich_file(
-        path, None, {"1234.5678": {"proposedMethod": None}}
-    )
+    changed = enrich_data.enrich_file(path, {"1234.5678": {"proposedMethod": None}})
 
     saved_paper = json.loads(path.read_text())["categories"][0]["papers"][0]
     assert changed is True
@@ -63,7 +61,7 @@ def test_enrichment_does_not_write_fields_for_empty_failure_result(tmp_path):
     }
     path.write_text(json.dumps({"categories": [{"papers": [paper]}]}))
 
-    changed = enrich_data.enrich_file(path, None, {"1234.5678": {}})
+    changed = enrich_data.enrich_file(path, {"1234.5678": {}})
 
     saved_paper = json.loads(path.read_text())["categories"][0]["papers"][0]
     assert changed is False

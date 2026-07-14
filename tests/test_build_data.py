@@ -110,7 +110,6 @@ def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_p
         "data": {
             "weekly_dir": "data/weekly",
             "index_file": "data/index.json",
-            "latest_file": "data/latest.json",
         },
     })
     monkeypatch.setattr(build_data, "KEYWORDS", {"ui_categories": []})
@@ -120,7 +119,7 @@ def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_p
 
     build_data.main(date_str="2026-07-10")
 
-    weekly = json.loads((data_dir / "latest.json").read_text())
+    weekly = json.loads((data_dir / "weekly/2026-0710.json").read_text())
     assert weekly["trend"]
     assert "trendEn" not in weekly
 

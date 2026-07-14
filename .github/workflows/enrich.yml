@@ -35,7 +35,6 @@ jobs:
             git show origin/gh-pages:$f > $f 2>/dev/null || true
           done
           git show origin/gh-pages:data/index.json > data/index.json 2>/dev/null || true
-          git show origin/gh-pages:data/latest.json > data/latest.json 2>/dev/null || true
           echo "Weekly files:"
           ls data/weekly/
 
@@ -62,7 +61,6 @@ jobs:
         run: |
           find data/weekly -name '*.json' -exec cp {} web/public/data/weekly/ \;
           cp data/index.json web/public/data/
-          cp data/latest.json web/public/data/
 
       - name: Build frontend
         working-directory: web

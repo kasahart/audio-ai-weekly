@@ -70,10 +70,10 @@ ArXiv 音声研究週報 自動更新システム（Sound Research Weekly Report
 
 - ★ 解析結果の JSON ファイルは上書きせず、週ごとに新規ファイルとして保存する（`data/weekly/YYYY-MMDD.json`）
 - ★ 全週分のインデックスファイル（`data/index.json`）を自動生成・更新し、週一覧を管理する
-- `data/latest.json` は最新週ファイルへのポインタとして機能する（ファイル実体はコピー）
+- `data/index.json` の先頭要素が最新週ファイルを示す
 - Git リポジトリに週次ファイルを蓄積することで、データは半永久的に保持される
 
-> **変更（v1.1）:** `latest.json` 上書きから「週次ファイル新規作成 + インデックス管理」に変更。過去データがすべて保持される。
+> **変更（v1.1）:** 「週次ファイル新規作成 + インデックス管理」に変更。過去データがすべて保持される。
 
 #### 2.1.4 Web ページ生成・公開
 
@@ -161,7 +161,6 @@ arxiv-weekly/
 │   └── settings.yaml           # max_papers=50 等のシステム設定
 ├── data/
 │   ├── index.json              # ★ 全週インデックス
-│   ├── latest.json             # 最新週データのコピー
 │   └── weekly/
 │       └── YYYY-MMDD.json      # ★ 週次論文データ（不変・上書きなし）
 ├── scripts/
@@ -234,14 +233,13 @@ arxiv-weekly/
 1. ★ 実行日付（`YYYY-MMDD`）をファイル名として `data/weekly/YYYY-MMDD.json` に**新規保存**
 2. ★ 既存ファイルが存在する場合はスキップ（同一日の重複実行を防止）
 3. ★ `data/index.json` を更新：日付・ファイルパス・論文数・実行日時を追記
-4. `data/latest.json` に最新週のデータをコピー
-5. 変更ファイルをまとめて git commit & push
+4. 変更ファイルをまとめて git commit & push
 
 #### Step 4 — フロントエンドビルド・デプロイ
 
 1. `web/` ディレクトリで `npm ci && npm run build`
 2. ★ フロントエンドは起動時に `data/index.json` を取得して週一覧を構築
-3. ★ デフォルトは最新週（`data/latest.json`）を表示。週セレクターで任意の週に切り替え可能
+3. ★ デフォルトはインデックス先頭の最新週を表示。週セレクターで任意の週に切り替え可能
 4. `web/dist/` を GitHub Pages（gh-pages ブランチ）にデプロイ
 
 ---
@@ -275,7 +273,7 @@ arxiv-weekly/
 #### 3.7.2 データ取得フロー
 
 1. 起動時：`data/index.json` を fetch → 週リストを WeekSelector に渡す
-2. 初期表示：`data/latest.json` を fetch → 最新週のデータを表示
+2. 初期表示：インデックス先頭の `data/weekly/YYYY-MMDD.json` を fetch
 3. ★ 週切替時：`data/weekly/YYYY-MMDD.json` を fetch → 選択週のデータを表示
 
 ---

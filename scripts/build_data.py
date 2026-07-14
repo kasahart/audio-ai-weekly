@@ -18,19 +18,18 @@ from model_utils import build_chat_kwargs, create_client, get_ai_config
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
 KEYWORDS = yaml.safe_load((ROOT / "config/keywords.yaml").read_text())
-
-TREND_PROMPT = """Based on the following paper titles and summaries, describe this
-week's technical trends in speech and audio AI research in exactly three concise
-Japanese lines and three equivalent English lines. Mention specific paper or method
-names and do not prefix lines with numbers or symbols. Return JSON only in this form:
-{"ja": ["...", "...", "..."], "en": ["...", "...", "..."]}."""
+ANALYSIS_SETTINGS = SETTINGS["analysis"]
+METADATA_SETTINGS = SETTINGS["metadata"]
+TREND_PROMPT = (ROOT / "config/prompts/trend.txt").read_text().strip().replace(
+    "{line_count}", str(ANALYSIS_SETTINGS["trend_line_count"])
+)
 
 
 def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[str]]:
     _, cfg = get_ai_config(SETTINGS)
     summaries = "\n".join(
         f"- {p['title']}: {p.get('whatEn') or p.get('what') or p.get('abstract', '')}"
-        for p in papers[:20]
+        for p in papers[: ANALYSIS_SETTINGS["trend_paper_limit"]]
     )
     last_request_at = None
     for attempt in range(cfg["retry_max"]):
@@ -47,11 +46,13 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             resp = client.chat.completions.create(
                 model=cfg["model"],
                 messages=[
-                    {"role": "system", "content": "Respond with JSON only."},
                     {"role": "user", "content": f"{TREND_PROMPT}\n\n{summaries}"},
                 ],
                 response_format={"type": "json_object"},
-                **build_chat_kwargs(cfg["model"], cfg["max_tokens"], temperature=0.4),
+                **build_chat_kwargs(
+                    cfg["model"], cfg["max_tokens"],
+                    temperature=ANALYSIS_SETTINGS["trend_temperature"],
+                ),
             )
             raw = (resp.choices[0].message.content or "").strip()
             raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
@@ -59,11 +60,13 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             if isinstance(result, dict):
                 ja, en = result.get("ja"), result.get("en")
                 if (isinstance(ja, list) and isinstance(en, list)
-                        and len(ja) == 3 and len(en) == 3
+                        and len(ja) == ANALYSIS_SETTINGS["trend_line_count"]
+                        and len(en) == ANALYSIS_SETTINGS["trend_line_count"]
                         and all(isinstance(line, str) for line in ja + en)):
                     return ja, en
             # Accept the legacy response shape so transient model deviations remain usable.
-            if (isinstance(result, list) and len(result) == 3
+            if (isinstance(result, list)
+                    and len(result) == ANALYSIS_SETTINGS["trend_line_count"]
                     and all(isinstance(line, str) for line in result)):
                 return result, []
             raise ValueError("trend response does not match the expected JSON shape")
@@ -71,6 +74,11 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             last_request_at = request_started_at
             print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
     return [], []
+
+
+def empty_trend() -> list[str]:
+    """Return a localized placeholder with the configured number of lines."""
+    return ["トレンド情報なし"] * ANALYSIS_SETTINGS["trend_line_count"]
 
 
 def group_by_category(papers: list[dict]) -> list[dict]:
@@ -114,8 +122,8 @@ def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
         # Semantic Scholar citation count.
         try:
             url = f"https://api.semanticscholar.org/graph/v1/paper/arXiv:{arxiv_id}?fields=citationCount"
-            req = urllib.request.Request(url, headers={"User-Agent": "arxiv-weekly/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as r:
+            req = urllib.request.Request(url, headers={"User-Agent": METADATA_SETTINGS["user_agent"]})
+            with urllib.request.urlopen(req, timeout=METADATA_SETTINGS["request_timeout"]) as r:
                 data = json.loads(r.read())
                 citation_count = data.get("citationCount")
         except Exception:
@@ -126,8 +134,8 @@ def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
         project_page = None
         try:
             url = f"https://huggingface.co/api/papers/{arxiv_id}"
-            req = urllib.request.Request(url, headers={"User-Agent": "arxiv-weekly/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as r:
+            req = urllib.request.Request(url, headers={"User-Agent": METADATA_SETTINGS["user_agent"]})
+            with urllib.request.urlopen(req, timeout=METADATA_SETTINGS["request_timeout"]) as r:
                 data = json.loads(r.read())
                 github_repo = data.get("githubRepo") or None
                 upvotes = data.get("upvotes")
@@ -141,7 +149,7 @@ def fetch_paper_meta(papers: list[dict]) -> dict[str, dict]:
             "upvotes": upvotes,
             "projectPage": project_page,
         }
-        time.sleep(0.5)  # Respect API rate limits.
+        time.sleep(METADATA_SETTINGS["paper_interval"])
 
     found_citations = sum(1 for v in meta.values() if v["citationCount"] is not None)
     found_repos = sum(1 for v in meta.values() if v["githubRepo"])
@@ -190,13 +198,13 @@ def main(date_str: str | None = None):
         client = create_client(SETTINGS)
         trend, trend_en = generate_trend(client, papers)
         if not trend:
-            trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
+            trend = empty_trend()
     except EnvironmentError:
         print(
             f"[build] {cfg['api_key_env']} is not set for provider {provider}; "
             "skipping trend generation."
         )
-        trend = ["① トレンド情報なし", "② トレンド情報なし", "③ トレンド情報なし"]
+        trend = empty_trend()
         trend_en = []
 
     # Group papers by category.
@@ -216,11 +224,6 @@ def main(date_str: str | None = None):
     weekly_path.parent.mkdir(parents=True, exist_ok=True)
     weekly_path.write_text(json.dumps(weekly_data, ensure_ascii=False, indent=2))
     print(f"[build] Saved weekly → {weekly_path}")
-
-    # Update latest.json.
-    latest_path = ROOT / SETTINGS["data"]["latest_file"]
-    latest_path.write_text(json.dumps(weekly_data, ensure_ascii=False, indent=2))
-    print(f"[build] Updated latest → {latest_path}")
 
     # Update index.json.
     index = load_index()

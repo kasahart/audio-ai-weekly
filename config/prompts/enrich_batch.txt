@@ -1,0 +1,20 @@
+Analyze the papers below and respond with a JSON object only, without Markdown code fences. Use the paper ID as each key and this structure as its value:
+
+{
+  "<paper_id>": {
+    "abstractJa": "Complete natural Japanese abstract translation",
+    "task": "One- or two-word Japanese task classification, such as TTS, ASR, 音源分離, 異音検知, or 音楽生成",
+    "taskEn": "Equivalent one- or two-word English task classification",
+    "proposedMethod": "Named method or abbreviation, or null",
+    "datasets": ["Dataset name 1", "Dataset name 2"],
+    "whatEn": "One- or two-sentence English overview",
+    "novelEn": "One- or two-sentence English novelty summary",
+    "methodEn": "One- or two-sentence English technical summary",
+    "validationEn": "One- or two-sentence English validation summary",
+    "discussionEn": "One- or two-sentence English limitations summary"
+  }
+}
+
+List up to five datasets. Write task in Japanese and every field ending in En in English.
+
+{{papers}}

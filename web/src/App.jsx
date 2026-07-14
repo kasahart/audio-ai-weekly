@@ -9,8 +9,15 @@ import { LANGUAGE_STORAGE_KEY, t } from './i18n.js'
 const DATA_BASE = './data'
 const LS_FAVORITES = 'arxiv-favorites'
 const LS_READ      = 'arxiv-read'
-// OpenAlex polite pool (higher rate limit)
-const OPENALEX_EMAIL = 'beinvoked66@gmail.com'
+const EXTERNAL_API = {
+  openAlexEmail: 'beinvoked66@gmail.com',
+  openAlexBatchSize: 5,
+  openAlexBatchIntervalMs: 500,
+  huggingFaceBatchSize: 10,
+  huggingFaceBatchIntervalMs: 300,
+}
+const SCROLL_TOP_THRESHOLD_PX = 400
+const INFINITE_SCROLL_THRESHOLD = 0.1
 
 import { readUrlState, buildUrlSearch } from './utils.js'
 
@@ -21,7 +28,7 @@ function pushUrlState(state) {
 
 // ── External API fetchers ──────────────────────────────────────────────
 async function fetchCitationsForPapers(papers) {
-  const CHUNK = 5
+  const CHUNK = EXTERNAL_API.openAlexBatchSize
   const results = {}
   for (let i = 0; i < papers.length; i += CHUNK) {
     const chunk = papers.slice(i, i + CHUNK)
@@ -29,20 +36,20 @@ async function fetchCitationsForPapers(papers) {
       const id = p.id.split('v')[0]
       try {
         const url = `https://api.openalex.org/works/https://doi.org/10.48550/arXiv.${id}` +
-                    `?select=cited_by_count&mailto=${OPENALEX_EMAIL}`
+                    `?select=cited_by_count&mailto=${EXTERNAL_API.openAlexEmail}`
         const res = await fetch(url)
         if (!res.ok) return
         const data = await res.json()
         if (data?.cited_by_count != null) results[id] = data.cited_by_count
       } catch {}
     }))
-    if (i + CHUNK < papers.length) await new Promise(r => setTimeout(r, 500))
+    if (i + CHUNK < papers.length) await new Promise(r => setTimeout(r, EXTERNAL_API.openAlexBatchIntervalMs))
   }
   return results
 }
 
 async function fetchGithubReposForPapers(papers) {
-  const CHUNK = 10
+  const CHUNK = EXTERNAL_API.huggingFaceBatchSize
   const results = {}
   for (let i = 0; i < papers.length; i += CHUNK) {
     const chunk = papers.slice(i, i + CHUNK)
@@ -55,7 +62,7 @@ async function fetchGithubReposForPapers(papers) {
         if (data?.githubRepo) results[id] = data.githubRepo
       } catch {}
     }))
-    if (i + CHUNK < papers.length) await new Promise(r => setTimeout(r, 300))
+    if (i + CHUNK < papers.length) await new Promise(r => setTimeout(r, EXTERNAL_API.huggingFaceBatchIntervalMs))
   }
   return results
 }
@@ -168,7 +175,7 @@ export default function App() {
 
   // Scroll-to-top button.
   useEffect(() => {
-    const onScroll = () => setShowScrollTop(window.scrollY > 400)
+    const onScroll = () => setShowScrollTop(window.scrollY > SCROLL_TOP_THRESHOLD_PX)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -259,7 +266,7 @@ export default function App() {
     if (!sentinel) return
     const observer = new IntersectionObserver(
       entries => { if (entries[0].isIntersecting) loadNextWeek() },
-      { threshold: 0.1 }
+      { threshold: INFINITE_SCROLL_THRESHOLD }
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
