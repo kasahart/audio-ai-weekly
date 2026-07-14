@@ -16,8 +16,14 @@ on:
         default: ''
 
 permissions:
+  actions: read
   contents: write
   models: read
+
+concurrency:
+  group: github-pages
+  queue: max
+  cancel-in-progress: false
 
 jobs:
   # Step 1: Retrieve papers from arXiv.
@@ -25,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       paper_count: ${{ steps.fetch.outputs.paper_count }}
+      reference_date: ${{ steps.window.outputs.reference_date }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,9 +46,11 @@ jobs:
       - name: Resolve catch-up window
         id: window
         env:
+          GH_TOKEN: ${{ github.token }}
           TARGET_DATE: ${{ github.event.inputs.target_date }}
         run: |
-          REF_DATE="${TARGET_DATE:-$(date -u +%F)}"
+          RUN_CREATED_AT=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .created_at)
+          REF_DATE="${TARGET_DATE:-${RUN_CREATED_AT%%T*}}"
           git fetch origin gh-pages
           git show origin/gh-pages:data/index.json > /tmp/existing_index.json 2>/dev/null \
             || echo '{"weeks":[]}' > /tmp/existing_index.json
@@ -49,15 +58,13 @@ jobs:
             --index /tmp/existing_index.json \
             --settings config/settings.yaml \
             --date "$REF_DATE" >> "$GITHUB_OUTPUT"
+          echo "reference_date=$REF_DATE" >> "$GITHUB_OUTPUT"
 
       - name: Fetch papers from arXiv
         id: fetch
         run: |
-          DATE_ARG=""
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            DATE_ARG="--date ${{ github.event.inputs.target_date }}"
-          fi
-          python scripts/fetch_papers.py $DATE_ARG \
+          python scripts/fetch_papers.py \
+            --date "${{ steps.window.outputs.reference_date }}" \
             --lookback-days "${{ steps.window.outputs.lookback_days }}" \
             --max-papers "${{ steps.window.outputs.max_papers }}"
           COUNT=$(python -c "import json; print(len(json.load(open('data/raw_papers.json'))))")
@@ -108,7 +115,7 @@ jobs:
 
   # Step 3: Generate data.
   build:
-    needs: analyze
+    needs: [fetch, analyze]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -131,12 +138,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          DATE_ARG=""
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            DATE_ARG="--date ${{ github.event.inputs.target_date }}"
-          fi
-          python scripts/build_data.py $DATE_ARG
+        run: python scripts/build_data.py --date "${{ needs.fetch.outputs.reference_date }}"
 
       - name: Upload built data
         uses: actions/upload-artifact@v4
