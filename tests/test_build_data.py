@@ -23,6 +23,7 @@ def test_generate_trend_uses_selected_provider_model(monkeypatch):
         "ai": {"provider": "gemini"},
         "gemini": {
             "model": "gemini-3.5-flash",
+            "max_tokens": 16000,
             "retry_max": 1,
             "retry_interval": 0,
         },
@@ -31,7 +32,8 @@ def test_generate_trend_uses_selected_provider_model(monkeypatch):
 
     assert build_data.generate_trend(client, [{"title": "T", "what": "W"}]) == (["a", "b", "c"], [])
     assert calls[0]["model"] == "gemini-3.5-flash"
-    assert calls[0]["max_tokens"] == 400
+    assert calls[0]["max_tokens"] == 16000
+    assert calls[0]["response_format"] == {"type": "json_object"}
 
 
 def test_generate_trend_rejects_non_array_language_values(monkeypatch):
@@ -42,7 +44,12 @@ def test_generate_trend_rejects_non_array_language_values(monkeypatch):
     client = type("Client", (), {"chat": type("Chat", (), {"completions": Completions()})()})()
     monkeypatch.setattr(build_data, "SETTINGS", {
         "ai": {"provider": "gemini"},
-        "gemini": {"model": "x", "retry_max": 1, "retry_interval": 0},
+        "gemini": {
+            "model": "x",
+            "max_tokens": 400,
+            "retry_max": 1,
+            "retry_interval": 0,
+        },
     })
     ja, en = build_data.generate_trend(client, [{"title": "T", "what": "W"}])
     assert isinstance(ja, list)
@@ -76,6 +83,7 @@ def test_generate_trend_waits_for_provider_interval_before_retry(monkeypatch):
         "ai": {"provider": "github_models"},
         "github_models": {
             "model": "openai/gpt-5",
+            "max_tokens": 400,
             "retry_max": 2,
             "min_request_interval": 60.0,
         },

@@ -185,6 +185,7 @@ def analyze_batch(
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": prompt},
                 ],
+                response_format={"type": "json_object"},
                 **build_chat_kwargs(
                     cfg["model"], cfg["batch_max_tokens"], temperature=0.3
                 ),

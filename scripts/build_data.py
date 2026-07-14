@@ -50,7 +50,8 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
                     {"role": "system", "content": "Respond with JSON only."},
                     {"role": "user", "content": f"{TREND_PROMPT}\n\n{summaries}"},
                 ],
-                **build_chat_kwargs(cfg["model"], 400, temperature=0.4),
+                response_format={"type": "json_object"},
+                **build_chat_kwargs(cfg["model"], cfg["max_tokens"], temperature=0.4),
             )
             raw = (resp.choices[0].message.content or "").strip()
             raw = raw.lstrip("```json").lstrip("```").rstrip("```").strip()
