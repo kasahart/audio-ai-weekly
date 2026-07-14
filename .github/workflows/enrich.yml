@@ -7,6 +7,10 @@ permissions:
   contents: write
   models: read
 
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
 jobs:
   enrich:
     runs-on: ubuntu-latest

@@ -19,6 +19,10 @@ permissions:
   contents: write
   models: read
 
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
 jobs:
   # Step 1: Retrieve papers from arXiv.
   fetch:
