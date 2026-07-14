@@ -16,7 +16,7 @@ arxiv:
 
 # AI provider selection
 ai:
-  provider: "github_models"  # "github_models" or "gemini"
+  provider: "gemini"  # "github_models" or "gemini"
 
 # GitHub Models settings
 github_models:

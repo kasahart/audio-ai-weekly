@@ -35,7 +35,7 @@ class TestProviderConfiguration:
     def test_repository_settings_define_both_providers(self):
         root = Path(__file__).parent.parent
         settings = yaml.safe_load((root / "config/settings.yaml").read_text())
-        assert settings["ai"]["provider"] == "github_models"
+        assert settings["ai"]["provider"] == "gemini"
         assert settings["github_models"]["api_key_env"] == "GITHUB_TOKEN"
         assert settings["github_models"]["endpoint"] == "https://models.github.ai/inference"
         assert settings["github_models"]["model"] == "gpt-4o"
