@@ -35,9 +35,9 @@ gemini:
   api_key_env: "GEMINI_API_KEY"
   endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
   model: "gemini-3.5-flash"
-  max_tokens: 1500
+  max_tokens: 16000
   batch_size: 5
-  batch_max_tokens: 6000
+  batch_max_tokens: 32000
   min_request_interval: 60.0
   retry_max: 3
   retry_interval: 5.0       # Retry interval in seconds

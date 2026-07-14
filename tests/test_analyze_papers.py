@@ -44,6 +44,7 @@ def test_analyze_batch_uses_selected_provider_model(monkeypatch):
 
     assert calls[0]["model"] == "gemini-3.5-flash"
     assert calls[0]["max_tokens"] == 1000
+    assert calls[0]["response_format"] == {"type": "json_object"}
 
 
 def test_analyze_batch_fails_closed_after_empty_response(monkeypatch, capsys):
