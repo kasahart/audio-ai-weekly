@@ -5,6 +5,8 @@ __pycache__/
 .env
 data/raw_papers.json
 data/analyzed_papers.json
+data/features/*.json
+!data/features/index.json
 
 # Node
 node_modules/

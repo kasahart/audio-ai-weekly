@@ -22,6 +22,13 @@ export default function Header({ total, loading, lang = 'ja', onLanguageChange }
           {copy.showingPapers(total)}
         </div>
       )}
+      <nav aria-label={copy.primaryNavigation} style={{ marginTop: 6 }}>
+        <a href="./features/" style={{ color: '#f472b6', fontSize: 11, letterSpacing: 1,
+          textDecoration: 'none', borderBottom: '1px solid #f472b680', display: 'inline-flex',
+          alignItems: 'center', minHeight: 28 }}>
+          {copy.featureArchive} <span aria-hidden="true">→</span>
+        </a>
+      </nav>
       <div aria-label="Language" style={{ position: 'absolute', top: 16, right: 20, fontSize: 11 }}>
         {['ja', 'en'].map((value, index) => <span key={value}>
           {index > 0 && <span style={{ color: '#334155', margin: '0 6px' }}>/</span>}

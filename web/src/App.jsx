@@ -4,6 +4,7 @@ import WeekSelector from './components/WeekSelector'
 import CategoryFilter from './components/CategoryFilter'
 import PaperCard from './components/PaperCard'
 import TrendSummary from './components/TrendSummary'
+import FeatureSpotlight from './components/FeatureSpotlight'
 import { LANGUAGE_STORAGE_KEY, t } from './i18n.js'
 
 const DATA_BASE = './data'
@@ -78,6 +79,7 @@ export default function App() {
   const initial = readUrlState()
 
   const [index,            setIndex]            = useState(null)
+  const [latestFeature,    setLatestFeature]    = useState(null)
   const [lang,             setLangRaw]           = useState(initial.lang)
   const [loadedWeeks,      setLoadedWeeks]      = useState([])
   const [toDate,           setToDateRaw]        = useState(initial.toDate)
@@ -216,6 +218,23 @@ export default function App() {
       .catch(() => setLoading(false))
   }, [])
 
+  // Feature data is optional and must not affect the weekly feed.
+  useEffect(() => {
+    let active = true
+    fetch(`${DATA_BASE}/features/index.json`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then(data => {
+        if (active) setLatestFeature(Array.isArray(data?.features) ? (data.features[0] ?? null) : null)
+      })
+      .catch(() => {
+        if (active) setLatestFeature(null)
+      })
+    return () => { active = false }
+  }, [])
+
   // Reset and load the first week when toDate changes.
   useEffect(() => {
     if (!toDate || !index) return
@@ -309,6 +328,24 @@ export default function App() {
         .refLink{color:inherit;text-decoration:none;border-bottom:1px solid currentColor;
           opacity:0.85;transition:opacity 0.15s}
         .refLink:hover{opacity:1}
+        .feature-spotlight{border:1px solid #3b2338;border-left:4px solid #f472b6;
+          background:#15111a;padding:clamp(16px,3vw,22px);border-radius:4px;margin-bottom:28px}
+        .feature-spotlight-heading{display:flex;align-items:center;justify-content:space-between;
+          gap:16px;margin-bottom:12px}
+        .feature-archive-link,.feature-read-link{color:#f472b6;text-decoration:none;
+          font-size:11px;letter-spacing:1px;border-bottom:1px solid #f472b680;
+          display:inline-flex;align-items:center;min-height:28px}
+        .feature-archive-link:hover,.feature-read-link:hover{color:#f9a8d4;border-color:#f9a8d4}
+        .feature-archive-link:focus-visible,.feature-read-link:focus-visible,.feature-title a:focus-visible{
+          outline:2px solid #38bdf8;outline-offset:4px}
+        .feature-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#94a3b8;
+          font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+        .feature-title{font-family:'Space Mono',monospace;font-size:clamp(16px,3.5vw,23px);
+          line-height:1.55;margin-bottom:9px}
+        .feature-title a{color:#f1f5f9;text-decoration:none}
+        .feature-title a:hover{color:#f9a8d4}
+        .feature-dek{color:#94a3b8;font-size:clamp(12px,2.8vw,14px);line-height:1.9;
+          max-width:780px;margin-bottom:14px}
         .toolbar{border-bottom:1px solid #1e293b;padding:10px 26px;background:#0a0d14;
           display:flex;flex-direction:column;gap:8px}
         .toolbar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -321,6 +358,8 @@ export default function App() {
           .content{padding:14px 12px}
           .search-input{width:100%}
           .catBtn,.ctrlBtn{font-size:12px}
+          .feature-spotlight-heading{align-items:flex-start;flex-direction:column;gap:7px}
+          .feature-archive-link,.feature-read-link{font-size:12px}
         }
         @media(max-width:400px){
           .toolbar{padding:6px 10px}
@@ -361,6 +400,8 @@ export default function App() {
       </div>
 
       <div className="content">
+        <FeatureSpotlight feature={latestFeature} lang={lang} />
+
         {loading && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#38bdf8', letterSpacing: 3 }}>
             {t(lang).loading}

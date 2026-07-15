@@ -36,6 +36,45 @@ analysis:
   trend_temperature: 0.4
   connection_max_tokens: 500
 
+# Twice-monthly long-form feature generation.
+features:
+  recent_days: 56
+  topic_candidate_limit: 40
+  prior_topic_limit: 12
+  archive_source_min: 4
+  archive_source_max: 6
+  external_source_min: 2
+  source_target: 8
+  primary_link_min: 1
+  external_candidate_limit: 24
+  search_term_min: 2
+  search_term_max: 5
+  perspective_count: 3
+  section_min: 6
+  primer_sections: [why-needed, history, approaches, perspectives, limits, outlook]
+  debate_sections: [current-signal, positions, evidence, evaluation, implications, watch]
+  target_min_chars: 3500
+  target_max_chars: 5000
+  validation_min_chars: 3151
+  validation_max_chars: 5400
+  reading_chars_per_minute: 450
+  reading_minutes_min: 8
+  reading_minutes_max: 12
+  japanese_body_min_ratio: 0.5
+  english_summary_min_words: 60
+  english_summary_max_words: 250
+  selection_max_tokens: 2200
+  generation_max_tokens: 10000
+  verification_max_tokens: 3000
+  revision_max_tokens: 10000
+  temperature: 0.2
+  request_timeout: 30
+  model_timeout: 180
+  retry_max: 3
+  retry_interval: 5.0
+  retryable_http_statuses: [429, 500, 502, 503, 504]
+  output_dir: "data/features"
+
 # Historical backfill settings
 backfill:
   weekday: 4                 # Monday=0, Friday=4
