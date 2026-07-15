@@ -274,6 +274,63 @@ def test_topic_plan_rejects_query_syntax_and_duplicate_topic():
         generate_feature.validate_topic_plan(make_plan(), make_candidates(), prior)
 
 
+def test_choose_topic_retries_invalid_plan_with_validation_feedback(capsys):
+    invalid_plan = make_plan()
+    invalid_plan["searchTerms"] = ["Acoustic Grounding", "foundation model"]
+
+    class SequenceModel:
+        def __init__(self):
+            self.responses = iter([invalid_plan, make_plan()])
+            self.calls = []
+
+        def complete(self, *args):
+            self.calls.append(args)
+            return next(self.responses)
+
+    model = SequenceModel()
+    selected = generate_feature.choose_topic(
+        model, "primer", make_candidates(), {"features": []}
+    )
+
+    assert selected["topicKey"] == make_plan()["topicKey"]
+    assert len(model.calls) == 2
+    assert "validationFeedback" in model.calls[0][0]
+    assert "validationFeedback" not in model.calls[0][1]
+    feedback = model.calls[1][1]["validationFeedback"]
+    assert feedback["remainingAttempts"] == 2
+    assert feedback["errors"] == [
+        "Search term is not grounded in selected archive papers: "
+        "'Acoustic Grounding'"
+    ]
+    output = capsys.readouterr().out
+    assert "attempt 1/3" in output
+    assert "errors=1" in output
+    assert "Acoustic Grounding" not in output
+
+
+def test_choose_topic_stops_after_validation_retry_budget():
+    invalid_plan = make_plan()
+    invalid_plan["searchTerms"] = ["Acoustic Grounding", "foundation model"]
+
+    class InvalidModel:
+        def __init__(self):
+            self.calls = 0
+
+        def complete(self, *_args):
+            self.calls += 1
+            return invalid_plan
+
+    model = InvalidModel()
+    cfg = dict(generate_feature.FEATURE_SETTINGS)
+    cfg["selection_validation_retry_max"] = 2
+
+    with pytest.raises(generate_feature.FeatureValidationError, match="not grounded"):
+        generate_feature.choose_topic(
+            model, "primer", make_candidates(), {"features": []}, cfg
+        )
+    assert model.calls == 2
+
+
 def test_topic_duplicate_guard_only_uses_recent_feature_history():
     prior = {
         "features": [
@@ -527,6 +584,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     )
     assert cfg["model_retry_max"] >= 5
     assert cfg["model_retry_max_interval"] >= cfg["model_retry_interval"]
+    assert cfg["selection_validation_retry_max"] >= 2
 
 
 def test_generation_keeps_source_instructions_out_of_system_prompt():
