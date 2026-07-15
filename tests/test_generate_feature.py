@@ -462,6 +462,12 @@ class FakeOpenAIClient:
         )
 
 
+class RetryableStatusError(ValueError):
+    def __init__(self, status_code, message):
+        super().__init__(message)
+        self.status_code = status_code
+
+
 def model_settings(retry_max=3):
     return {
         "ai": {"provider": "test"},
@@ -583,6 +589,83 @@ def test_json_model_uses_purpose_specific_reasoning_effort(monkeypatch):
     assert client.calls[1]["reasoning_effort"] == "medium"
 
 
+@pytest.mark.parametrize(("status_code", "primary_attempts"), [(503, 2), (429, 1)])
+def test_json_model_falls_back_only_for_provider_capacity_errors(
+    monkeypatch, capsys, status_code, primary_attempts
+):
+    private_error = "provider error containing a private draft"
+    primary = FakeOpenAIClient(
+        [RetryableStatusError(status_code, private_error)] * primary_attempts
+    )
+    fallback = FakeOpenAIClient(['{"ok":true}', '{"stillOk":true}'])
+    clients = {"test": primary, "fallback": fallback}
+    created_providers = []
+
+    def fake_create_client(settings):
+        provider = settings["ai"]["provider"]
+        created_providers.append(provider)
+        return clients[provider]
+
+    monkeypatch.setattr(generate_feature, "create_client", fake_create_client)
+    settings = model_settings(retry_max=6)
+    settings["fallback"] = {
+        "model": "openai/gpt-4.1",
+        "retry_max": 2,
+        "retry_interval": 0,
+        "min_request_interval": 0,
+        "feature_max_tokens": 200,
+    }
+    settings["features"].update(
+        {
+            "model_fallback_providers": ["fallback"],
+            "model_fallback_after": 2,
+            "model_retry_max": 6,
+            "model_retry_interval": 0,
+            "model_retry_max_interval": 0,
+        }
+    )
+    model = generate_feature.JsonModel(settings, sleep=lambda _seconds: None)
+
+    assert model.complete("Rules", {}, 100, "feature generation") == {"ok": True}
+    assert len(primary.calls) == primary_attempts
+    assert len(fallback.calls) == 1
+    assert fallback.calls[0]["model"] == "openai/gpt-4.1"
+    assert created_providers == ["test", "fallback"]
+
+    assert model.complete("Rules", {}, 100, "feature verification") == {
+        "stillOk": True
+    }
+    assert len(primary.calls) == primary_attempts
+    assert len(fallback.calls) == 2
+    assert created_providers == ["test", "fallback"]
+    output = capsys.readouterr().out
+    assert f"status_code={status_code}" in output
+    assert "falling back to fallback" in output
+    assert private_error not in output
+
+
+def test_json_model_does_not_fall_back_for_invalid_model_content(monkeypatch):
+    primary = FakeOpenAIClient([ValueError("invalid content")])
+    fallback = FakeOpenAIClient(['{"ok":true}'])
+    created_providers = []
+
+    def fake_create_client(settings):
+        provider = settings["ai"]["provider"]
+        created_providers.append(provider)
+        return {"test": primary, "fallback": fallback}[provider]
+
+    monkeypatch.setattr(generate_feature, "create_client", fake_create_client)
+    settings = model_settings(retry_max=1)
+    settings["fallback"] = {"model": "openai/gpt-4.1"}
+    settings["features"]["model_fallback_providers"] = ["fallback"]
+    model = generate_feature.JsonModel(settings, sleep=lambda _seconds: None)
+
+    with pytest.raises(generate_feature.FeatureError, match="invalid content"):
+        model.complete("Rules", {}, 100, "feature generation")
+    assert created_providers == ["test"]
+    assert len(fallback.calls) == 0
+
+
 def test_feature_model_budgets_cover_reasoning_and_structured_output():
     cfg = generate_feature.FEATURE_SETTINGS
 
@@ -601,6 +684,13 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["selection_validation_retry_max"] >= 2
     assert cfg["feature_generation_reasoning_effort"] == "low"
     assert cfg["single_revision_reasoning_effort"] == "low"
+    assert cfg["model_fallback_providers"] == ["github_models"]
+    assert cfg["model_fallback_after"] == 2
+    assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
+    assert (
+        generate_feature.SETTINGS["github_models"]["feature_max_tokens"]
+        >= cfg["generation_max_tokens"]
+    )
 
 
 def test_generation_keeps_source_instructions_out_of_system_prompt():

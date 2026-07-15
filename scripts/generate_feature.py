@@ -619,6 +619,16 @@ def _retryable_model_error(exc: Exception) -> bool:
     )
 
 
+def _provider_fallback_error(exc: Exception) -> bool:
+    """Return whether another configured provider may handle this failure."""
+    if isinstance(exc, (APIConnectionError, APITimeoutError)):
+        return True
+    status_code = getattr(exc, "status_code", None)
+    return isinstance(status_code, int) and (
+        status_code in (408, 409, 425, 429) or status_code >= 500
+    )
+
+
 class JsonModel:
     """Rate-limited JSON-only wrapper around the configured OpenAI-compatible model."""
 
@@ -637,11 +647,16 @@ class JsonModel:
         self.sleep = sleep
         self.monotonic = monotonic
         self.last_request_at: float | None = None
+        self._fallback_model: JsonModel | None = None
 
     def complete(
         self, instructions: str, payload: Any, max_tokens: int, purpose: str
     ) -> dict:
-        _, provider_cfg = get_ai_config(self.settings)
+        if self._fallback_model is not None:
+            return self._fallback_model.complete(
+                instructions, payload, max_tokens, purpose
+            )
+        provider_name, provider_cfg = get_ai_config(self.settings)
         retry_max = max(
             1,
             int(
@@ -662,9 +677,14 @@ class JsonModel:
             retry_interval,
             float(self.feature_cfg.get("model_retry_max_interval", 240.0)),
         )
+        configured_max_tokens = int(
+            self.feature_cfg.get("model_max_tokens", max_tokens)
+        )
+        provider_max_tokens = int(
+            provider_cfg.get("feature_max_tokens", configured_max_tokens)
+        )
         model_max_tokens = max(
-            max_tokens,
-            int(self.feature_cfg.get("model_max_tokens", max_tokens)),
+            max_tokens, min(configured_max_tokens, provider_max_tokens)
         )
         reasoning_effort = self.feature_cfg.get(
             f"{purpose.replace(' ', '_')}_reasoning_effort"
@@ -728,6 +748,55 @@ class JsonModel:
                 return result
             except Exception as exc:
                 self.last_request_at = request_started_at
+                fallback_providers = [
+                    name
+                    for name in self.feature_cfg.get("model_fallback_providers", [])
+                    if isinstance(name, str)
+                    and name != provider_name
+                    and isinstance(self.settings.get(name), Mapping)
+                ]
+                fallback_after = max(
+                    1, int(self.feature_cfg.get("model_fallback_after", 2))
+                )
+                status_code = getattr(exc, "status_code", None)
+                if (
+                    fallback_providers
+                    and _provider_fallback_error(exc)
+                    and (status_code == 429 or attempt + 1 >= fallback_after)
+                ):
+                    fallback_provider = fallback_providers[0]
+                    status = (
+                        f", status_code={status_code}"
+                        if status_code is not None
+                        else ""
+                    )
+                    print(
+                        f"  [warn] AI {purpose} provider {provider_name} exhausted "
+                        f"({type(exc).__name__}{status}); falling back to "
+                        f"{fallback_provider}"
+                    )
+                    fallback_settings = dict(self.settings)
+                    fallback_features = dict(self.feature_cfg)
+                    fallback_features["model_fallback_providers"] = (
+                        fallback_providers[1:]
+                    )
+                    fallback_settings["ai"] = {"provider": fallback_provider}
+                    fallback_settings["features"] = fallback_features
+                    try:
+                        self._fallback_model = JsonModel(
+                            fallback_settings,
+                            sleep=self.sleep,
+                            monotonic=self.monotonic,
+                        )
+                    except Exception as fallback_exc:
+                        raise FeatureError(
+                            f"AI {purpose} failed closed: fallback provider "
+                            f"{fallback_provider} is unavailable "
+                            f"({type(fallback_exc).__name__})"
+                        ) from exc
+                    return self._fallback_model.complete(
+                        instructions, payload, max_tokens, purpose
+                    )
                 if not _retryable_model_error(exc) or attempt == retry_max - 1:
                     raise FeatureError(f"AI {purpose} failed closed: {exc}") from exc
                 retry_delay = min(retry_interval * (2**attempt), retry_max_interval)
@@ -739,7 +808,6 @@ class JsonModel:
                     )
                     request_max_tokens = next_max_tokens
                 else:
-                    status_code = getattr(exc, "status_code", None)
                     status = (
                         f", status_code={status_code}"
                         if status_code is not None
