@@ -99,7 +99,10 @@ github_models:
   api_key_env: "GITHUB_TOKEN"
   endpoint: "https://models.github.ai/inference"
   model: "openai/gpt-4.1"
-  feature_max_tokens: 32000
+  feature_max_tokens: 4000
+  feature_topic_candidate_limit: 16
+  feature_linked_candidate_min: 1
+  feature_abstract_max_chars: 1000
   max_tokens: 1500
   batch_size: 5
   batch_max_tokens: 6000
