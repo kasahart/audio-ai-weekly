@@ -1392,6 +1392,63 @@ def _only_short_body_expansion_errors(errors: list[str]) -> bool:
     return bool(errors) and all(error.startswith(prefixes) for error in errors)
 
 
+def _non_whitespace_character_count(value: str) -> int:
+    return len("".join(value.split()))
+
+
+def _trim_text_to_character_limit(value: str, limit: int) -> str:
+    """Return a bounded prefix, preferring a nearby complete sentence."""
+    if _non_whitespace_character_count(value) <= limit:
+        return value.strip()
+    seen = 0
+    end = 0
+    for index, character in enumerate(value):
+        if not character.isspace():
+            seen += 1
+        if seen >= limit:
+            end = index + 1
+            break
+    prefix = value[:end].rstrip()
+    sentence_end = max(prefix.rfind(mark) for mark in "。！？!?")
+    if sentence_end >= 0:
+        sentence_prefix = prefix[: sentence_end + 1].rstrip()
+        if _non_whitespace_character_count(sentence_prefix) >= int(limit * 0.85):
+            return sentence_prefix
+    if prefix and prefix[-1] not in "。！？!?":
+        while prefix and _non_whitespace_character_count(prefix) >= limit:
+            prefix = prefix[:-1].rstrip()
+        prefix += "。"
+    return prefix
+
+
+def _trim_additions_to_character_limit(
+    additions: Mapping[str, str], limit: int
+) -> dict[str, str]:
+    """Trim additions proportionally while retaining prose for every block."""
+    counts = {
+        block_id: _non_whitespace_character_count(text)
+        for block_id, text in additions.items()
+    }
+    total = sum(counts.values())
+    if total <= limit:
+        return dict(additions)
+
+    result: dict[str, str] = {}
+    remaining = limit
+    items = list(additions.items())
+    for index, (block_id, text) in enumerate(items):
+        remaining_blocks = len(items) - index - 1
+        if not remaining_blocks:
+            quota = remaining
+        else:
+            proportional = round(limit * counts[block_id] / total)
+            quota = max(1, min(proportional, remaining - remaining_blocks))
+        trimmed = _trim_text_to_character_limit(text, quota)
+        result[block_id] = trimmed
+        remaining -= _non_whitespace_character_count(trimmed)
+    return result
+
+
 def expand_short_body(
     model: Any,
     feature: dict,
@@ -1523,7 +1580,18 @@ def expand_short_body(
                 + ", ".join(missing_required)
             )
         addition_text = "".join(candidate_additions.values())
-        addition_chars = len("".join(addition_text.split()))
+        addition_chars = _non_whitespace_character_count(addition_text)
+        if not errors and addition_chars > addition_max:
+            print(
+                "  [warn] AI short body expansion exceeded the local character "
+                f"limit ({addition_chars}>{addition_max}); trimming complete "
+                "additions proportionally"
+            )
+            candidate_additions = _trim_additions_to_character_limit(
+                candidate_additions, addition_max
+            )
+            addition_text = "".join(candidate_additions.values())
+            addition_chars = _non_whitespace_character_count(addition_text)
         if not addition_min <= addition_chars <= addition_max:
             errors.append(
                 f"Short-body additions have {addition_chars} characters; required "

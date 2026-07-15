@@ -906,6 +906,49 @@ def test_short_body_expansion_retries_locally_invalid_length(capsys):
     assert "failed local validation (attempt 1/2, errors=1)" in output
 
 
+def test_short_body_expansion_trims_overlong_additions(capsys):
+    calls = []
+
+    class ExpansionModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            return {
+                "blockAdditions": [
+                    {
+                        "id": block["id"],
+                        "text": "追加の説明です。" * 100,
+                        "sourceIds": block["sourceIds"],
+                    }
+                    for block in payload["blocks"]
+                ]
+            }
+
+    feature = generate_feature.assemble_feature(
+        make_body(chars_per_section=360),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    body = generate_feature.expand_short_body(
+        ExpansionModel(), feature, make_sources()
+    )
+    expanded_chars = generate_feature.article_character_count(
+        {"sections": body["sections"]}
+    )
+
+    assert len(calls) == 1
+    assert 4000 <= expanded_chars <= 5000
+    assert all(
+        block["text"].endswith("。")
+        for section in body["sections"]
+        for block in section["blocks"]
+    )
+    assert "trimming complete additions proportionally" in capsys.readouterr().out
+
+
 def test_complete_feature_passes_local_publication_gates():
     feature = make_feature()
     generate_feature.validate_feature(feature)
