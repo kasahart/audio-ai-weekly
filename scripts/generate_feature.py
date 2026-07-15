@@ -629,6 +629,79 @@ def _provider_fallback_error(exc: Exception) -> bool:
     )
 
 
+def _compact_provider_payload(payload: Any, provider_cfg: Mapping[str, Any]) -> Any:
+    """Bound large feature inputs for providers with smaller free-tier contexts."""
+    raw_candidate_limit = provider_cfg.get("feature_topic_candidate_limit")
+    raw_linked_candidate_min = provider_cfg.get("feature_linked_candidate_min")
+    raw_abstract_limit = provider_cfg.get("feature_abstract_max_chars")
+    if (
+        raw_candidate_limit is None
+        and raw_linked_candidate_min is None
+        and raw_abstract_limit is None
+    ):
+        return payload
+
+    candidate_limit = (
+        max(1, int(raw_candidate_limit))
+        if raw_candidate_limit is not None
+        else None
+    )
+    abstract_limit = (
+        max(1, int(raw_abstract_limit))
+        if raw_abstract_limit is not None
+        else None
+    )
+    linked_candidate_min = (
+        max(0, int(raw_linked_candidate_min))
+        if raw_linked_candidate_min is not None
+        else 0
+    )
+
+    def compact(value: Any, key: str | None = None) -> Any:
+        if isinstance(value, Mapping):
+            return {
+                item_key: compact(item, item_key)
+                for item_key, item in value.items()
+            }
+        if isinstance(value, list):
+            items = value
+            if key == "archiveCandidates" and candidate_limit is not None:
+                items = list(items[:candidate_limit])
+                linked_count = sum(
+                    isinstance(item, Mapping)
+                    and item.get("hasPrimaryLink") is True
+                    for item in items
+                )
+                if linked_count < linked_candidate_min:
+                    missing_linked = [
+                        item
+                        for item in value[candidate_limit:]
+                        if isinstance(item, Mapping)
+                        and item.get("hasPrimaryLink") is True
+                    ][: linked_candidate_min - linked_count]
+                    for linked_item in missing_linked:
+                        replace_at = next(
+                            (
+                                index
+                                for index in range(len(items) - 1, -1, -1)
+                                if not (
+                                    isinstance(items[index], Mapping)
+                                    and items[index].get("hasPrimaryLink") is True
+                                )
+                            ),
+                            None,
+                        )
+                        if replace_at is None:
+                            break
+                        items[replace_at] = linked_item
+            return [compact(item) for item in items]
+        if key == "abstract" and abstract_limit is not None and isinstance(value, str):
+            return value[:abstract_limit]
+        return value
+
+    return compact(payload)
+
+
 class JsonModel:
     """Rate-limited JSON-only wrapper around the configured OpenAI-compatible model."""
 
@@ -677,19 +750,19 @@ class JsonModel:
             retry_interval,
             float(self.feature_cfg.get("model_retry_max_interval", 240.0)),
         )
-        configured_max_tokens = int(
-            self.feature_cfg.get("model_max_tokens", max_tokens)
+        configured_max_tokens = max(
+            1, int(self.feature_cfg.get("model_max_tokens", max_tokens))
         )
-        provider_max_tokens = int(
-            provider_cfg.get("feature_max_tokens", configured_max_tokens)
+        provider_max_tokens = max(
+            1,
+            int(provider_cfg.get("feature_max_tokens", configured_max_tokens)),
         )
-        model_max_tokens = max(
-            max_tokens, min(configured_max_tokens, provider_max_tokens)
-        )
+        model_max_tokens = min(configured_max_tokens, provider_max_tokens)
         reasoning_effort = self.feature_cfg.get(
             f"{purpose.replace(' ', '_')}_reasoning_effort"
         )
-        request_max_tokens = max_tokens
+        request_max_tokens = min(max(1, max_tokens), model_max_tokens)
+        request_payload = _compact_provider_payload(payload, provider_cfg)
         for attempt in range(retry_max):
             if self.last_request_at is not None:
                 remaining = float(provider_cfg.get("min_request_interval", 0)) - (
@@ -706,7 +779,7 @@ class JsonModel:
                         {
                             "role": "user",
                             "content": json.dumps(
-                                {"untrustedData": payload},
+                                {"untrustedData": request_payload},
                                 ensure_ascii=False,
                                 separators=(",", ":"),
                             ),

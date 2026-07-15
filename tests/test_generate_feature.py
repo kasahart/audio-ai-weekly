@@ -589,6 +589,40 @@ def test_json_model_uses_purpose_specific_reasoning_effort(monkeypatch):
     assert client.calls[1]["reasoning_effort"] == "medium"
 
 
+def test_json_model_applies_provider_limits_without_mutating_payload(monkeypatch):
+    client = FakeOpenAIClient(['{"ok":true}'])
+    monkeypatch.setattr(generate_feature, "create_client", lambda _settings: client)
+    settings = model_settings()
+    settings["test"].update(
+        {
+            "feature_max_tokens": 40,
+            "feature_topic_candidate_limit": 2,
+            "feature_linked_candidate_min": 1,
+            "feature_abstract_max_chars": 5,
+        }
+    )
+    payload = {
+        "archiveCandidates": [
+            {"id": "1", "abstract": "abcdefghij", "hasPrimaryLink": False},
+            {"id": "2", "abstract": "klmnopqrst", "hasPrimaryLink": False},
+            {"id": "3", "abstract": "uvwxyz", "hasPrimaryLink": True},
+        ],
+        "primarySources": [{"sourceId": "S1", "abstract": "0123456789"}],
+    }
+    model = generate_feature.JsonModel(settings, sleep=lambda _seconds: None)
+
+    assert model.complete("Rules", payload, 100, "topic selection") == {"ok": True}
+    assert client.calls[0]["max_tokens"] == 40
+    sent = json.loads(client.calls[0]["messages"][1]["content"])["untrustedData"]
+    assert sent["archiveCandidates"] == [
+        {"id": "1", "abstract": "abcde", "hasPrimaryLink": False},
+        {"id": "3", "abstract": "uvwxy", "hasPrimaryLink": True},
+    ]
+    assert sent["primarySources"] == [{"sourceId": "S1", "abstract": "01234"}]
+    assert len(payload["archiveCandidates"]) == 3
+    assert payload["archiveCandidates"][0]["abstract"] == "abcdefghij"
+
+
 @pytest.mark.parametrize(("status_code", "primary_attempts"), [(503, 2), (429, 1)])
 def test_json_model_falls_back_only_for_provider_capacity_errors(
     monkeypatch, capsys, status_code, primary_attempts
@@ -687,9 +721,18 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["model_fallback_providers"] == ["github_models"]
     assert cfg["model_fallback_after"] == 2
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
+    assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
     assert (
-        generate_feature.SETTINGS["github_models"]["feature_max_tokens"]
-        >= cfg["generation_max_tokens"]
+        generate_feature.SETTINGS["github_models"]["feature_topic_candidate_limit"]
+        < cfg["topic_candidate_limit"]
+    )
+    assert (
+        generate_feature.SETTINGS["github_models"]["feature_linked_candidate_min"]
+        == 1
+    )
+    assert (
+        generate_feature.SETTINGS["github_models"]["feature_abstract_max_chars"]
+        < 2400
     )
 
 
