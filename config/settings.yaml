@@ -64,10 +64,12 @@ features:
   english_summary_min_words: 60
   english_summary_max_words: 250
   selection_max_tokens: 16000
-  generation_max_tokens: 32000
+  generation_max_tokens: 16000
   verification_max_tokens: 16000
-  revision_max_tokens: 32000
+  revision_max_tokens: 16000
   model_max_tokens: 64000
+  feature_generation_reasoning_effort: low
+  single_revision_reasoning_effort: low
   temperature: 0.2
   request_timeout: 30
   model_timeout: 180

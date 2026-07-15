@@ -61,14 +61,17 @@ def build_token_kwargs(model: str, max_tokens: int) -> dict:
 
 
 def build_chat_kwargs(
-    model: str, max_tokens: int, temperature: float | None = None
+    model: str,
+    max_tokens: int,
+    temperature: float | None = None,
+    reasoning_effort: str | None = None,
 ) -> dict:
     kwargs = build_token_kwargs(model, max_tokens)
     model_name = model.rsplit("/", 1)[-1]
     if model_name.startswith("gpt-5"):
-        kwargs["reasoning_effort"] = "minimal"
+        kwargs["reasoning_effort"] = reasoning_effort or "minimal"
     elif model_name.startswith("gemini-3"):
-        kwargs["reasoning_effort"] = "medium"
+        kwargs["reasoning_effort"] = reasoning_effort or "medium"
     if temperature is not None and supports_custom_temperature(model):
         kwargs["temperature"] = temperature
     return kwargs

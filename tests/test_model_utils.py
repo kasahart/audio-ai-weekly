@@ -184,3 +184,15 @@ class TestBuildChatKwargs:
     def test_gemini3_uses_default_temperature_and_medium_reasoning(self):
         result = build_chat_kwargs("gemini-3.5-flash", 1000, temperature=0.3)
         assert result == {"max_tokens": 1000, "reasoning_effort": "medium"}
+
+    def test_gemini3_accepts_reasoning_override(self):
+        result = build_chat_kwargs(
+            "gemini-3.5-flash", 1000, temperature=0.3, reasoning_effort="low"
+        )
+        assert result == {"max_tokens": 1000, "reasoning_effort": "low"}
+
+    def test_non_reasoning_model_ignores_reasoning_override(self):
+        result = build_chat_kwargs(
+            "gpt-4o", 1000, temperature=0.3, reasoning_effort="low"
+        )
+        assert result == {"max_tokens": 1000, "temperature": 0.3}
