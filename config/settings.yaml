@@ -63,10 +63,11 @@ features:
   japanese_body_min_ratio: 0.5
   english_summary_min_words: 60
   english_summary_max_words: 250
-  selection_max_tokens: 2200
-  generation_max_tokens: 10000
-  verification_max_tokens: 3000
-  revision_max_tokens: 10000
+  selection_max_tokens: 16000
+  generation_max_tokens: 32000
+  verification_max_tokens: 16000
+  revision_max_tokens: 32000
+  model_max_tokens: 64000
   temperature: 0.2
   request_timeout: 30
   model_timeout: 180

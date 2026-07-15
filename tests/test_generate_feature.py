@@ -391,8 +391,17 @@ class FakeOpenAIClient:
         result = next(self.responses)
         if isinstance(result, Exception):
             raise result
+        if isinstance(result, tuple):
+            result, finish_reason = result
+        else:
+            finish_reason = "stop"
         return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content=result))]
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content=result),
+                    finish_reason=finish_reason,
+                )
+            ]
         )
 
 
@@ -433,6 +442,7 @@ def test_json_model_retries_malformed_json_but_not_unknown_errors(monkeypatch):
     model = generate_feature.JsonModel(model_settings(), sleep=lambda _seconds: None)
     assert model.complete("Rules", {}, 100, "test") == {"ok": True}
     assert len(retrying_client.calls) == 2
+    assert [call["max_tokens"] for call in retrying_client.calls] == [100, 100]
 
     failing_client = FakeOpenAIClient([RuntimeError("invalid request")])
     monkeypatch.setattr(
@@ -442,6 +452,55 @@ def test_json_model_retries_malformed_json_but_not_unknown_errors(monkeypatch):
     with pytest.raises(generate_feature.FeatureError, match="failed closed"):
         model.complete("Rules", {}, 100, "test")
     assert len(failing_client.calls) == 1
+
+
+def test_json_model_expands_budget_only_after_truncated_response(monkeypatch, capsys):
+    sensitive_fragment = '{"privateDraft":"do not log this"'
+    client = FakeOpenAIClient([(sensitive_fragment, "length"), ('{"ok":true}', "stop")])
+    monkeypatch.setattr(generate_feature, "create_client", lambda _settings: client)
+    settings = model_settings()
+    settings["features"]["model_max_tokens"] = 400
+    model = generate_feature.JsonModel(settings, sleep=lambda _seconds: None)
+
+    assert model.complete("Rules", {}, 100, "topic selection") == {"ok": True}
+    assert [call["max_tokens"] for call in client.calls] == [100, 200]
+    output = capsys.readouterr().out
+    assert "finish_reason=length" in output
+    assert "retrying with max_tokens=200" in output
+    assert sensitive_fragment not in output
+
+
+def test_json_model_reports_exhausted_truncation_without_response_body(
+    monkeypatch, capsys
+):
+    sensitive_fragment = '{"privateDraft":"still do not log this"'
+    client = FakeOpenAIClient([(sensitive_fragment, "MAX_TOKENS")])
+    monkeypatch.setattr(generate_feature, "create_client", lambda _settings: client)
+    model = generate_feature.JsonModel(
+        model_settings(retry_max=1), sleep=lambda _seconds: None
+    )
+
+    with pytest.raises(
+        generate_feature.FeatureError,
+        match=r"response truncated.*finish_reason=max_tokens.*requested_max_tokens=100",
+    ):
+        model.complete("Rules", {}, 100, "topic selection")
+    assert sensitive_fragment not in capsys.readouterr().out
+
+
+def test_feature_model_budgets_cover_reasoning_and_structured_output():
+    cfg = generate_feature.FEATURE_SETTINGS
+
+    assert cfg["selection_max_tokens"] >= 16000
+    assert cfg["generation_max_tokens"] >= 32000
+    assert cfg["verification_max_tokens"] >= 16000
+    assert cfg["revision_max_tokens"] >= 32000
+    assert cfg["model_max_tokens"] >= max(
+        cfg["selection_max_tokens"],
+        cfg["generation_max_tokens"],
+        cfg["verification_max_tokens"],
+        cfg["revision_max_tokens"],
+    )
 
 
 def test_generation_keeps_source_instructions_out_of_system_prompt():
