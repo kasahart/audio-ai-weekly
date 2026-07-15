@@ -6,12 +6,18 @@ Return additional paragraphs only; do not repeat, replace, summarize, or delete 
 Across all `text` values, write {{addition_min_chars}}-{{addition_max_chars}} non-whitespace Japanese
 characters. Add one entry for each of the {{block_count}} supplied block IDs, preserving every ID
 exactly once. Deepen technical explanation, comparisons, limitations, uncertainty, and practical
-implications. Any factual claim in an addition must be supported by the sourceIds already attached
-to that block. Do not introduce new source IDs, facts from memory, or deployment claims.
+implications. Any factual claim in an addition must be supported by the sourceIds returned for that
+block. Keep all source IDs already attached to each block. Add only IDs present in `primarySources`,
+and ensure every currently uncited source ID in {{required_source_ids_json}} is attached to at least
+one relevant addition. Do not introduce facts from memory or deployment claims.
 
 Return JSON only with this shape and no Markdown fences:
 {
   "blockAdditions": [
-    {"id": "existing-block-id", "text": "Additional Japanese paragraphs only"}
+    {
+      "id": "existing-block-id",
+      "text": "Additional Japanese paragraphs only",
+      "sourceIds": ["existing-or-required-source-id"]
+    }
   ]
 }
