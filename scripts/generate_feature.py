@@ -642,7 +642,26 @@ class JsonModel:
         self, instructions: str, payload: Any, max_tokens: int, purpose: str
     ) -> dict:
         _, provider_cfg = get_ai_config(self.settings)
-        retry_max = max(1, int(provider_cfg.get("retry_max", 3)))
+        retry_max = max(
+            1,
+            int(
+                self.feature_cfg.get(
+                    "model_retry_max", provider_cfg.get("retry_max", 3)
+                )
+            ),
+        )
+        retry_interval = max(
+            0.0,
+            float(
+                self.feature_cfg.get(
+                    "model_retry_interval", provider_cfg.get("retry_interval", 5.0)
+                )
+            ),
+        )
+        retry_max_interval = max(
+            retry_interval,
+            float(self.feature_cfg.get("model_retry_max_interval", 240.0)),
+        )
         model_max_tokens = max(
             max_tokens,
             int(self.feature_cfg.get("model_max_tokens", max_tokens)),
@@ -707,16 +726,27 @@ class JsonModel:
                 self.last_request_at = request_started_at
                 if not _retryable_model_error(exc) or attempt == retry_max - 1:
                     raise FeatureError(f"AI {purpose} failed closed: {exc}") from exc
+                retry_delay = min(retry_interval * (2**attempt), retry_max_interval)
                 if isinstance(exc, ModelResponseTruncated):
                     next_max_tokens = min(request_max_tokens * 2, model_max_tokens)
                     print(
                         f"  [warn] AI {purpose} {exc}; retrying with "
-                        f"max_tokens={next_max_tokens}"
+                        f"max_tokens={next_max_tokens} in {retry_delay:g}s"
                     )
                     request_max_tokens = next_max_tokens
-                self.sleep(
-                    float(provider_cfg.get("retry_interval", 5.0)) * (2**attempt)
-                )
+                else:
+                    status_code = getattr(exc, "status_code", None)
+                    status = (
+                        f", status_code={status_code}"
+                        if status_code is not None
+                        else ""
+                    )
+                    print(
+                        f"  [warn] AI {purpose} attempt {attempt + 1}/{retry_max} "
+                        f"failed ({type(exc).__name__}{status}); retrying in "
+                        f"{retry_delay:g}s"
+                    )
+                self.sleep(retry_delay)
         raise FeatureError(f"AI {purpose} retry loop exited unexpectedly")
 
 

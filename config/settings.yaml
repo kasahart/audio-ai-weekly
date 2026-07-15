@@ -71,6 +71,9 @@ features:
   temperature: 0.2
   request_timeout: 30
   model_timeout: 180
+  model_retry_max: 6
+  model_retry_interval: 15.0
+  model_retry_max_interval: 240.0
   retry_max: 3
   retry_interval: 5.0
   retryable_http_statuses: [429, 500, 502, 503, 504]

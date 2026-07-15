@@ -488,6 +488,30 @@ def test_json_model_reports_exhausted_truncation_without_response_body(
     assert sensitive_fragment not in capsys.readouterr().out
 
 
+def test_json_model_uses_feature_retry_budget_with_capped_backoff(monkeypatch, capsys):
+    private_error = "temporary error containing a private draft"
+    client = FakeOpenAIClient([ValueError(private_error)] * 4 + ['{"ok":true}'])
+    monkeypatch.setattr(generate_feature, "create_client", lambda _settings: client)
+    settings = model_settings(retry_max=1)
+    settings["features"].update(
+        {
+            "model_retry_max": 5,
+            "model_retry_interval": 2,
+            "model_retry_max_interval": 5,
+        }
+    )
+    sleeps = []
+    model = generate_feature.JsonModel(settings, sleep=sleeps.append)
+
+    assert model.complete("Rules", {}, 100, "feature generation") == {"ok": True}
+    assert len(client.calls) == 5
+    assert sleeps == [2, 4, 5, 5]
+    output = capsys.readouterr().out
+    assert "attempt 1/5 failed (ValueError)" in output
+    assert "retrying in 5s" in output
+    assert private_error not in output
+
+
 def test_feature_model_budgets_cover_reasoning_and_structured_output():
     cfg = generate_feature.FEATURE_SETTINGS
 
@@ -501,6 +525,8 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
         cfg["verification_max_tokens"],
         cfg["revision_max_tokens"],
     )
+    assert cfg["model_retry_max"] >= 5
+    assert cfg["model_retry_max_interval"] >= cfg["model_retry_interval"]
 
 
 def test_generation_keeps_source_instructions_out_of_system_prompt():
