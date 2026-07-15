@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 import pytest
@@ -37,7 +38,10 @@ class TestProviderConfiguration:
         settings = yaml.safe_load((root / "config/settings.yaml").read_text())
         assert settings["ai"]["provider"] == "gemini"
         assert settings["github_models"]["api_key_env"] == "GITHUB_TOKEN"
-        assert settings["github_models"]["endpoint"] == "https://models.github.ai/inference"
+        assert (
+            settings["github_models"]["endpoint"]
+            == "https://models.github.ai/inference"
+        )
         assert settings["github_models"]["model"] == "gpt-4o"
         assert settings["gemini"] == {
             "api_key_env": "GEMINI_API_KEY",
@@ -56,7 +60,10 @@ class TestProviderConfiguration:
         assert provider == "github_models"
         assert config["model"] == "openai/gpt-5"
         assert config["endpoint"] == "https://models.example/v1"
-        assert get_api_key(provider, config, {"GITHUB_TOKEN": "github-key"}) == "github-key"
+        assert (
+            get_api_key(provider, config, {"GITHUB_TOKEN": "github-key"})
+            == "github-key"
+        )
 
     def test_selects_gemini(self):
         settings = {**SETTINGS, "ai": {"provider": "gemini"}}
@@ -64,7 +71,10 @@ class TestProviderConfiguration:
         assert provider == "gemini"
         assert config["model"] == "gemini-3.5-flash"
         assert config["endpoint"] == "https://gemini.example/openai/"
-        assert get_api_key(provider, config, {"GEMINI_API_KEY": "gemini-key"}) == "gemini-key"
+        assert (
+            get_api_key(provider, config, {"GEMINI_API_KEY": "gemini-key"})
+            == "gemini-key"
+        )
 
     def test_unknown_provider_is_an_explicit_error(self):
         settings = {**SETTINGS, "ai": {"provider": "unknown"}}
@@ -107,6 +117,9 @@ class TestSupportsCustomTemperature:
 
     def test_provider_prefixed_gpt5_does_not_support_temperature(self):
         assert supports_custom_temperature("openai/gpt-5") is False
+
+    def test_gemini3_does_not_support_custom_temperature(self):
+        assert supports_custom_temperature("gemini-3.5-flash") is False
 
     def test_o1_supports_temperature(self):
         # o1 does not start with gpt-5, so supports temperature
@@ -168,6 +181,6 @@ class TestBuildChatKwargs:
         result = build_chat_kwargs("gpt-4o", 800, temperature=None)
         assert "temperature" not in result
 
-    def test_gemini_uses_max_tokens_and_temperature(self):
+    def test_gemini3_uses_default_temperature_and_medium_reasoning(self):
         result = build_chat_kwargs("gemini-3.5-flash", 1000, temperature=0.3)
-        assert result == {"max_tokens": 1000, "temperature": 0.3}
+        assert result == {"max_tokens": 1000, "reasoning_effort": "medium"}

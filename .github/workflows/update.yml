@@ -51,9 +51,10 @@ jobs:
         run: |
           RUN_CREATED_AT=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .created_at)
           REF_DATE="${TARGET_DATE:-${RUN_CREATED_AT%%T*}}"
-          git fetch origin gh-pages
-          git show origin/gh-pages:data/index.json > /tmp/existing_index.json 2>/dev/null \
-            || echo '{"weeks":[]}' > /tmp/existing_index.json
+          git fetch --no-tags origin gh-pages
+          PUBLISHED_REF=$(git rev-parse --verify origin/gh-pages)
+          git show "${PUBLISHED_REF}:data/index.json" > /tmp/existing_index.json
+          python -m json.tool /tmp/existing_index.json > /dev/null
           python scripts/fetch_window.py \
             --index /tmp/existing_index.json \
             --settings config/settings.yaml \
@@ -154,10 +155,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - uses: actions/setup-node@v4
         with:
@@ -165,46 +168,80 @@ jobs:
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
+      - name: Restore published JSON from gh-pages
+        run: |
+          git fetch --no-tags origin gh-pages
+          PUBLISHED_REF=$(git rev-parse --verify origin/gh-pages)
+          git cat-file -e "${PUBLISHED_REF}:data/index.json"
+
+          mapfile -t JSON_FILES < <(git ls-tree -r --name-only "$PUBLISHED_REF" -- data | grep '\.json$')
+          if [ "${#JSON_FILES[@]}" -eq 0 ]; then
+            echo "::error::No published JSON files found on gh-pages"
+            exit 1
+          fi
+
+          WEEKLY_COUNT=0
+          for file in "${JSON_FILES[@]}"; do
+            case "$file" in
+              data/index.json|data/weekly/*.json|data/features/*.json)
+                mkdir -p "$(dirname "$file")"
+                tmp="${file}.published-tmp"
+                git show "${PUBLISHED_REF}:${file}" > "$tmp"
+                python -m json.tool "$tmp" > /dev/null
+                mv "$tmp" "$file"
+                case "$file" in data/weekly/*.json) WEEKLY_COUNT=$((WEEKLY_COUNT + 1));; esac
+                ;;
+            esac
+          done
+
+          if [ "$WEEKLY_COUNT" -eq 0 ]; then
+            echo "::error::No published weekly JSON files found on gh-pages"
+            exit 1
+          fi
+          cp data/index.json /tmp/existing_index.json
+
       - name: Download built data
         uses: actions/download-artifact@v4
         with:
           name: built-data
-          path: data/
+          path: /tmp/built-data
 
-      - name: Fetch existing weekly data from gh-pages
+      - name: Merge weekly data
         run: |
-          git fetch origin gh-pages
-          mkdir -p web/public/data/weekly
-          # Copy existing weekly JSON files.
-          for f in $(git ls-tree -r --name-only origin/gh-pages 2>/dev/null | grep '^data/weekly/.*\.json$'); do
-            git show origin/gh-pages:$f > web/public/$f 2>/dev/null || true
-          done
-          # Preserve the existing index.json.
-          git show origin/gh-pages:data/index.json > /tmp/existing_index.json 2>/dev/null \
-            || echo '{"weeks":[],"generated_at":""}' > /tmp/existing_index.json
-
-      - name: Merge data and copy to web/public
-        run: |
-          # Copy new weekly JSON files, replacing matching weeks.
-          find data/weekly -name '*.json' -exec cp {} web/public/data/weekly/ \;
-          # Merge the existing and new index.json files.
+          python -m json.tool /tmp/built-data/index.json > /dev/null
+          mkdir -p data/weekly
+          find /tmp/built-data/weekly -maxdepth 1 -type f -name '*.json' -exec cp {} data/weekly/ \;
           python3 - << 'EOF'
           import json
           existing = json.load(open('/tmp/existing_index.json'))
-          new = json.load(open('data/index.json'))
+          new = json.load(open('/tmp/built-data/index.json'))
           merged = {w['date']: w for w in existing.get('weeks', [])}
           for w in new.get('weeks', []):
               merged[w['date']] = w
           existing['weeks'] = sorted(merged.values(), key=lambda x: x['date'], reverse=True)
           existing['generated_at'] = new.get('generated_at', '')
           existing['categories'] = new.get('categories', existing.get('categories', []))
-          json.dump(existing, open('web/public/data/index.json', 'w'), ensure_ascii=False, indent=2)
+          json.dump(existing, open('data/index.json', 'w'), ensure_ascii=False, indent=2)
           print(f"[deploy] Merged index: {len(existing['weeks'])} weeks")
           EOF
+
+      - name: Copy published JSON
+        run: |
+          mkdir -p web/public/data/weekly web/public/data/features
+          install -m 0644 data/index.json web/public/data/index.json
+          find data/weekly -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/weekly/ \;
+          if [ -d data/features ]; then
+            find data/features -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/features/ \;
+          fi
+
+      - name: Render static feature pages
+        run: python scripts/render_features.py
+
       - name: Build frontend
         working-directory: web
         run: |
           npm ci
+          npm test -- --run
           npm run build
 
       - name: Deploy to GitHub Pages

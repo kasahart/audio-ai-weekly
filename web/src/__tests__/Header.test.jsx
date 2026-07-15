@@ -28,6 +28,12 @@ describe('Header', () => {
     expect(screen.getByText(/音の基盤モデル/)).toBeInTheDocument()
   })
 
+  it('links to the feature archive', () => {
+    render(<Header total={0} loading={false} />)
+    expect(screen.getByRole('link', { name: /特集アーカイブ/ }))
+      .toHaveAttribute('href', './features/')
+  })
+
   it('renders English copy and switches language', () => {
     const onLanguageChange = vi.fn()
     render(<Header total={2} loading={false} lang="en" onLanguageChange={onLanguageChange} />)

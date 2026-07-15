@@ -10,7 +10,11 @@ def get_ai_config(settings: Mapping) -> tuple[str, Mapping]:
     """Return the selected provider name and its configuration."""
     ai = settings.get("ai")
     provider = ai.get("provider") if isinstance(ai, Mapping) else None
-    if not provider or provider not in settings or not isinstance(settings[provider], Mapping):
+    if (
+        not provider
+        or provider not in settings
+        or not isinstance(settings[provider], Mapping)
+    ):
         raise ValueError(
             f"Unknown AI provider {provider!r}; set ai.provider to a configured provider"
         )
@@ -33,7 +37,9 @@ def get_api_key(
     return api_key
 
 
-def create_client(settings: Mapping, environ: Mapping[str, str] | None = None) -> OpenAI:
+def create_client(
+    settings: Mapping, environ: Mapping[str, str] | None = None
+) -> OpenAI:
     """Create an OpenAI client for the provider selected in settings."""
     provider, config = get_ai_config(settings)
     return OpenAI(
@@ -44,7 +50,7 @@ def create_client(settings: Mapping, environ: Mapping[str, str] | None = None) -
 
 def supports_custom_temperature(model: str) -> bool:
     model_name = model.rsplit("/", 1)[-1]
-    return not model_name.startswith("gpt-5")
+    return not model_name.startswith(("gpt-5", "gemini-3"))
 
 
 def build_token_kwargs(model: str, max_tokens: int) -> dict:
@@ -61,6 +67,8 @@ def build_chat_kwargs(
     model_name = model.rsplit("/", 1)[-1]
     if model_name.startswith("gpt-5"):
         kwargs["reasoning_effort"] = "minimal"
+    elif model_name.startswith("gemini-3"):
+        kwargs["reasoning_effort"] = "medium"
     if temperature is not None and supports_custom_temperature(model):
         kwargs["temperature"] = temperature
     return kwargs

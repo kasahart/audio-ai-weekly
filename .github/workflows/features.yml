@@ -1,0 +1,174 @@
+name: Publish Deep-Dive Features
+
+on:
+  schedule:
+    # Check every Tuesday at 03:00 UTC. The slot resolver publishes only on
+    # the second and fourth Tuesdays of each month.
+    - cron: '0 3 * * 2'
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Reference date YYYY-MM-DD (default: workflow creation date)'
+        required: false
+        type: string
+        default: ''
+      article_type:
+        description: 'Feature format (auto resolves the second/fourth Tuesday slot)'
+        required: true
+        type: choice
+        options:
+          - auto
+          - primer
+          - debate
+        default: auto
+      dry_run:
+        description: 'Generate and validate only; do not render or deploy'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: write
+  models: read
+
+concurrency:
+  group: github-pages
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  feature:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: write
+      models: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Resolve feature slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_DATE: ${{ inputs.target_date }}
+          REQUESTED_TYPE: ${{ inputs.article_type || 'auto' }}
+        run: |
+          RUN_CREATED_AT=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .created_at)
+          REFERENCE_DATE="${TARGET_DATE:-${RUN_CREATED_AT%%T*}}"
+          SLOT=$(python scripts/generate_feature.py --date "$REFERENCE_DATE" --print-slot)
+          case "$SLOT" in
+            primer|debate|none) ;;
+            *)
+              echo "::error::Unexpected feature slot: $SLOT"
+              exit 1
+              ;;
+          esac
+
+          SELECTED_TYPE="$REQUESTED_TYPE"
+          if [ "$SELECTED_TYPE" = "auto" ]; then
+            SELECTED_TYPE="$SLOT"
+          fi
+
+          SHOULD_RUN=true
+          if [ "$SELECTED_TYPE" = "none" ]; then
+            SHOULD_RUN=false
+            echo "No feature is due for $REFERENCE_DATE."
+          fi
+
+          echo "reference_date=$REFERENCE_DATE" >> "$GITHUB_OUTPUT"
+          echo "article_type=$SELECTED_TYPE" >> "$GITHUB_OUTPUT"
+          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+
+      - name: Restore published JSON from gh-pages
+        if: steps.slot.outputs.should_run == 'true'
+        run: |
+          git fetch --no-tags origin gh-pages
+          PUBLISHED_REF=$(git rev-parse --verify origin/gh-pages)
+          git cat-file -e "${PUBLISHED_REF}:data/index.json"
+
+          mapfile -t JSON_FILES < <(git ls-tree -r --name-only "$PUBLISHED_REF" -- data | grep '\.json$')
+          if [ "${#JSON_FILES[@]}" -eq 0 ]; then
+            echo "::error::No published JSON files found on gh-pages"
+            exit 1
+          fi
+
+          WEEKLY_COUNT=0
+          for file in "${JSON_FILES[@]}"; do
+            case "$file" in
+              data/index.json|data/weekly/*.json|data/features/*.json)
+                mkdir -p "$(dirname "$file")"
+                tmp="${file}.published-tmp"
+                git show "${PUBLISHED_REF}:${file}" > "$tmp"
+                python -m json.tool "$tmp" > /dev/null
+                mv "$tmp" "$file"
+                case "$file" in data/weekly/*.json) WEEKLY_COUNT=$((WEEKLY_COUNT + 1));; esac
+                ;;
+            esac
+          done
+
+          if [ "$WEEKLY_COUNT" -eq 0 ]; then
+            echo "::error::No published weekly JSON files found on gh-pages"
+            exit 1
+          fi
+
+      - name: Generate feature
+        if: steps.slot.outputs.should_run == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+        run: |
+          DRY_RUN_ARG=()
+          if [ "$DRY_RUN" = "true" ]; then
+            DRY_RUN_ARG+=(--dry-run)
+          fi
+          python scripts/generate_feature.py \
+            --date "${{ steps.slot.outputs.reference_date }}" \
+            --article-type "${{ steps.slot.outputs.article_type }}" \
+            "${DRY_RUN_ARG[@]}"
+
+      - name: Copy published JSON
+        if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
+        run: |
+          mkdir -p web/public/data/weekly web/public/data/features
+          install -m 0644 data/index.json web/public/data/index.json
+          find data/weekly -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/weekly/ \;
+          find data/features -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/features/ \;
+
+      - name: Render static feature pages
+        if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
+        run: python scripts/render_features.py
+
+      - uses: actions/setup-node@v4
+        if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build frontend
+        if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
+        working-directory: web
+        run: |
+          npm ci
+          npm test -- --run
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: web/dist
+          publish_branch: gh-pages
+          commit_message: "deploy: ${{ steps.slot.outputs.article_type }} feature for ${{ steps.slot.outputs.reference_date }}"
