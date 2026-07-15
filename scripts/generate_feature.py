@@ -33,7 +33,7 @@ FEATURE_SETTINGS = SETTINGS["features"]
 PROMPT_DIR = ROOT / "config" / "prompts"
 PROMPTS = {
     name: (PROMPT_DIR / f"feature_{name}.txt").read_text().strip()
-    for name in ("select", "generate", "verify", "revise")
+    for name in ("select", "generate", "verify", "revise", "expand")
 }
 
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
@@ -1383,6 +1383,146 @@ def revise_body(
     )
 
 
+def _only_short_body_errors(errors: list[str]) -> bool:
+    prefixes = (
+        "Japanese body has ",
+        "Estimated reading time must be ",
+    )
+    return bool(errors) and all(error.startswith(prefixes) for error in errors)
+
+
+def expand_short_body(
+    model: Any,
+    feature: dict,
+    sources: list[dict],
+    cfg: Mapping[str, Any] = FEATURE_SETTINGS,
+) -> dict:
+    """Append grounded prose without spending the response budget on full regeneration."""
+    blocks: list[dict] = []
+    for section in feature.get("sections", []):
+        if not isinstance(section, dict):
+            continue
+        for block in section.get("blocks", []):
+            if not isinstance(block, dict):
+                continue
+            blocks.append(
+                {
+                    "id": block.get("id"),
+                    "text": block.get("text"),
+                    "sourceIds": block.get("sourceIds"),
+                }
+            )
+    expected_ids = [block["id"] for block in blocks]
+    if not expected_ids or not _unique_strings(expected_ids):
+        raise FeatureValidationError(
+            ["Short-body expansion requires unique existing block IDs"]
+        )
+
+    current_chars = article_character_count(feature)
+    absolute_max = min(cfg["target_max_chars"], cfg["validation_max_chars"])
+    expanded_min = min(
+        absolute_max,
+        max(
+            cfg["target_min_chars"] + 500,
+            cfg["validation_min_chars"] + 500,
+        ),
+    )
+    expanded_max = absolute_max
+    addition_min = max(1, expanded_min - current_chars)
+    addition_max = max(addition_min, expanded_max - current_chars)
+    instructions = render_prompt(
+        PROMPTS["expand"],
+        addition_min_chars=str(addition_min),
+        addition_max_chars=str(addition_max),
+        block_count=str(len(blocks)),
+    )
+    retry_max = max(1, int(cfg.get("short_body_expansion_retry_max", 1)))
+    validation_feedback: list[str] | None = None
+    addition_by_id: dict[str, str] | None = None
+    for attempt in range(retry_max):
+        payload: dict[str, Any] = {
+            "primarySources": grounding_source_payload(sources),
+            "blocks": blocks,
+        }
+        if validation_feedback is not None:
+            payload["validationFeedback"] = {
+                "errors": validation_feedback,
+                "remainingAttempts": retry_max - attempt,
+            }
+        raw = model.complete(
+            instructions,
+            payload,
+            cfg["revision_max_tokens"],
+            "short body expansion",
+        )
+        errors: list[str] = []
+        additions = raw.get("blockAdditions") if isinstance(raw, dict) else None
+        if not isinstance(additions, list):
+            errors.append("Short-body expansion must return a blockAdditions array")
+            additions = []
+
+        candidate_additions: dict[str, str] = {}
+        for addition in additions:
+            if not isinstance(addition, dict):
+                errors.append("Every short-body addition must be an object")
+                continue
+            block_id = addition.get("id")
+            text = addition.get("text")
+            if (
+                not isinstance(block_id, str)
+                or block_id not in expected_ids
+                or block_id in candidate_additions
+                or not isinstance(text, str)
+                or not text.strip()
+                or not JAPANESE_CHAR_RE.search(text)
+            ):
+                errors.append("Short-body expansion returned an invalid block addition")
+                continue
+            candidate_additions[block_id] = text.strip()
+        if set(candidate_additions) != set(expected_ids):
+            errors.append(
+                "Short-body expansion must add prose to every existing block"
+            )
+        addition_text = "".join(candidate_additions.values())
+        addition_chars = len("".join(addition_text.split()))
+        if not addition_min <= addition_chars <= addition_max:
+            errors.append(
+                f"Short-body additions have {addition_chars} characters; required "
+                f"range is {addition_min}-{addition_max}"
+            )
+        if _japanese_ratio(addition_text) < cfg["japanese_body_min_ratio"]:
+            errors.append("Short-body additions must be predominantly Japanese")
+        if not errors:
+            addition_by_id = candidate_additions
+            break
+        if attempt == retry_max - 1:
+            raise FeatureValidationError(errors)
+        validation_feedback = errors
+        print(
+            "  [warn] AI short body expansion failed local validation "
+            f"(attempt {attempt + 1}/{retry_max}, errors={len(errors)}); "
+            "requesting corrected additions"
+        )
+    if addition_by_id is None:
+        raise FeatureError("AI short body expansion validation loop exited unexpectedly")
+
+    body = dict(_body_from_feature(feature))
+    expanded_sections: list[dict] = []
+    for section in feature["sections"]:
+        expanded_section = dict(section)
+        expanded_blocks: list[dict] = []
+        for block in section["blocks"]:
+            expanded_block = dict(block)
+            expanded_block["text"] = (
+                f"{block['text'].rstrip()}\n\n{addition_by_id[block['id']]}"
+            )
+            expanded_blocks.append(expanded_block)
+        expanded_section["blocks"] = expanded_blocks
+        expanded_sections.append(expanded_section)
+    body["sections"] = expanded_sections
+    return body
+
+
 def verify_feature(
     model: Any,
     feature: dict,
@@ -1530,9 +1670,15 @@ def run_feature_pipeline(
     try:
         validate_feature(feature, cfg)
     except FeatureValidationError as exc:
-        body = revise_body(
-            model, feature, plan, sources, _issue_payload(exc.errors), cfg
-        )
+        if (
+            article_character_count(feature) < cfg["validation_min_chars"]
+            and _only_short_body_errors(exc.errors)
+        ):
+            body = expand_short_body(model, feature, sources, cfg)
+        else:
+            body = revise_body(
+                model, feature, plan, sources, _issue_payload(exc.errors), cfg
+            )
         revision_count = 1
         feature = assemble_feature(
             body,
