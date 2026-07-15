@@ -45,6 +45,7 @@ ARXIV_VERSION_RE = re.compile(r"v[0-9]+$")
 JAPANESE_CHAR_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
 LATIN_CHAR_RE = re.compile(r"[A-Za-z]")
 ENGLISH_WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z'-]*\b")
+TRUNCATED_FINISH_REASONS = frozenset({"length", "max_tokens", "max_output_tokens"})
 
 
 class FeatureError(RuntimeError):
@@ -57,6 +58,10 @@ class FeatureValidationError(FeatureError):
     def __init__(self, errors: list[str]):
         self.errors = errors
         super().__init__("; ".join(errors))
+
+
+class ModelResponseTruncated(ValueError):
+    """The model exhausted its output budget before completing a JSON response."""
 
 
 def feature_slot(value: date) -> str:
@@ -638,6 +643,11 @@ class JsonModel:
     ) -> dict:
         _, provider_cfg = get_ai_config(self.settings)
         retry_max = max(1, int(provider_cfg.get("retry_max", 3)))
+        model_max_tokens = max(
+            max_tokens,
+            int(self.feature_cfg.get("model_max_tokens", max_tokens)),
+        )
+        request_max_tokens = max_tokens
         for attempt in range(retry_max):
             if self.last_request_at is not None:
                 remaining = float(provider_cfg.get("min_request_interval", 0)) - (
@@ -663,12 +673,26 @@ class JsonModel:
                     response_format={"type": "json_object"},
                     **build_chat_kwargs(
                         provider_cfg["model"],
-                        max_tokens,
+                        request_max_tokens,
                         temperature=self.feature_cfg.get("temperature", 0.2),
                     ),
                 )
                 self.last_request_at = self.monotonic()
-                raw = (response.choices[0].message.content or "").strip()
+                choice = response.choices[0]
+                raw = (choice.message.content or "").strip()
+                finish_reason = str(getattr(choice, "finish_reason", "") or "").lower()
+                if finish_reason in TRUNCATED_FINISH_REASONS:
+                    usage = getattr(response, "usage", None)
+                    details = getattr(usage, "completion_tokens_details", None)
+                    diagnostics = (
+                        f"finish_reason={finish_reason}, "
+                        f"requested_max_tokens={request_max_tokens}, "
+                        f"completion_tokens={getattr(usage, 'completion_tokens', None)}, "
+                        f"reasoning_tokens={getattr(details, 'reasoning_tokens', None)}"
+                    )
+                    raise ModelResponseTruncated(
+                        f"response truncated before valid JSON ({diagnostics})"
+                    )
                 raw = (
                     raw.removeprefix("```json")
                     .removeprefix("```")
@@ -683,6 +707,13 @@ class JsonModel:
                 self.last_request_at = request_started_at
                 if not _retryable_model_error(exc) or attempt == retry_max - 1:
                     raise FeatureError(f"AI {purpose} failed closed: {exc}") from exc
+                if isinstance(exc, ModelResponseTruncated):
+                    next_max_tokens = min(request_max_tokens * 2, model_max_tokens)
+                    print(
+                        f"  [warn] AI {purpose} {exc}; retrying with "
+                        f"max_tokens={next_max_tokens}"
+                    )
+                    request_max_tokens = next_max_tokens
                 self.sleep(
                     float(provider_cfg.get("retry_interval", 5.0)) * (2**attempt)
                 )
