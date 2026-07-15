@@ -720,6 +720,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["single_revision_reasoning_effort"] == "low"
     assert cfg["model_fallback_providers"] == ["github_models"]
     assert cfg["model_fallback_after"] == 2
+    assert cfg["short_body_expansion_retry_max"] >= 2
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
     assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
     assert (
@@ -753,6 +754,98 @@ def test_generation_keeps_source_instructions_out_of_system_prompt():
     assert malicious not in instructions
     assert payload["primarySources"][0]["abstract"] == malicious
     assert "primaryLinks" not in payload["primarySources"][0]
+
+
+def test_short_body_expansion_appends_prose_without_changing_structure():
+    captured = []
+
+    class ExpansionModel:
+        def complete(self, *args):
+            captured.append(args)
+            blocks = args[1]["blocks"]
+            return {
+                "blockAdditions": [
+                    {"id": block["id"], "text": "追" * 350} for block in blocks
+                ]
+            }
+
+    feature = generate_feature.assemble_feature(
+        make_body(chars_per_section=360),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+    original_sections = json.loads(json.dumps(feature["sections"]))
+
+    body = generate_feature.expand_short_body(
+        ExpansionModel(), feature, make_sources()
+    )
+    expanded = generate_feature.assemble_feature(
+        body,
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    generate_feature.validate_feature(expanded)
+    assert feature["sections"] == original_sections
+    assert [section["id"] for section in body["sections"]] == [
+        section["id"] for section in original_sections
+    ]
+    assert [
+        block["sourceIds"]
+        for section in body["sections"]
+        for block in section["blocks"]
+    ] == [
+        block["sourceIds"]
+        for section in original_sections
+        for block in section["blocks"]
+    ]
+    instructions, payload, _max_tokens, purpose = captured[0]
+    assert purpose == "short body expansion"
+    assert "additional grounded prose" in instructions
+    assert "primaryLinks" not in payload["primarySources"][0]
+
+
+def test_short_body_expansion_retries_locally_invalid_length(capsys):
+    calls = []
+
+    class ExpansionModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            size = 10 if len(calls) == 1 else 350
+            return {
+                "blockAdditions": [
+                    {"id": block["id"], "text": "追" * size}
+                    for block in payload["blocks"]
+                ]
+            }
+
+    feature = generate_feature.assemble_feature(
+        make_body(chars_per_section=360),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    body = generate_feature.expand_short_body(
+        ExpansionModel(), feature, make_sources()
+    )
+
+    assert len(calls) == 2
+    assert "validationFeedback" not in calls[0]
+    assert calls[1]["validationFeedback"]["remainingAttempts"] == 1
+    assert generate_feature.article_character_count(
+        {"sections": body["sections"]}
+    ) == 4260
+    output = capsys.readouterr().out
+    assert "failed local validation (attempt 1/2, errors=1)" in output
 
 
 def test_complete_feature_passes_local_publication_gates():
@@ -921,3 +1014,57 @@ def test_pipeline_never_performs_a_second_revision(monkeypatch, tmp_path):
             now=datetime(2026, 7, 14, tzinfo=timezone.utc),
         )
     assert calls == ["revise"]
+
+
+def test_pipeline_expands_length_only_failure_without_full_revision(
+    monkeypatch, tmp_path
+):
+    plan = make_plan()
+    sources = make_sources()
+    short_body = make_body(chars_per_section=360)
+    expanded_body = make_body(chars_per_section=600)
+    calls = []
+    monkeypatch.setattr(
+        generate_feature, "load_recent_weekly_papers", lambda *_args: make_candidates()
+    )
+    monkeypatch.setattr(generate_feature, "choose_topic", lambda *_args: plan)
+    monkeypatch.setattr(
+        generate_feature, "fetch_additional_arxiv_sources", lambda *_args, **_kwargs: []
+    )
+    monkeypatch.setattr(generate_feature, "build_source_packet", lambda *_args: sources)
+    monkeypatch.setattr(
+        generate_feature, "generate_body", lambda *_args: short_body
+    )
+
+    def expand(*_args):
+        calls.append("expand")
+        return expanded_body
+
+    monkeypatch.setattr(generate_feature, "expand_short_body", expand)
+    monkeypatch.setattr(
+        generate_feature,
+        "revise_body",
+        lambda *_args: pytest.fail("full revision should not run for length-only errors"),
+    )
+    monkeypatch.setattr(
+        generate_feature,
+        "verify_feature",
+        lambda *_args: {"status": "pass", "issues": []},
+    )
+
+    feature = generate_feature.run_feature_pipeline(
+        as_of=date(2026, 7, 14),
+        article_type="primer",
+        dry_run=True,
+        data_root=tmp_path,
+        output_dir=tmp_path / "features",
+        model=object(),
+        now=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    assert calls == ["expand"]
+    assert feature["verification"] == {
+        "status": "passed",
+        "revisionCount": 1,
+        "verifiedAt": "2026-07-14T00:00:00+00:00",
+    }

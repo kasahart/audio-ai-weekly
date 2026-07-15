@@ -79,6 +79,7 @@ features:
   model_fallback_providers: [github_models]
   model_fallback_after: 2
   selection_validation_retry_max: 3
+  short_body_expansion_retry_max: 2
   retry_max: 3
   retry_interval: 5.0
   retryable_http_statuses: [429, 500, 502, 503, 504]
