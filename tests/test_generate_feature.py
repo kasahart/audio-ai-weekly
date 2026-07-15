@@ -569,13 +569,27 @@ def test_json_model_uses_feature_retry_budget_with_capped_backoff(monkeypatch, c
     assert private_error not in output
 
 
+def test_json_model_uses_purpose_specific_reasoning_effort(monkeypatch):
+    client = FakeOpenAIClient(['{"draft":true}', '{"plan":true}'])
+    monkeypatch.setattr(generate_feature, "create_client", lambda _settings: client)
+    settings = model_settings()
+    settings["test"]["model"] = "gemini-3.5-flash"
+    settings["features"]["feature_generation_reasoning_effort"] = "low"
+    model = generate_feature.JsonModel(settings, sleep=lambda _seconds: None)
+
+    assert model.complete("Rules", {}, 100, "feature generation") == {"draft": True}
+    assert model.complete("Rules", {}, 100, "topic selection") == {"plan": True}
+    assert client.calls[0]["reasoning_effort"] == "low"
+    assert client.calls[1]["reasoning_effort"] == "medium"
+
+
 def test_feature_model_budgets_cover_reasoning_and_structured_output():
     cfg = generate_feature.FEATURE_SETTINGS
 
     assert cfg["selection_max_tokens"] >= 16000
-    assert cfg["generation_max_tokens"] >= 32000
+    assert cfg["generation_max_tokens"] == 16000
     assert cfg["verification_max_tokens"] >= 16000
-    assert cfg["revision_max_tokens"] >= 32000
+    assert cfg["revision_max_tokens"] == 16000
     assert cfg["model_max_tokens"] >= max(
         cfg["selection_max_tokens"],
         cfg["generation_max_tokens"],
@@ -585,6 +599,8 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["model_retry_max"] >= 5
     assert cfg["model_retry_max_interval"] >= cfg["model_retry_interval"]
     assert cfg["selection_validation_retry_max"] >= 2
+    assert cfg["feature_generation_reasoning_effort"] == "low"
+    assert cfg["single_revision_reasoning_effort"] == "low"
 
 
 def test_generation_keeps_source_instructions_out_of_system_prompt():

@@ -666,6 +666,9 @@ class JsonModel:
             max_tokens,
             int(self.feature_cfg.get("model_max_tokens", max_tokens)),
         )
+        reasoning_effort = self.feature_cfg.get(
+            f"{purpose.replace(' ', '_')}_reasoning_effort"
+        )
         request_max_tokens = max_tokens
         for attempt in range(retry_max):
             if self.last_request_at is not None:
@@ -694,6 +697,7 @@ class JsonModel:
                         provider_cfg["model"],
                         request_max_tokens,
                         temperature=self.feature_cfg.get("temperature", 0.2),
+                        reasoning_effort=reasoning_effort,
                     ),
                 )
                 self.last_request_at = self.monotonic()
