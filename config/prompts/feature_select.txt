@@ -26,6 +26,8 @@ quotes, brackets, field prefixes, or boolean operators. Select only IDs present 
 Avoid prior topics and materially similar search-term combinations. When the candidate data marks
 papers with `hasPrimaryLink: true`, select at least one so readers receive a metadata-linked code or
 project resource in addition to arXiv sources.
+If `validationFeedback` is present in the data envelope, return a complete replacement plan that
+corrects every listed error while continuing to follow all rules above.
 The three perspectives must collectively bridge (1) the research mechanism, (2) deployment or
 practitioner constraints, and (3) evaluation limits or wider user/societal consequences. For a
 debate, represent competing method assumptions without dropping the practitioner perspective.

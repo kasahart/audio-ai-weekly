@@ -770,13 +770,36 @@ def choose_topic(
         PROMPTS["select"],
         article_type=article_type,
     )
-    raw_plan = model.complete(
-        instructions,
-        {"priorTopics": prior_topics, "archiveCandidates": candidate_payload},
-        cfg["selection_max_tokens"],
-        "topic selection",
-    )
-    return validate_topic_plan(raw_plan, candidate_payload, feature_index, cfg)
+    validation_retry_max = max(1, int(cfg.get("selection_validation_retry_max", 1)))
+    validation_errors: list[str] | None = None
+    for attempt in range(validation_retry_max):
+        payload: dict[str, Any] = {
+            "priorTopics": prior_topics,
+            "archiveCandidates": candidate_payload,
+        }
+        if validation_errors is not None:
+            payload["validationFeedback"] = {
+                "errors": validation_errors,
+                "remainingAttempts": validation_retry_max - attempt,
+            }
+        raw_plan = model.complete(
+            instructions,
+            payload,
+            cfg["selection_max_tokens"],
+            "topic selection",
+        )
+        try:
+            return validate_topic_plan(raw_plan, candidate_payload, feature_index, cfg)
+        except FeatureValidationError as exc:
+            if attempt == validation_retry_max - 1:
+                raise
+            validation_errors = list(exc.errors)
+            print(
+                "  [warn] AI topic selection failed local validation "
+                f"(attempt {attempt + 1}/{validation_retry_max}, "
+                f"errors={len(validation_errors)}); requesting a corrected plan"
+            )
+    raise FeatureError("AI topic selection validation loop exited unexpectedly")
 
 
 def _body_texts(feature: Mapping[str, Any]) -> list[str]:
