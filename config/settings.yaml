@@ -76,6 +76,8 @@ features:
   model_retry_max: 6
   model_retry_interval: 15.0
   model_retry_max_interval: 240.0
+  model_fallback_providers: [github_models]
+  model_fallback_after: 2
   selection_validation_retry_max: 3
   retry_max: 3
   retry_interval: 5.0
@@ -96,7 +98,8 @@ ai:
 github_models:
   api_key_env: "GITHUB_TOKEN"
   endpoint: "https://models.github.ai/inference"
-  model: "gpt-4o"
+  model: "openai/gpt-4.1"
+  feature_max_tokens: 32000
   max_tokens: 1500
   batch_size: 5
   batch_max_tokens: 6000
@@ -109,6 +112,7 @@ gemini:
   api_key_env: "GEMINI_API_KEY"
   endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
   model: "gemini-3.5-flash"
+  feature_max_tokens: 64000
   max_tokens: 16000
   batch_size: 5
   batch_max_tokens: 32000

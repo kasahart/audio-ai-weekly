@@ -42,11 +42,12 @@ class TestProviderConfiguration:
             settings["github_models"]["endpoint"]
             == "https://models.github.ai/inference"
         )
-        assert settings["github_models"]["model"] == "gpt-4o"
+        assert settings["github_models"]["model"] == "openai/gpt-4.1"
         assert settings["gemini"] == {
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "model": "gemini-3.5-flash",
+            "feature_max_tokens": 64000,
             "max_tokens": 16000,
             "batch_size": 5,
             "batch_max_tokens": 32000,
