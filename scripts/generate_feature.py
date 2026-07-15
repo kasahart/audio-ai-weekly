@@ -1383,8 +1383,9 @@ def revise_body(
     )
 
 
-def _only_short_body_errors(errors: list[str]) -> bool:
+def _only_short_body_expansion_errors(errors: list[str]) -> bool:
     prefixes = (
+        "Every source must be cited; unused: ",
         "Japanese body has ",
         "Estimated reading time must be ",
     )
@@ -1417,6 +1418,25 @@ def expand_short_body(
         raise FeatureValidationError(
             ["Short-body expansion requires unique existing block IDs"]
         )
+    known_source_ids = {
+        source.get("sourceId")
+        for source in sources
+        if isinstance(source, dict) and isinstance(source.get("sourceId"), str)
+    }
+    existing_source_ids = {block["id"]: block["sourceIds"] for block in blocks}
+    if not known_source_ids or not all(
+        _valid_source_ids(source_ids, known_source_ids)
+        for source_ids in existing_source_ids.values()
+    ):
+        raise FeatureValidationError(
+            ["Short-body expansion requires valid existing source IDs"]
+        )
+    cited_source_ids = {
+        source_id
+        for source_ids in existing_source_ids.values()
+        for source_id in source_ids
+    }
+    required_source_ids = sorted(known_source_ids - cited_source_ids)
 
     current_chars = article_character_count(feature)
     absolute_max = min(cfg["target_max_chars"], cfg["validation_max_chars"])
@@ -1435,10 +1455,12 @@ def expand_short_body(
         addition_min_chars=str(addition_min),
         addition_max_chars=str(addition_max),
         block_count=str(len(blocks)),
+        required_source_ids_json=required_source_ids,
     )
     retry_max = max(1, int(cfg.get("short_body_expansion_retry_max", 1)))
     validation_feedback: list[str] | None = None
     addition_by_id: dict[str, str] | None = None
+    source_ids_by_id: dict[str, list[str]] | None = None
     for attempt in range(retry_max):
         payload: dict[str, Any] = {
             "primarySources": grounding_source_payload(sources),
@@ -1462,12 +1484,14 @@ def expand_short_body(
             additions = []
 
         candidate_additions: dict[str, str] = {}
+        candidate_source_ids: dict[str, list[str]] = {}
         for addition in additions:
             if not isinstance(addition, dict):
                 errors.append("Every short-body addition must be an object")
                 continue
             block_id = addition.get("id")
             text = addition.get("text")
+            source_ids = addition.get("sourceIds")
             if (
                 not isinstance(block_id, str)
                 or block_id not in expected_ids
@@ -1475,13 +1499,28 @@ def expand_short_body(
                 or not isinstance(text, str)
                 or not text.strip()
                 or not JAPANESE_CHAR_RE.search(text)
+                or not _valid_source_ids(source_ids, known_source_ids)
+                or not set(existing_source_ids.get(block_id, []))
+                <= set(source_ids if isinstance(source_ids, list) else [])
             ):
                 errors.append("Short-body expansion returned an invalid block addition")
                 continue
             candidate_additions[block_id] = text.strip()
+            candidate_source_ids[block_id] = source_ids
         if set(candidate_additions) != set(expected_ids):
             errors.append(
                 "Short-body expansion must add prose to every existing block"
+            )
+        cited_after_expansion = {
+            source_id
+            for source_ids in candidate_source_ids.values()
+            for source_id in source_ids
+        }
+        missing_required = sorted(set(required_source_ids) - cited_after_expansion)
+        if missing_required:
+            errors.append(
+                "Short-body expansion must cite required source IDs: "
+                + ", ".join(missing_required)
             )
         addition_text = "".join(candidate_additions.values())
         addition_chars = len("".join(addition_text.split()))
@@ -1494,6 +1533,7 @@ def expand_short_body(
             errors.append("Short-body additions must be predominantly Japanese")
         if not errors:
             addition_by_id = candidate_additions
+            source_ids_by_id = candidate_source_ids
             break
         if attempt == retry_max - 1:
             raise FeatureValidationError(errors)
@@ -1503,7 +1543,7 @@ def expand_short_body(
             f"(attempt {attempt + 1}/{retry_max}, errors={len(errors)}); "
             "requesting corrected additions"
         )
-    if addition_by_id is None:
+    if addition_by_id is None or source_ids_by_id is None:
         raise FeatureError("AI short body expansion validation loop exited unexpectedly")
 
     body = dict(_body_from_feature(feature))
@@ -1516,6 +1556,7 @@ def expand_short_body(
             expanded_block["text"] = (
                 f"{block['text'].rstrip()}\n\n{addition_by_id[block['id']]}"
             )
+            expanded_block["sourceIds"] = source_ids_by_id[block["id"]]
             expanded_blocks.append(expanded_block)
         expanded_section["blocks"] = expanded_blocks
         expanded_sections.append(expanded_section)
@@ -1672,7 +1713,7 @@ def run_feature_pipeline(
     except FeatureValidationError as exc:
         if (
             article_character_count(feature) < cfg["validation_min_chars"]
-            and _only_short_body_errors(exc.errors)
+            and _only_short_body_expansion_errors(exc.errors)
         ):
             body = expand_short_body(model, feature, sources, cfg)
         else:

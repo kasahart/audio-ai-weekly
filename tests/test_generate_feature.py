@@ -765,7 +765,12 @@ def test_short_body_expansion_appends_prose_without_changing_structure():
             blocks = args[1]["blocks"]
             return {
                 "blockAdditions": [
-                    {"id": block["id"], "text": "追" * 350} for block in blocks
+                    {
+                        "id": block["id"],
+                        "text": "追" * 350,
+                        "sourceIds": block["sourceIds"],
+                    }
+                    for block in blocks
                 ]
             }
 
@@ -811,6 +816,55 @@ def test_short_body_expansion_appends_prose_without_changing_structure():
     assert "primaryLinks" not in payload["primarySources"][0]
 
 
+def test_short_body_expansion_assigns_required_uncited_sources():
+    captured = []
+
+    class ExpansionModel:
+        def complete(self, *args):
+            captured.append(args)
+            blocks = args[1]["blocks"]
+            additions = []
+            for index, block in enumerate(blocks):
+                source_ids = list(block["sourceIds"])
+                if index == len(blocks) - 1:
+                    source_ids.append("S8")
+                additions.append(
+                    {
+                        "id": block["id"],
+                        "text": "追" * 350,
+                        "sourceIds": source_ids,
+                    }
+                )
+            return {"blockAdditions": additions}
+
+    feature = generate_feature.assemble_feature(
+        make_body(chars_per_section=360),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+    feature["sections"][0]["blocks"][0]["sourceIds"].remove("S8")
+
+    body = generate_feature.expand_short_body(
+        ExpansionModel(), feature, make_sources()
+    )
+    expanded = generate_feature.assemble_feature(
+        body,
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    generate_feature.validate_feature(expanded)
+    assert body["sections"][-1]["blocks"][0]["sourceIds"] == ["S6", "S8"]
+    instructions = captured[0][0]
+    assert '["S8"]' in instructions
+
+
 def test_short_body_expansion_retries_locally_invalid_length(capsys):
     calls = []
 
@@ -820,7 +874,11 @@ def test_short_body_expansion_retries_locally_invalid_length(capsys):
             size = 10 if len(calls) == 1 else 350
             return {
                 "blockAdditions": [
-                    {"id": block["id"], "text": "追" * size}
+                    {
+                        "id": block["id"],
+                        "text": "追" * size,
+                        "sourceIds": block["sourceIds"],
+                    }
                     for block in payload["blocks"]
                 ]
             }
@@ -1016,12 +1074,13 @@ def test_pipeline_never_performs_a_second_revision(monkeypatch, tmp_path):
     assert calls == ["revise"]
 
 
-def test_pipeline_expands_length_only_failure_without_full_revision(
+def test_pipeline_expands_short_body_with_uncited_source_without_full_revision(
     monkeypatch, tmp_path
 ):
     plan = make_plan()
     sources = make_sources()
     short_body = make_body(chars_per_section=360)
+    short_body["sections"][0]["blocks"][0]["sourceIds"].remove("S8")
     expanded_body = make_body(chars_per_section=600)
     calls = []
     monkeypatch.setattr(
