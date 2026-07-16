@@ -963,7 +963,7 @@ def test_short_body_expansion_accepts_output_that_meets_publication_gates():
                 "blockAdditions": [
                     {
                         "id": block["id"],
-                        "text": "追" * (353 if index == 0 else 352),
+                        "text": "追" * (294 if index < 2 else 293),
                         "sourceIds": block["sourceIds"],
                     }
                     for index, block in enumerate(payload["blocks"])
@@ -971,7 +971,7 @@ def test_short_body_expansion_accepts_output_that_meets_publication_gates():
             }
 
     feature = generate_feature.assemble_feature(
-        make_body(chars_per_section=268),
+        make_body(chars_per_section=256),
         plan=make_plan(),
         sources=make_sources(),
         article_type="primer",
@@ -993,7 +993,7 @@ def test_short_body_expansion_accepts_output_that_meets_publication_gates():
 
     generate_feature.validate_feature(expanded)
     assert len(calls) == 1
-    assert generate_feature.article_character_count(expanded) == 3721
+    assert generate_feature.article_character_count(expanded) == 3296
 
 
 def test_short_body_expansion_trims_overlong_additions(capsys):

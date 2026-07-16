@@ -1535,13 +1535,7 @@ def expand_short_body(
 
     current_chars = article_character_count(feature)
     absolute_max = min(cfg["target_max_chars"], cfg["validation_max_chars"])
-    expanded_min = min(
-        absolute_max,
-        max(
-            cfg["target_min_chars"],
-            cfg["validation_min_chars"],
-        ),
-    )
+    expanded_min = min(absolute_max, cfg["validation_min_chars"])
     expanded_max = absolute_max
     addition_min = max(1, expanded_min - current_chars)
     addition_max = max(addition_min, expanded_max - current_chars)
