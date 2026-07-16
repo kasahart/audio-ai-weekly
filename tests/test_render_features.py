@@ -51,11 +51,13 @@ def make_feature():
             {
                 "id": section_id,
                 "heading": f"節 {index + 1}",
+                "headingEn": f"Section {index + 1}",
                 "blocks": [
                     {
                         "id": f"block-{index + 1}",
                         "text": ("本文" * 260)
                         + " <script>alert(1)</script> & analysis",
+                        "textEn": " ".join(["evidence"] * 200),
                         "sourceIds": source_ids,
                     }
                 ],
@@ -63,6 +65,7 @@ def make_feature():
         )
     return {
         "schemaVersion": 1,
+        "sourceLanguage": "en",
         "slug": "2026-07-14-primer-source-separation",
         "type": "primer",
         "date": "2026-07-14",
@@ -76,28 +79,40 @@ def make_feature():
         "summaryEn": "A concise English summary.",
         "keyPointsEn": ["One", "Two", "Three"],
         "readTimeMinutes": 8,
+        "readTimeMinutesEn": 6,
         "perspectives": [
             {
                 "id": "metrics",
                 "label": "指標",
                 "description": "指標の視点",
+                "labelEn": "Metrics",
+                "descriptionEn": "The metrics perspective.",
                 "sourceIds": ["S1"],
             },
             {
                 "id": "data",
                 "label": "データ",
                 "description": "データの視点",
+                "labelEn": "Data",
+                "descriptionEn": "The data perspective.",
                 "sourceIds": ["S2"],
             },
             {
                 "id": "users",
                 "label": "利用",
                 "description": "利用の視点",
+                "labelEn": "Use",
+                "descriptionEn": "The practitioner perspective.",
                 "sourceIds": ["S3"],
             },
         ],
         "sections": sections,
         "sources": sources,
+        "translation": {
+            "targetLanguage": "ja",
+            "status": "passed",
+            "revisionCount": 0,
+        },
         "verification": {"status": "passed", "revisionCount": 0},
     }
 
@@ -131,6 +146,30 @@ def test_missing_index_renders_empty_archive_placeholder(tmp_path):
     assert "公開済みの特集はまだありません" in japanese
     assert "No features have been published yet" in english
     assert "radial-gradient" not in japanese
+
+
+def test_renderer_keeps_legacy_english_summary_compatible(tmp_path):
+    input_dir = tmp_path / "data" / "features"
+    output_dir = tmp_path / "public" / "features"
+    feature = make_feature()
+    feature.pop("sourceLanguage")
+    feature.pop("translation")
+    feature.pop("readTimeMinutesEn")
+    for perspective in feature["perspectives"]:
+        perspective.pop("labelEn")
+        perspective.pop("descriptionEn")
+    for section in feature["sections"]:
+        section.pop("headingEn")
+        for block in section["blocks"]:
+            block.pop("textEn")
+    write_feature_data(input_dir, feature)
+
+    render_features.render_all(input_dir, output_dir)
+
+    english = (output_dir / feature["slug"] / "en" / "index.html").read_text()
+    assert "English summary" in english
+    assert feature["summaryEn"] in english
+    assert "This summary is grounded" in english
 
 
 def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_path):
@@ -171,8 +210,11 @@ def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_pat
     assert feature["title"] not in english
     assert feature["dek"] not in english
     assert feature["sections"][0]["blocks"][0]["text"] not in english
+    assert feature["perspectives"][0]["labelEn"] in english
+    assert feature["sections"][0]["headingEn"] in english
+    assert feature["sections"][0]["blocks"][0]["textEn"] in english
     assert "Source Separation &lt;script&gt;" in english
-    assert feature["summaryEn"] in english
+    assert feature["summaryEn"] not in english
     assert "Metadata-linked resources:" in english
     assert ">コード</a>" in japanese
     assert ">Code</a>" in english
@@ -247,7 +289,14 @@ def test_renderer_recomputes_body_length_language_and_read_time(tmp_path):
         section["blocks"][0]["text"] = ("あ" * 100) + ("a" * 450)
     input_dir = tmp_path / "english-dominant"
     write_feature_data(input_dir, feature)
-    with pytest.raises(render_features.RenderError, match="language ratio"):
+    with pytest.raises(render_features.RenderError, match="predominantly Japanese"):
+        render_features.load_features(input_dir)
+
+    feature = make_feature()
+    feature["sections"][0]["blocks"][0]["textEn"] = "日本語だけの本文" * 100
+    input_dir = tmp_path / "japanese-english-edition"
+    write_feature_data(input_dir, feature)
+    with pytest.raises(render_features.RenderError, match="textEn.*English"):
         render_features.load_features(input_dir)
 
     feature = make_feature()

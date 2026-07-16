@@ -61,6 +61,12 @@ features:
   reading_minutes_min: 8
   reading_minutes_max: 12
   japanese_body_min_ratio: 0.5
+  japanese_metadata_min_ratio: 0.25
+  english_body_target_min_words: 1200
+  english_body_target_max_words: 1500
+  english_body_validation_min_words: 1050
+  english_body_validation_max_words: 1700
+  english_reading_words_per_minute: 225
   english_summary_min_words: 60
   english_summary_max_words: 250
   selection_max_tokens: 16000
@@ -68,10 +74,14 @@ features:
   verification_max_tokens: 16000
   revision_max_tokens: 16000
   grounding_patch_max_tokens: 4000
+  translation_max_tokens: 4000
+  translation_verification_max_tokens: 4000
   model_max_tokens: 64000
   feature_generation_reasoning_effort: low
   single_revision_reasoning_effort: low
   grounding_patch_reasoning_effort: low
+  feature_translation_reasoning_effort: low
+  translation_verification_reasoning_effort: low
   temperature: 0.2
   request_timeout: 30
   model_timeout: 180
@@ -81,6 +91,9 @@ features:
   model_fallback_providers: [github_models]
   model_fallback_after: 2
   selection_validation_retry_max: 3
+  english_generation_validation_retry_max: 3
+  translation_retry_max: 3
+  translation_block_batch_max: 3
   short_body_expansion_retry_max: 2
   verification_revision_max: 4
   grounding_patch_retry_max: 3

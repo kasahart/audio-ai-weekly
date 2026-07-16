@@ -11,6 +11,9 @@ export default function FeatureSpotlight({ feature, lang = 'ja' }) {
     ? (feature.dekEn || feature.dek)
     : (feature.dek || feature.dekEn)
   const type = copy.featureTypes[feature.type] || feature.type
+  const readTime = lang === 'en'
+    ? (feature.readTimeMinutesEn || feature.readTimeMinutes)
+    : feature.readTimeMinutes
   const articleHref = `./features/${encodeURIComponent(feature.slug)}/${lang === 'en' ? 'en/' : ''}`
   const archiveHref = lang === 'en' ? './features/en/' : './features/'
 
@@ -30,7 +33,7 @@ export default function FeatureSpotlight({ feature, lang = 'ja' }) {
         <span aria-hidden="true">/</span>
         <time dateTime={feature.date}>{feature.date}</time>
         <span aria-hidden="true">/</span>
-        <span>{copy.readTime(feature.readTimeMinutes)}</span>
+        <span>{copy.readTime(readTime)}</span>
         <span aria-hidden="true">/</span>
         <span>{copy.sourceCount(feature.sourceCount)}</span>
         <span aria-hidden="true">/</span>

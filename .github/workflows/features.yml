@@ -26,6 +26,11 @@ on:
         required: true
         type: boolean
         default: false
+      replace_existing:
+        description: 'Regenerate and atomically replace an existing feature in this slot'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -127,15 +132,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DRY_RUN: ${{ inputs.dry_run || false }}
+          REPLACE_EXISTING: ${{ inputs.replace_existing || false }}
         run: |
           DRY_RUN_ARG=()
+          REPLACE_EXISTING_ARG=()
           if [ "$DRY_RUN" = "true" ]; then
             DRY_RUN_ARG+=(--dry-run)
+          fi
+          if [ "$REPLACE_EXISTING" = "true" ]; then
+            REPLACE_EXISTING_ARG+=(--replace-existing)
           fi
           python scripts/generate_feature.py \
             --date "${{ steps.slot.outputs.reference_date }}" \
             --article-type "${{ steps.slot.outputs.article_type }}" \
-            "${DRY_RUN_ARG[@]}"
+            "${DRY_RUN_ARG[@]}" \
+            "${REPLACE_EXISTING_ARG[@]}"
 
       - name: Copy published JSON
         if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}

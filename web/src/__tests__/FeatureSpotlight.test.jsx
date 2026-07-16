@@ -7,6 +7,7 @@ const FEATURE = {
   type: 'primer',
   date: '2026-07-18',
   readTimeMinutes: 8,
+  readTimeMinutesEn: 6,
   sourceCount: 4,
   title: '空間オーディオエージェント入門',
   titleEn: 'A Primer on Spatial Audio Agents',
@@ -37,7 +38,7 @@ describe('FeatureSpotlight', () => {
     expect(screen.getByText(FEATURE.dekEn)).toBeInTheDocument()
     expect(screen.queryByText(FEATURE.dek)).not.toBeInTheDocument()
     expect(screen.getByText('Field Primer')).toBeInTheDocument()
-    expect(screen.getByText('8 min read')).toBeInTheDocument()
+    expect(screen.getByText('6 min read')).toBeInTheDocument()
     expect(screen.getByText('4 sources')).toBeInTheDocument()
     expect(screen.getByText('AI-generated · auto-verified')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: `Read feature: ${FEATURE.titleEn}` }))

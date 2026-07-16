@@ -24,21 +24,25 @@ features each month:
 - the fourth Tuesday: a debate brief comparing competing approaches, evaluation
   assumptions, and implications for researchers and practitioners.
 
-Each feature targets a Japanese 8–12 minute read and includes a 60–250 word English
-summary. Topic selection starts from the recent weekly archive, then retrieves
-additional arXiv primary sources for historical context. The generator uses only
-the supplied paper metadata and abstracts for factual claims. Validated HTTPS code
-and project URLs already present in weekly metadata are shown as metadata-linked
-reading resources; they are not treated as independent evidence or endorsed as
-official by the publisher.
+Each feature publishes matched full-length English and Japanese editions. The
+generator first writes a 1,200–1,500 word canonical English article, verifies its
+grounding, and only then translates the fixed section, block, and citation structure
+into a Japanese 8–12 minute read. A separate bilingual review rejects material
+omissions, additions, or changed qualifications. Topic selection starts from the
+recent weekly archive, then retrieves additional arXiv primary sources for
+historical context. The generator uses only the supplied paper metadata and
+abstracts for factual claims. Validated HTTPS code and project URLs already present
+in weekly metadata are shown as metadata-linked reading resources; they are not
+treated as independent evidence or endorsed as official by the publisher.
 
 Publication is fail-closed. A feature must pass structural checks for article
 length and reading time, Japanese/English language checks, source coverage, one
 metadata-linked resource, three distinct perspectives, and block-level citations,
-followed by a separate AI grounding review. One revision is allowed; if the review
-still fails, that publication slot is skipped. Generated feature JSON is
-stored under `data/features/`, and `scripts/render_features.py` turns it into
-shareable static pages under `/features/<slug>/`.
+followed by separate grounding and translation-fidelity reviews. Bounded correction
+attempts are allowed; if either review still fails, that publication slot is
+skipped. Generated feature JSON is stored under `data/features/`, and
+`scripts/render_features.py` turns it into shareable Japanese and English static
+pages under `/features/<slug>/` and `/features/<slug>/en/`.
 
 ## Research Areas
 
@@ -74,8 +78,9 @@ python scripts/generate_feature.py --date 2026-07-14 --article-type primer --dry
 ```
 
 The **Publish Deep-Dive Features** workflow supports a target date, an automatic
-or explicit article type, and dry-run mode. Its scheduled run checks every Tuesday
-at 03:00 UTC (12:00 JST) and publishes only in the second and fourth Tuesday slots.
+or explicit article type, dry-run mode, and an explicit same-slot replacement mode.
+Its scheduled run checks every Tuesday at 03:00 UTC (12:00 JST) and publishes only
+in the second and fourth Tuesday slots.
 
 ## AI Provider
 
