@@ -50,7 +50,7 @@ def make_feature():
         sections.append(
             {
                 "id": section_id,
-                "heading": f"Section {index + 1}",
+                "heading": f"節 {index + 1}",
                 "blocks": [
                     {
                         "id": f"block-{index + 1}",
@@ -125,10 +125,12 @@ def write_feature_data(input_dir, feature):
 def test_missing_index_renders_empty_archive_placeholder(tmp_path):
     output = tmp_path / "public" / "features"
     written = render_features.render_all(tmp_path / "missing-features", output)
-    assert written == [output / "index.html"]
-    html = (output / "index.html").read_text()
-    assert "公開済みの特集はまだありません" in html
-    assert "radial-gradient" not in html
+    assert written == [output / "index.html", output / "en" / "index.html"]
+    japanese = (output / "index.html").read_text()
+    english = (output / "en" / "index.html").read_text()
+    assert "公開済みの特集はまだありません" in japanese
+    assert "No features have been published yet" in english
+    assert "radial-gradient" not in japanese
 
 
 def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_path):
@@ -141,26 +143,51 @@ def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_pat
         input_dir, output_dir, "https://example.test/site"
     )
 
-    article_path = output_dir / feature["slug"] / "index.html"
-    assert article_path in written
-    article = article_path.read_text()
-    assert "&lt;script&gt;" in article
-    assert "<script>alert(1)</script>" not in article
-    assert 'rel="canonical" href="https://example.test/site/features/' in article
-    assert 'type="application/ld+json"' in article
-    assert "\\u003cscript\\u003e" in article
-    assert "分野を解く" in article
-    assert "AI生成・自動検証" in article
-    assert "Metadata-linked resources:" in article
-    assert ">Code</a>" in article
-    assert "x=1&amp;y=2" in article
-    assert "IBM Plex Mono" in article
-    assert "radial-gradient" not in article
+    japanese_path = output_dir / feature["slug"] / "index.html"
+    english_path = output_dir / feature["slug"] / "en" / "index.html"
+    assert japanese_path in written
+    assert english_path in written
+    japanese = japanese_path.read_text()
+    english = english_path.read_text()
+    assert "&lt;script&gt;" in japanese
+    assert "&lt;script&gt;" in english
+    assert "<script>alert(1)</script>" not in japanese
+    assert "<script>alert(1)</script>" not in english
+    assert 'rel="canonical" href="https://example.test/site/features/' in japanese
+    assert f'rel="canonical" href="https://example.test/site/features/{feature["slug"]}/en/"' in english
+    assert 'hreflang="ja"' in japanese
+    assert 'hreflang="en"' in japanese
+    assert 'type="application/ld+json"' in japanese
+    assert "\\u003cscript\\u003e" in japanese
+    assert "\\u003cscript\\u003e" in english
+    assert "分野を解く" in japanese
+    assert "AI生成・自動検証" in japanese
+    assert "関連リソース:" in japanese
+    assert "一次資料（原題）" in japanese
+    assert feature["titleEn"] not in japanese
+    assert feature["dekEn"] not in japanese
+    assert feature["summaryEn"] not in japanese
+    assert "English summary" not in japanese
+    assert feature["title"] not in english
+    assert feature["dek"] not in english
+    assert feature["sections"][0]["blocks"][0]["text"] not in english
+    assert "Source Separation &lt;script&gt;" in english
+    assert feature["summaryEn"] in english
+    assert "Metadata-linked resources:" in english
+    assert ">コード</a>" in japanese
+    assert ">Code</a>" in english
+    assert "x=1&amp;y=2" in japanese
+    assert "IBM Plex Mono" in japanese
+    assert "radial-gradient" not in japanese
 
-    archive = (output_dir / "index.html").read_text()
-    assert f'./{feature["slug"]}/' in archive
-    assert "音源分離 &lt;script&gt;" in archive
-    assert "Source Separation &lt;script&gt;" in archive
+    japanese_archive = (output_dir / "index.html").read_text()
+    english_archive = (output_dir / "en" / "index.html").read_text()
+    assert f'./{feature["slug"]}/' in japanese_archive
+    assert f'../{feature["slug"]}/en/' in english_archive
+    assert "音源分離 &lt;script&gt;" in japanese_archive
+    assert "Source Separation &lt;script&gt;" not in japanese_archive
+    assert "Source Separation &lt;script&gt;" in english_archive
+    assert "音源分離 &lt;script&gt;" not in english_archive
     assert not list(output_dir.rglob(".*.html.*"))
 
 

@@ -39,6 +39,8 @@ describe('Header', () => {
     render(<Header total={2} loading={false} lang="en" onLanguageChange={onLanguageChange} />)
     expect(screen.getByText('Audio AI Weekly')).toBeInTheDocument()
     expect(screen.getByText('Showing 2 papers')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Feature archive/ }))
+      .toHaveAttribute('href', './features/en/')
     fireEvent.click(screen.getByText('JA'))
     expect(onLanguageChange).toHaveBeenCalledWith('ja')
   })

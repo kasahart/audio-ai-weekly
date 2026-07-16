@@ -2,6 +2,7 @@ import { t } from '../i18n.js'
 
 export default function Header({ total, loading, lang = 'ja', onLanguageChange }) {
   const copy = t(lang)
+  const featureArchiveHref = lang === 'en' ? './features/en/' : './features/'
   return (
     <div style={{ position: 'relative', borderBottom: '1px solid #1e293b', background: '#0a0d14',
       padding: 'clamp(12px,3vw,18px) clamp(12px,4vw,26px) 14px' }}>
@@ -23,7 +24,7 @@ export default function Header({ total, loading, lang = 'ja', onLanguageChange }
         </div>
       )}
       <nav aria-label={copy.primaryNavigation} style={{ marginTop: 6 }}>
-        <a href="./features/" style={{ color: '#f472b6', fontSize: 11, letterSpacing: 1,
+        <a href={featureArchiveHref} style={{ color: '#f472b6', fontSize: 11, letterSpacing: 1,
           textDecoration: 'none', borderBottom: '1px solid #f472b680', display: 'inline-flex',
           alignItems: 'center', minHeight: 28 }}>
           {copy.featureArchive} <span aria-hidden="true">→</span>

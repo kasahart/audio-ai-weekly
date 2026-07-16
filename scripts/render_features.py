@@ -287,8 +287,8 @@ STYLE = """
 :root{color-scheme:dark;--bg:#0f1117;--deep:#0a0d14;--panel:#131720;--line:#1e293b;--text:#e7edf7;--muted:#94a3b8;--accent:#22d3ee;--feature:#f472b6}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Mono","Space Mono",ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.8}
 a{color:var(--accent)}.shell{width:min(960px,calc(100% - 32px));margin:auto}.nav{display:flex;justify-content:space-between;gap:16px;padding:24px 0;color:var(--muted)}.nav a{text-decoration:none;display:inline-flex;align-items:center;min-height:28px}.hero{padding:72px 0 44px;border-bottom:1px solid var(--line)}
-.badge{display:inline-block;padding:4px 9px;border:1px solid var(--feature);border-radius:3px;color:var(--feature);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}.badge.debate{border-color:var(--accent);color:var(--accent)}h1{font-size:clamp(2.1rem,6vw,4.2rem);line-height:1.14;margin:.5em 0 .3em;letter-spacing:-.04em}h2{font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.4;margin-top:2.3em}.dek{font-size:1.08rem;color:#cbd5e1;max-width:52rem}.meta{display:flex;flex-wrap:wrap;gap:10px 24px;color:var(--muted);font-size:.88rem}
-main{padding:30px 0 90px}.perspectives{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:40px 0}.card,.summary,.source{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px}.card h3{margin-top:0;color:var(--feature)}.article-section{max-width:780px;margin:0 auto}.article-section p{font-size:1rem}.citations{white-space:nowrap;font-size:.75rem;margin-left:.35rem}.citations a{display:inline-flex;align-items:center;justify-content:center;min-width:24px;min-height:24px;text-decoration:none;margin-right:.2rem}.summary{margin:64px 0;border-color:var(--accent);background:var(--deep)}.summary h2{margin-top:0}.sources{margin-top:64px}.source{margin:10px 0}.source-title{font-weight:700}.source-meta,.primary-links{color:var(--muted);font-size:.82rem}.primary-links a{display:inline-flex;align-items:center;min-height:28px;margin-right:1rem}.archive-grid{display:grid;gap:12px;padding:40px 0 90px}.archive-card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:24px}.archive-card:hover{border-color:var(--feature)}.archive-card h2{margin:.35em 0 .1em}.archive-card p{color:#cbd5e1}.archive-title-en{color:var(--muted)!important;font-size:.86rem;margin:0 0 1rem}.footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--muted)}
+.badge{display:inline-block;padding:4px 9px;border:1px solid var(--feature);border-radius:3px;color:var(--feature);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}.badge.debate{border-color:var(--accent);color:var(--accent)}h1{font-size:clamp(2.1rem,6vw,4.2rem);line-height:1.14;margin:.5em 0 .3em;letter-spacing:-.04em}h2{font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.4;margin-top:2.3em}.dek{font-size:1.08rem;color:#cbd5e1;max-width:52rem}.meta{display:flex;flex-wrap:wrap;gap:10px 24px;color:var(--muted);font-size:.88rem}.language-switch{display:flex;align-items:center;gap:8px;margin-left:auto}.language-switch a,.language-switch span{min-height:28px;display:inline-flex;align-items:center}.language-switch [aria-current="page"]{color:var(--accent);font-weight:700}
+main{padding:30px 0 90px}.perspectives{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:40px 0}.card,.summary,.source{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px}.card h3{margin-top:0;color:var(--feature)}.article-section{max-width:780px;margin:0 auto}.article-section p{font-size:1rem}.citations{white-space:nowrap;font-size:.75rem;margin-left:.35rem}.citations a{display:inline-flex;align-items:center;justify-content:center;min-width:24px;min-height:24px;text-decoration:none;margin-right:.2rem}.summary{margin:40px 0 64px;border-color:var(--accent);background:var(--deep)}.summary h2{margin-top:0}.sources{margin-top:64px}.source{margin:10px 0}.source-title{font-weight:700}.source-meta,.primary-links{color:var(--muted);font-size:.82rem}.primary-links a{display:inline-flex;align-items:center;min-height:28px;margin-right:1rem}.archive-grid{display:grid;gap:12px;padding:40px 0 90px}.archive-card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:24px}.archive-card:hover{border-color:var(--feature)}.archive-card h2{margin:.35em 0 .1em}.archive-card p{color:#cbd5e1}.footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--muted)}
 @media(max-width:720px){.perspectives{grid-template-columns:1fr}.hero{padding-top:40px}.shell{width:min(100% - 22px,960px)}}
 """
 
@@ -305,12 +305,20 @@ def _json_for_script(value: Any) -> str:
 
 
 def _document_head(
-    *, title: str, description: str, canonical_url: str, json_ld: dict
+    *,
+    title: str,
+    description: str,
+    canonical_url: str,
+    json_ld: dict,
+    language: str,
+    japanese_url: str,
+    english_url: str,
 ) -> str:
     return f"""<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="{_escape(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{_escape(title)}</title><meta name="description" content="{_escape(description)}">
 <link rel="canonical" href="{_escape(canonical_url)}">
+<link rel="alternate" hreflang="ja" href="{_escape(japanese_url)}"><link rel="alternate" hreflang="en" href="{_escape(english_url)}"><link rel="alternate" hreflang="x-default" href="{_escape(japanese_url)}">
 <meta property="og:type" content="article"><meta property="og:title" content="{_escape(title)}">
 <meta property="og:description" content="{_escape(description)}"><meta property="og:url" content="{_escape(canonical_url)}">
 <meta property="og:site_name" content="Audio Research Weekly"><meta name="twitter:card" content="summary">
@@ -325,107 +333,214 @@ def _source_links(source_ids: list[str]) -> str:
     return f'<sup class="citations">{links}</sup>'
 
 
-def _primary_links(source: dict) -> str:
+def _primary_links(source: dict, language: str) -> str:
     links = source.get("primaryLinks", [])
     if not links:
         return ""
-    rendered = "".join(
-        f'<a href="{_escape(link["url"])}" rel="noopener noreferrer">{_escape(link["label"])}</a>'
-        for link in links
-    )
-    return f'<div class="primary-links">Metadata-linked resources: {rendered}</div>'
+    translated_labels = {"Code": "コード", "Project": "プロジェクト"}
+    rendered_parts = []
+    for link in links:
+        link_label = link["label"]
+        if language == "ja":
+            link_label = translated_labels.get(link_label, link_label)
+        rendered_parts.append(
+            f'<a href="{_escape(link["url"])}" rel="noopener noreferrer">'
+            f"{_escape(link_label)}</a>"
+        )
+    rendered = "".join(rendered_parts)
+    label = "関連リソース: " if language == "ja" else "Metadata-linked resources: "
+    return f'<div class="primary-links">{label}{rendered}</div>'
 
 
-def render_feature_page(feature: dict, site_url: str = DEFAULT_SITE_URL) -> str:
+def _source_origin(origin: str, language: str) -> str:
+    labels = {
+        "ja": {"archive": "週報掲載", "external": "外部", "historical": "過去掲載"},
+        "en": {
+            "archive": "weekly archive",
+            "external": "external",
+            "historical": "historical",
+        },
+    }
+    return labels[language].get(origin, origin)
+
+
+def _feature_kind(article_type: str, language: str) -> str:
+    labels = {
+        "ja": {"primer": "分野を解く", "debate": "論点を読む"},
+        "en": {"primer": "Field Primer", "debate": "Debate Brief"},
+    }
+    return labels[language][article_type]
+
+
+def _archive_card(feature: dict, language: str) -> str:
+    if language == "ja":
+        href = f'./{_escape(feature["slug"])}/'
+        title = feature["title"]
+        description = feature["dek"]
+        reading_meta = f"約 {_escape(feature['readTimeMinutes'])} 分"
+        source_meta = f"出典 {len(feature['sources'])} 件"
+    else:
+        href = f'../{_escape(feature["slug"])}/en/'
+        title = feature["titleEn"]
+        description = feature["dekEn"]
+        reading_meta = "English summary"
+        source_meta = f"{len(feature['sources'])} primary sources"
+    return f"""<a class="archive-card" href="{href}"><span class="badge {_escape(feature['type'])}">{_escape(_feature_kind(feature['type'], language))}</span>
+<h2>{_escape(title)}</h2><p>{_escape(description)}</p>
+<div class="meta"><span>{_escape(feature['date'])}</span><span>{reading_meta}</span><span>{source_meta}</span></div></a>"""
+
+
+def render_feature_page(
+    feature: dict, site_url: str = DEFAULT_SITE_URL, language: str = "ja"
+) -> str:
+    if language not in ("ja", "en"):
+        raise ValueError("language must be ja or en")
     slug = feature["slug"]
-    canonical_url = f"{site_url.rstrip('/')}/features/{slug}/"
+    japanese_url = f"{site_url.rstrip('/')}/features/{slug}/"
+    english_url = f"{japanese_url}en/"
+    canonical_url = japanese_url if language == "ja" else english_url
+    title = feature["title"] if language == "ja" else feature["titleEn"]
+    description = feature["dek"] if language == "ja" else feature["dekEn"]
     json_ld = {
         "@context": "https://schema.org",
         "@type": "Article",
-        "headline": feature["title"],
-        "alternativeHeadline": feature["titleEn"],
-        "description": feature["dek"],
+        "headline": title,
+        "description": description,
         "datePublished": feature["date"],
         "dateModified": feature.get("generatedAt", feature["date"]),
-        "inLanguage": ["ja", "en"],
+        "inLanguage": language,
         "mainEntityOfPage": canonical_url,
         "publisher": {"@type": "Organization", "name": "Audio Research Weekly"},
         "citation": [source["url"] for source in feature["sources"]],
     }
     head = _document_head(
-        title=f"{feature['title']} | Audio Research Weekly",
-        description=feature["dek"],
+        title=f"{title} | Audio Research Weekly",
+        description=description,
         canonical_url=canonical_url,
         json_ld=json_ld,
+        language=language,
+        japanese_url=japanese_url,
+        english_url=english_url,
     )
-    kind = "分野を解く" if feature["type"] == "primer" else "論点を読む"
-    perspectives = "".join(
-        f"""<article class="card"><h3>{_escape(item['label'])}</h3>
+    kind = _feature_kind(feature["type"], language)
+    if language == "ja":
+        perspectives = "".join(
+            f"""<article class="card"><h3>{_escape(item['label'])}</h3>
 <p>{_escape(item['description'])}{_source_links(item['sourceIds'])}</p></article>"""
-        for item in feature["perspectives"]
-    )
-    sections = "".join(
-        f"""<section class="article-section" id="{_escape(section['id'])}"><h2>{_escape(section['heading'])}</h2>
+            for item in feature["perspectives"]
+        )
+        sections = "".join(
+            f"""<section class="article-section" id="{_escape(section['id'])}"><h2>{_escape(section['heading'])}</h2>
 {''.join(f'<p>{_escape(block["text"])}{_source_links(block["sourceIds"])}</p>' for block in section['blocks'])}</section>"""
-        for section in feature["sections"]
-    )
-    english_points = "".join(
-        f"<li>{_escape(point)}</li>" for point in feature["keyPointsEn"]
-    )
+            for section in feature["sections"]
+        )
+        main_content = (
+            f'<aside class="perspectives" aria-label="3つの視点">{perspectives}</aside>'
+            f"{sections}"
+        )
+    else:
+        english_points = "".join(
+            f"<li>{_escape(point)}</li>" for point in feature["keyPointsEn"]
+        )
+        main_content = f"""<section class="summary"><span class="badge">English summary</span><h2>Summary</h2>
+<p>{_escape(feature['summaryEn'])}</p><h2>Key points</h2><ul>{english_points}</ul></section>"""
     sources = "".join(
         f"""<article class="source" id="source-{_escape(source['sourceId'])}">
-<div class="source-meta">{_escape(source['sourceId'])} · {_escape(source['origin'])} · {_escape(source.get('publishedAt', ''))}</div>
+<div class="source-meta">{_escape(source['sourceId'])} · {_escape(_source_origin(source['origin'], language))} · {_escape(source.get('publishedAt', ''))}</div>
 <div class="source-title"><a href="{_escape(source['url'])}" rel="noopener noreferrer">{_escape(source['title'])}</a></div>
 <div class="source-meta">{_escape(', '.join(source.get('authors', [])[:5]))} · arXiv:{_escape(source['arxivId'])}</div>
-{_primary_links(source)}</article>"""
+{_primary_links(source, language)}</article>"""
         for source in feature["sources"]
     )
-    return f"""{head}<body><div class="shell"><nav class="nav"><a href="../../">← Audio Research Weekly</a><a href="../">特集一覧</a></nav></div>
+    if language == "ja":
+        home_link = '<a href="../../?lang=ja">← 音響AI週報</a>'
+        archive_link = '<a href="../">特集一覧</a>'
+        language_switch = '<span aria-current="page">JA</span><span>/</span><a href="./en/" hreflang="en">EN</a>'
+        meta = f"""<span>{_escape(feature['date'])}</span><span>約 {_escape(feature['readTimeMinutes'])} 分</span><span>出典 {len(feature['sources'])} 件</span><span>AI生成・自動検証</span>"""
+        sources_heading = "一次資料（原題）"
+        sources_note = "本文は以下の arXiv 論文のタイトルとアブストラクトに基づき、出典 ID を段落ごとに付与しています。論文タイトルは原題のまま掲載しています。"
+        footer = '<a href="../">特集一覧へ</a> · <a href="../../?lang=ja">週報へ戻る</a>'
+    else:
+        home_link = '<a href="../../../?lang=en">← Audio AI Weekly</a>'
+        archive_link = '<a href="../../en/">Feature archive</a>'
+        language_switch = '<a href="../" hreflang="ja">JA</a><span>/</span><span aria-current="page">EN</span>'
+        meta = f"""<span>{_escape(feature['date'])}</span><span>English summary</span><span>{len(feature['sources'])} primary sources</span><span>AI-generated · auto-verified</span>"""
+        sources_heading = "Primary sources"
+        sources_note = "This summary is grounded in the titles and abstracts of the following arXiv papers."
+        footer = '<a href="../../en/">Feature archive</a> · <a href="../../../?lang=en">Back to weekly report</a>'
+    return f"""{head}<body><div class="shell"><nav class="nav">{home_link}{archive_link}<span class="language-switch" aria-label="Language">{language_switch}</span></nav></div>
 <header class="hero"><div class="shell"><span class="badge {_escape(feature['type'])}">{_escape(kind)}</span>
-<h1>{_escape(feature['title'])}</h1><p class="dek">{_escape(feature['dek'])}</p>
-<div class="meta"><span>{_escape(feature['date'])}</span><span>約 {_escape(feature['readTimeMinutes'])} 分</span><span>{len(feature['sources'])} primary sources</span><span>AI生成・自動検証</span><a href="#english-summary">English summary</a></div></div></header>
-<main class="shell"><aside class="perspectives" aria-label="3つの視点">{perspectives}</aside>{sections}
-<section class="summary" id="english-summary" lang="en"><span class="badge">English summary</span><h2>{_escape(feature['titleEn'])}</h2>
-<p>{_escape(feature['dekEn'])}</p><p>{_escape(feature['summaryEn'])}</p><ul>{english_points}</ul></section>
-<section class="sources"><h2>一次資料</h2><p class="dek">本文は以下の arXiv 論文のタイトルとアブストラクトに基づき、出典 ID を段落ごとに付与しています。</p>{sources}</section></main>
-<footer class="footer"><div class="shell"><a href="../">特集一覧へ</a> · <a href="../../">週報へ戻る</a></div></footer></body></html>"""
+<h1>{_escape(title)}</h1><p class="dek">{_escape(description)}</p>
+<div class="meta">{meta}</div></div></header>
+<main class="shell">{main_content}
+<section class="sources"><h2>{sources_heading}</h2><p class="dek">{sources_note}</p>{sources}</section></main>
+<footer class="footer"><div class="shell">{footer}</div></footer></body></html>"""
 
 
-def render_archive_page(features: list[dict], site_url: str = DEFAULT_SITE_URL) -> str:
-    canonical_url = f"{site_url.rstrip('/')}/features/"
-    description = "音声・音響AI研究を一次資料から読み解く、月2回の特集記事。"
+def render_archive_page(
+    features: list[dict], site_url: str = DEFAULT_SITE_URL, language: str = "ja"
+) -> str:
+    if language not in ("ja", "en"):
+        raise ValueError("language must be ja or en")
+    japanese_url = f"{site_url.rstrip('/')}/features/"
+    english_url = f"{japanese_url}en/"
+    canonical_url = japanese_url if language == "ja" else english_url
+    description = (
+        "音声・音響AI研究を一次資料から読み解く、月2回の特集記事。"
+        if language == "ja"
+        else "Twice-monthly features explaining audio and speech AI research from primary sources."
+    )
+    page_name = "Audio Research Weekly 特集" if language == "ja" else "Audio Research Weekly Features"
     json_ld = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": "Audio Research Weekly 特集",
+        "name": page_name,
         "description": description,
         "url": canonical_url,
         "hasPart": [
             {
                 "@type": "Article",
-                "headline": feature["title"],
-                "url": f"{canonical_url}{feature['slug']}/",
+                "headline": feature["title"] if language == "ja" else feature["titleEn"],
+                "url": (
+                    f"{japanese_url}{feature['slug']}/"
+                    if language == "ja"
+                    else f"{japanese_url}{feature['slug']}/en/"
+                ),
             }
             for feature in features
         ],
     }
     head = _document_head(
-        title="特集 | Audio Research Weekly",
+        title=("特集 | Audio Research Weekly" if language == "ja" else "Features | Audio Research Weekly"),
         description=description,
         canonical_url=canonical_url,
         json_ld=json_ld,
+        language=language,
+        japanese_url=japanese_url,
+        english_url=english_url,
     )
-    cards = "".join(
-        f"""<a class="archive-card" href="./{_escape(feature['slug'])}/"><span class="badge {_escape(feature['type'])}">{'分野を解く' if feature['type'] == 'primer' else '論点を読む'}</span>
-<h2>{_escape(feature['title'])}</h2><p class="archive-title-en" lang="en">{_escape(feature['titleEn'])}</p><p>{_escape(feature['dek'])}</p>
-<div class="meta"><span>{_escape(feature['date'])}</span><span>約 {_escape(feature['readTimeMinutes'])} 分</span><span>{len(feature['sources'])} sources</span></div></a>"""
-        for feature in features
-    )
+    cards = "".join(_archive_card(feature, language) for feature in features)
     if not cards:
-        cards = '<p class="dek">公開済みの特集はまだありません。</p>'
-    return f"""{head}<body><div class="shell"><nav class="nav"><a href="../">← Audio Research Weekly</a></nav>
-<header class="hero"><span class="badge">Features</span><h1>研究の現在地を、一次資料から。</h1><p class="dek">{_escape(description)}</p></header>
-<main class="archive-grid">{cards}</main><footer class="footer"><a href="../">週報へ戻る</a></footer></div></body></html>"""
+        cards = (
+            '<p class="dek">公開済みの特集はまだありません。</p>'
+            if language == "ja"
+            else '<p class="dek">No features have been published yet.</p>'
+        )
+    if language == "ja":
+        home_link = '<a href="../?lang=ja">← 音響AI週報</a>'
+        language_switch = '<span aria-current="page">JA</span><span>/</span><a href="./en/" hreflang="en">EN</a>'
+        badge = "特集"
+        heading = "研究の現在地を、一次資料から。"
+        footer = '<a href="../?lang=ja">週報へ戻る</a>'
+    else:
+        home_link = '<a href="../../?lang=en">← Audio AI Weekly</a>'
+        language_switch = '<a href="../" hreflang="ja">JA</a><span>/</span><span aria-current="page">EN</span>'
+        badge = "Features"
+        heading = "Research context, grounded in primary sources."
+        footer = '<a href="../../?lang=en">Back to weekly report</a>'
+    return f"""{head}<body><div class="shell"><nav class="nav">{home_link}<span class="language-switch" aria-label="Language">{language_switch}</span></nav>
+<header class="hero"><span class="badge">{badge}</span><h1>{heading}</h1><p class="dek">{_escape(description)}</p></header>
+<main class="archive-grid">{cards}</main><footer class="footer">{footer}</footer></div></body></html>"""
 
 
 def _atomic_write_text(path: Path, content: str) -> None:
@@ -450,12 +565,26 @@ def render_all(
     _, features = load_features(input_dir)
     written: list[Path] = []
     for feature in features:
-        path = output_dir / feature["slug"] / "index.html"
-        _atomic_write_text(path, render_feature_page(feature, site_url))
-        written.append(path)
-    archive_path = output_dir / "index.html"
-    _atomic_write_text(archive_path, render_archive_page(features, site_url))
-    written.append(archive_path)
+        japanese_path = output_dir / feature["slug"] / "index.html"
+        _atomic_write_text(
+            japanese_path, render_feature_page(feature, site_url, "ja")
+        )
+        written.append(japanese_path)
+        english_path = output_dir / feature["slug"] / "en" / "index.html"
+        _atomic_write_text(
+            english_path, render_feature_page(feature, site_url, "en")
+        )
+        written.append(english_path)
+    japanese_archive_path = output_dir / "index.html"
+    _atomic_write_text(
+        japanese_archive_path, render_archive_page(features, site_url, "ja")
+    )
+    written.append(japanese_archive_path)
+    english_archive_path = output_dir / "en" / "index.html"
+    _atomic_write_text(
+        english_archive_path, render_archive_page(features, site_url, "en")
+    )
+    written.append(english_archive_path)
     return written
 
 
@@ -467,7 +596,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     written = render_all(args.input, args.output, args.site_url)
     print(
-        f"[features] Rendered {len(written) - 1} article page(s) and archive -> {args.output}"
+        f"[features] Rendered {(len(written) - 2) // 2} feature(s) in ja/en "
+        f"and archives -> {args.output}"
     )
     return 0
 

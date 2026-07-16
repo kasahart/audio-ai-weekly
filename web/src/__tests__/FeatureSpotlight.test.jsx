@@ -41,7 +41,9 @@ describe('FeatureSpotlight', () => {
     expect(screen.getByText('4 sources')).toBeInTheDocument()
     expect(screen.getByText('AI-generated · auto-verified')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: `Read feature: ${FEATURE.titleEn}` }))
-      .toHaveAttribute('href', './features/spatial-audio-agents/#english-summary')
+      .toHaveAttribute('href', './features/spatial-audio-agents/en/')
+    expect(screen.getByRole('link', { name: /Feature archive/ }))
+      .toHaveAttribute('href', './features/en/')
   })
 
   it('renders nothing without a feature', () => {
