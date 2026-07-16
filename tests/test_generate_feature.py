@@ -911,6 +911,49 @@ def test_short_body_expansion_retries_locally_invalid_length(capsys):
     assert "failed local validation (attempt 1/2, errors=1)" in output
 
 
+def test_short_body_expansion_accepts_output_that_meets_publication_gates():
+    calls = []
+
+    class ExpansionModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            return {
+                "blockAdditions": [
+                    {
+                        "id": block["id"],
+                        "text": "追" * (353 if index == 0 else 352),
+                        "sourceIds": block["sourceIds"],
+                    }
+                    for index, block in enumerate(payload["blocks"])
+                ]
+            }
+
+    feature = generate_feature.assemble_feature(
+        make_body(chars_per_section=268),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    body = generate_feature.expand_short_body(
+        ExpansionModel(), feature, make_sources()
+    )
+    expanded = generate_feature.assemble_feature(
+        body,
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    generate_feature.validate_feature(expanded)
+    assert len(calls) == 1
+    assert generate_feature.article_character_count(expanded) == 3721
+
+
 def test_short_body_expansion_trims_overlong_additions(capsys):
     calls = []
 
