@@ -1,6 +1,7 @@
 import json
 import math
 import sys
+import urllib.error
 from datetime import date, datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -424,6 +425,45 @@ def test_fetch_additional_sources_uses_atom_and_excludes_archive_ids():
     assert excluded == []
 
 
+def test_fetch_additional_sources_retries_rate_limit_with_bounded_backoff(capsys):
+    attempts = []
+    sleeps = []
+    cfg = dict(generate_feature.FEATURE_SETTINGS)
+    cfg.update(
+        {
+            "arxiv_retry_max": 4,
+            "arxiv_retry_interval": 2.0,
+            "arxiv_retry_max_interval": 10.0,
+        }
+    )
+
+    def opener(request, timeout):
+        attempts.append((request.full_url, timeout))
+        if len(attempts) < 4:
+            raise urllib.error.HTTPError(
+                request.full_url,
+                429,
+                "rate limited",
+                {"Retry-After": "7"},
+                None,
+            )
+        return DummyResponse()
+
+    sources = generate_feature.fetch_additional_arxiv_sources(
+        ["audio source separation"],
+        set(),
+        cfg=cfg,
+        opener=opener,
+        sleep=sleeps.append,
+    )
+
+    assert sources[0]["arxivId"] == "2401.00001"
+    assert len(attempts) == 4
+    assert sleeps == [7.0, 7.0, 8.0]
+    output = capsys.readouterr().out
+    assert "attempt 1/4 failed (HTTP 429); retrying in 7s" in output
+
+
 def urllib_parse_query(url):
     from urllib.parse import parse_qs, urlparse
 
@@ -726,6 +766,8 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["verification_revision_max"] == 1
     assert cfg["grounding_patch_retry_max"] >= 2
     assert cfg["grounding_patch_block_max"] == 3
+    assert cfg["arxiv_retry_max"] >= 5
+    assert cfg["arxiv_retry_max_interval"] >= cfg["arxiv_retry_interval"]
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
     assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
     assert (
