@@ -464,6 +464,24 @@ def test_fetch_additional_sources_retries_rate_limit_with_bounded_backoff(capsys
     assert "attempt 1/4 failed (HTTP 429); retrying in 7s" in output
 
 
+def test_archived_fallback_sources_rank_unused_relevant_papers():
+    candidates = make_candidates()
+
+    sources = generate_feature.select_archived_fallback_sources(
+        ["audio source separation", "foundation model"],
+        candidates,
+        {"2601.00001", "2601.00002", "2601.00003", "2601.00004"},
+        limit=2,
+    )
+
+    assert {source["arxivId"] for source in sources} == {
+        "2601.00005",
+        "2601.00006",
+    }
+    assert all(source["origin"] == "historical" for source in sources)
+    assert all(source["url"].startswith("https://arxiv.org/abs/") for source in sources)
+
+
 def urllib_parse_query(url):
     from urllib.parse import parse_qs, urlparse
 
@@ -766,7 +784,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["verification_revision_max"] == 2
     assert cfg["grounding_patch_retry_max"] >= 2
     assert cfg["grounding_patch_block_max"] == 3
-    assert cfg["arxiv_retry_max"] >= 5
+    assert cfg["arxiv_retry_max"] == 3
     assert cfg["arxiv_retry_max_interval"] >= cfg["arxiv_retry_interval"]
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
     assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
@@ -1311,6 +1329,61 @@ def test_scheduled_rerun_returns_existing_feature_without_model(tmp_path):
     )
 
     assert result == feature
+
+
+def test_pipeline_uses_archived_sources_when_arxiv_api_is_rate_limited(
+    monkeypatch, tmp_path, capsys
+):
+    plan = make_plan()
+    candidates = make_candidates() + [
+        {
+            "id": f"2601.0000{index}v1",
+            "title": f"Foundation Model Source Separation {index}",
+            "abstract": "Audio source separation and foundation model evaluation.",
+            "authors": [f"Author {index}"],
+            "archiveDate": "2026-07-03",
+        }
+        for index in (7, 8)
+    ]
+    monkeypatch.setattr(
+        generate_feature, "load_recent_weekly_papers", lambda *_args: candidates
+    )
+    monkeypatch.setattr(generate_feature, "choose_topic", lambda *_args: plan)
+    monkeypatch.setattr(
+        generate_feature,
+        "fetch_additional_arxiv_sources",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            generate_feature.FeatureError("arXiv primary-source retrieval failed: 429")
+        ),
+    )
+    monkeypatch.setattr(generate_feature, "generate_body", lambda *_args: make_body())
+    monkeypatch.setattr(
+        generate_feature,
+        "verify_feature",
+        lambda *_args: {"status": "pass", "issues": []},
+    )
+
+    feature = generate_feature.run_feature_pipeline(
+        as_of=date(2026, 7, 14),
+        article_type="primer",
+        dry_run=True,
+        data_root=tmp_path,
+        output_dir=tmp_path / "features",
+        model=object(),
+        now=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    assert [source["origin"] for source in feature["sources"]] == [
+        "archive",
+        "archive",
+        "archive",
+        "archive",
+        "historical",
+        "historical",
+        "historical",
+        "historical",
+    ]
+    assert "fallback used 4 archived source(s)" in capsys.readouterr().out
 
 
 def test_pipeline_bounds_verifier_revisions_after_local_correction(
