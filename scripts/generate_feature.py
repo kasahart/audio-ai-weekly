@@ -1447,6 +1447,16 @@ def validate_verdict(verdict: Any, feature: dict) -> dict:
     return verdict
 
 
+def _verifier_issue_summary(issues: list[dict], limit: int = 5) -> str:
+    summarized = [
+        f"{issue['blockId']}: {_clean_text(issue['reason'])[:160]}"
+        for issue in issues[:limit]
+    ]
+    if len(issues) > limit:
+        summarized.append(f"and {len(issues) - limit} more")
+    return "; ".join(summarized)
+
+
 def generate_body(
     model: Any,
     plan: dict,
@@ -2193,7 +2203,12 @@ def run_feature_pipeline(
     ):
         print(
             "  [warn] AI grounding verification requested a revision "
-            f"({verifier_revision_count + 1}/{verifier_revision_max})"
+            f"({verifier_revision_count + 1}/{verifier_revision_max}); "
+            f"issues={len(verdict['issues'])}; "
+            "blocks="
+            + ",".join(
+                dict.fromkeys(issue["blockId"] for issue in verdict["issues"])
+            )
         )
         body = revise_grounding_blocks(
             model, feature, plan, sources, verdict["issues"], cfg
@@ -2215,7 +2230,8 @@ def run_feature_pipeline(
         raise FeatureValidationError(
             [
                 "Feature failed grounding verification after "
-                f"{verifier_revision_count} verifier revision(s)"
+                f"{verifier_revision_count} verifier revision(s); remaining: "
+                f"{_verifier_issue_summary(verdict['issues'])}"
             ]
         )
 
