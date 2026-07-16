@@ -1,4 +1,35 @@
 {
-  "features": [],
-  "generatedAt": ""
+  "features": [
+    {
+      "slug": "2026-07-14-primer-human-preference-reward-text-to-music",
+      "type": "primer",
+      "date": "2026-07-14",
+      "readTimeMinutes": 10,
+      "sourceCount": 8,
+      "title": "人間の嗜好報酬によるテキストから音楽生成の最前線",
+      "titleEn": "Frontiers of Text-to-Music Generation with Human Preference Rewards",
+      "dek": "テキストから音楽生成の分野では、人間の嗜好を反映した報酬モデルの導入が、生成音楽の品質やユーザー満足度の向上に大きな役割を果たしています。本稿ではTuneJuryやペアワイズランキングを中心に、技術的進化、実運用課題、評価指標の観点から最新の研究動向を解説します。",
+      "dekEn": "Human preference reward models are transforming text-to-music generation by improving output quality and user satisfaction. This feature examines recent advances, technical mechanisms, deployment challenges, and evaluation metrics, focusing on TuneJury and pairwise ranking approaches.",
+      "file": "2026-07-14-primer-human-preference-reward-text-to-music.json",
+      "topicKey": "human-preference-reward-text-to-music",
+      "searchTerms": [
+        "human-preference reward",
+        "text-to-music generation",
+        "TuneJury",
+        "audio-text alignment"
+      ],
+      "sourcePaperIds": [
+        "2606.21670",
+        "2607.03806",
+        "2607.06611",
+        "2606.30682",
+        "2605.21433",
+        "2607.01669",
+        "2606.17006",
+        "2506.08570"
+      ],
+      "generatedAt": "2026-07-16T03:02:00.739750+00:00"
+    }
+  ],
+  "generatedAt": "2026-07-16T03:02:00.739750+00:00"
 }

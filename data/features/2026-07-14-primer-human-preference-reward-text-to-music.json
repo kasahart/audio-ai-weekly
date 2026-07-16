@@ -1,0 +1,301 @@
+{
+  "title": "人間の嗜好報酬によるテキストから音楽生成の最前線",
+  "titleEn": "Frontiers of Text-to-Music Generation with Human Preference Rewards",
+  "dek": "テキストから音楽生成の分野では、人間の嗜好を反映した報酬モデルの導入が、生成音楽の品質やユーザー満足度の向上に大きな役割を果たしています。本稿ではTuneJuryやペアワイズランキングを中心に、技術的進化、実運用課題、評価指標の観点から最新の研究動向を解説します。",
+  "dekEn": "Human preference reward models are transforming text-to-music generation by improving output quality and user satisfaction. This feature examines recent advances, technical mechanisms, deployment challenges, and evaluation metrics, focusing on TuneJury and pairwise ranking approaches.",
+  "summaryEn": "Text-to-music generation has seen rapid progress, with human preference reward models such as TuneJury emerging as key innovations. These models use pairwise rankings and human-labeled datasets to guide generation, improving both audio quality and alignment with user expectations. Technical advances include reward conditioning, efficient training pipelines, and calibration methods. Practical deployment faces challenges in balancing efficiency, user satisfaction, and pipeline complexity. Evaluation remains difficult due to the subjective nature of music preference, and societal impacts must be considered. This primer synthesizes evidence from recent arXiv papers, highlighting technical mechanisms, practical concerns, and evaluation strategies, while noting limitations and open questions.",
+  "keyPointsEn": [
+    "Human preference rewards, exemplified by TuneJury, enhance text-to-music generation quality and alignment.",
+    "Technical advances include reward conditioning, efficient pipelines, and calibration for data efficiency.",
+    "Evaluation and societal impact remain challenging due to subjectivity and limitations of current metrics."
+  ],
+  "perspectives": [
+    {
+      "id": "reward-mechanism",
+      "label": "報酬機構の技術的進化",
+      "description": "人間の嗜好を反映した報酬モデル（TuneJuryなど）は、ペアワイズランキングや効率的な条件付けを通じて、生成音楽の品質や多様性を向上させる技術的基盤を提供しています。これらの報酬は学習時や推論時に活用され、音楽とテキストの整合性やユーザーの好みに近い生成を促進します。",
+      "sourceIds": [
+        "S1",
+        "S7"
+      ]
+    },
+    {
+      "id": "deployment-practitioner",
+      "label": "実運用とユーザー満足度の課題",
+      "description": "生成音楽の実運用では、嗜好報酬を用いたモデルがユーザー体験やアプリケーションの効率性に大きく影響します。パイプライン設計やデータ効率、推論時の条件付けなど、現場で直面する課題とその解決策が求められています。",
+      "sourceIds": [
+        "S1",
+        "S6"
+      ]
+    },
+    {
+      "id": "evaluation-societal",
+      "label": "評価指標と社会的インパクト",
+      "description": "人間の嗜好報酬による音楽生成の評価は主観性が強く、客観的指標との整合や社会的・文化的影響の把握が課題です。TuneJuryのようなオープン評価モデルや多様な指標の活用が進む一方、限界や未解決の問題も残されています。",
+      "sourceIds": [
+        "S2",
+        "S7"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "why-needed",
+      "heading": "なぜ人間の嗜好報酬が必要なのか",
+      "blocks": [
+        {
+          "id": "block-why-1",
+          "text": "従来のテキストから音楽生成モデルは、客観的なスコアや自動評価指標（例：FAD-CLAPやCLAPスコア）に依存していました。しかし、音楽の品質やユーザー満足度は主観的であり、これらの指標だけでは人間の好みに十分に対応できません。TuneJuryのような人間の嗜好を反映したペアワイズ報酬モデルは、生成音楽が実際にどれだけユーザーの期待に応えるかを直接評価・学習できる点で、従来手法の限界を克服する重要な技術です。これにより、生成モデルがより多様で質の高い音楽を生み出すことが可能となります。\n\nTuneJuryのような人間嗜好報酬モデルは、単なる自動評価指標では捉えきれない音楽の主観的な魅力やニュアンスを学習可能にします。特に、ペアワイズランキングに基づく報酬設計は、異なる生成音楽同士の微妙な好みの差異を反映できるため、従来の絶対評価型スコアよりもユーザー体験に直結した最適化が可能です。さらに、TuneJuryはアリーナ型投票や専門家評価、クラウドソーシングによる多様な人間ラベルを統合しており、汎用性と一般化性能の高さが特徴です（S7）。このような報酬モデルを学習時の条件付けや推論時のサンプル選択に活用することで、生成音楽の質的向上だけでなく、ユーザーごとの嗜好に合わせたパーソナライズも実現しやすくなります。一方で、報酬モデルの導入は計算資源やデータ収集のコスト増加を伴うため、実運用における効率性とのバランスも重要な検討事項となります（S1）。",
+          "sourceIds": [
+            "S1",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "heading": "技術進化の歴史と因果的転換点",
+      "blocks": [
+        {
+          "id": "block-history-1",
+          "text": "テキストから音楽生成の初期は、主に大規模データと外部事前学習に依存したモデルが主流でした（S5）。その後、音楽とテキストの整合性を高めるために、音声・テキストの埋め込み空間を活用する手法（S4）や、バッチサンプリング戦略による効率化（S6）が登場しました。近年では、TuneJuryのようなペアワイズ報酬モデルが導入され、学習時や推論時に人間の嗜好を直接条件付けすることで、生成音楽の品質や多様性が大きく向上しています（S1, S7）。この技術的転換は、従来の客観評価から主観的嗜好へのシフトを促し、生成パイプラインの設計や評価方法にも新たな課題と可能性をもたらしました。\n\n初期の大規模事前学習モデルは、膨大なデータセットと計算資源を必要とし、特定のドメインやユーザー層への適応性に課題がありました（S5）。これに対し、ALM2Vecのような大規模音声・言語モデルを活用した埋め込み空間の統一は、異なる音響ドメインやタスクタイプを横断した柔軟な検索・生成を可能にし、従来のキャプションマッチング中心の最適化から、より多様な応用へと発展しています（S4）。また、バッチサンプリング戦略の導入により、低データ・小規模モデル環境下でも効率的な学習が実現され、クラスタリング手法の違いや粒度が評価指標や生成音楽の構造性に与える影響も明らかになりました（S6）。このような技術進化の流れの中で、TuneJuryのような主観的報酬モデルは、従来の客観評価指標と組み合わせることで、より包括的な生成音楽の評価・最適化を可能にしています（S1, S7）。しかし、主観的嗜好の導入は評価の一貫性や再現性の課題も伴うため、今後は客観・主観指標の統合的な運用や、評価データの多様性確保が重要となります。",
+          "sourceIds": [
+            "S1",
+            "S4",
+            "S5",
+            "S6",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approaches",
+      "heading": "主要アプローチとその比較",
+      "blocks": [
+        {
+          "id": "block-approaches-1",
+          "text": "テキストから音楽生成のアプローチは多岐にわたります。TuneJuryのようなペアワイズ報酬モデルは、学習時の条件付けや推論時のCFG（Classifier-Free Guidance）軸として活用され、生成音楽の嗜好整合性を高めています（S1, S7）。一方、バッチサンプリングやクラスタリングによる効率化（S6）、音声・テキスト埋め込み空間の活用（S4）、モデリングパラダイムの比較（S8）など、技術的選択肢にはそれぞれトレードオフがあります。例えば、報酬条件付けは多様性や品質向上に寄与しますが、計算コストやデータ効率の課題も伴います。さらに、音声埋め込みの属性表現（S2）やクロスモーダル統合（S3）など、生成パイプラインの設計は評価指標やユーザー体験にも影響を与えます。\n\n近年のアプローチでは、報酬モデルによる条件付けとともに、埋め込み空間の設計やクラスタリング戦略の選択が生成品質に大きな影響を与えています。たとえば、ALM2Vecのような大規模音声・言語モデルを活用した埋め込みは、従来のデュアルエンコーダ方式よりも多様な検索・生成タスクに対応可能であり、自然言語による指示や質問応答にも柔軟に適応できます（S4）。一方、バッチサンプリングではテキスト埋め込みに基づくクラスタリングが音響埋め込みよりも客観評価指標で優れることが示されており、クラスタ粒度の調整によって生成音楽の構造性や一貫性も制御可能です（S6）。また、CLAP埋め込み空間の分析からは、残響やラウドネス、スペクトル特性などの低次元音響属性がどの程度線形的・非線形的に表現されているかが明らかになり、生成モデルの設計や評価指標の選択に新たな知見をもたらしています（S2）。クロスモーダル統合（S3）やモデリングパラダイムの比較（S8）も進み、オーディオとテキストの情報をどのように融合・分離するかが、最終的な生成音楽の多様性や制御性に直結することが示唆されています。これらの技術選択は、モデルの計算コストやデータ効率、ユーザー体験の観点からも慎重なトレードオフが求められます。",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S6",
+            "S7",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perspectives",
+      "heading": "三つの観点から見る人間嗜好報酬の意義",
+      "blocks": [
+        {
+          "id": "block-perspectives-1",
+          "text": "技術的進化の観点では、TuneJuryのような報酬モデルがペアワイズランキングや効率的な条件付けを通じて、生成音楽の品質や多様性を大きく向上させています（S1, S7）。実運用の観点では、報酬モデルの導入がユーザー満足度やアプリケーションの効率性に直結し、パイプライン設計やデータ効率の課題解決が求められています（S1, S6）。評価・社会的インパクトの観点では、主観的指標と客観的指標の整合や、生成音楽が文化や社会に与える影響の把握が重要です。TuneJuryのようなオープン評価モデルは進歩を促す一方、主観性や評価の限界も残されています（S2, S7）。\n\n一方で、報酬モデルの導入は、生成音楽の多様性や品質向上に寄与するだけでなく、ユーザーごとの嗜好や文化的背景に合わせたパーソナライズの可能性も広げています（S1, S7）。しかし、主観的指標の導入は評価の一貫性や再現性の課題を内包しており、異なるユーザー層や文化圏での評価結果のばらつきが生じるリスクもあります（S2, S7）。また、バッチサンプリングやクラスタリング戦略の工夫は、限られたデータや計算資源下でも効率的な学習を実現する一方で、クラスタ粒度やモダリティ選択が生成結果の構造性や一貫性に与える影響を慎重に評価する必要があります（S6）。社会的インパクトの観点では、生成音楽が既存の音楽文化やクリエイターの活動に与える影響、著作権や倫理的課題への配慮も不可欠です。今後は、主観的嗜好と客観的指標のバランスを取りつつ、透明性や説明性を備えた評価・生成パイプラインの設計が求められます。",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S6",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "heading": "現状の限界と未解決課題",
+      "blocks": [
+        {
+          "id": "block-limits-1",
+          "text": "人間の嗜好報酬モデルにはいくつかの限界があります。まず、主観的評価のバイアスやデータの偏りが、生成音楽の多様性や公平性に影響を与える可能性があります（S7）。また、報酬モデルの計算コストやデータ効率、推論時の条件付けの複雑さは、実運用における課題です（S1, S6）。さらに、音声埋め込み空間の属性表現やクロスモーダル統合の精度には未解決の問題が残されており（S2, S3）、評価指標の客観性と主観性のバランスも十分に確立されていません。これらの課題は、今後の研究や実運用において慎重な検討が必要です。\n\nさらに、報酬モデルの学習には多様で質の高い人間ラベルが不可欠ですが、ラベル収集のコストやバイアスの管理は依然として大きな課題です（S7）。特に、特定の文化圏やユーザー層に偏ったデータセットでは、生成音楽の多様性や公平性が損なわれるリスクがあります。加えて、報酬モデルを推論時のCFG軸やサンプル選択基準として利用する場合、計算コストやリアルタイム性の確保が実運用上のボトルネックとなることもあります（S1, S6）。音声埋め込み空間の属性表現については、CLAPのような基盤モデルでも一部属性（例：スペクトルセントロイド）は非線形プローブを必要とするなど、完全な説明性や制御性には限界が残されています（S2）。クロスモーダル統合においても、音声とテキストの情報融合が必ずしも最適な感情認識や生成品質に直結しない場合があり、モダリティ間の情報損失やノイズ伝播のリスクも指摘されています（S3）。これらの技術的・運用的限界を克服するためには、評価指標やデータ収集、モデル設計のさらなる工夫が求められます。",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S6",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outlook",
+      "heading": "今後の展望と研究・実践への示唆",
+      "blocks": [
+        {
+          "id": "block-outlook-1",
+          "text": "今後は、より多様な人間の嗜好データを活用した報酬モデルの開発や、効率的なパイプライン設計、音声・テキスト埋め込み空間の高度化が進むと予想されます（S1, S4, S7）。また、評価指標の客観性と主観性のバランスを取る新たな方法や、社会的・文化的インパクトの定量化も重要な研究課題です。実運用では、ユーザー満足度を高めるためのインタラクティブな生成や、データ効率・計算コストの最適化が求められます。研究者・実務者双方にとって、人間の嗜好報酬を活用した音楽生成は、技術的進化と社会的価値の両面で大きな可能性を秘めています。\n\n今後の展望としては、報酬モデルの多様性と一般化性能を高めるため、より広範な人間ラベルや異文化データの活用が進むと考えられます。ALM2Vecのような大規模音声・言語モデルを基盤とした埋め込み空間の高度化は、タスク横断的な柔軟性や指示対応性の向上に寄与し、生成音楽のパーソナライズや新規応用の可能性を広げます（S4）。また、TuneJuryのようなオープンな評価モデルを活用した客観・主観指標の統合的運用や、バッチサンプリング・クラスタリング戦略の最適化によるデータ効率・計算コストの削減も重要な研究テーマです（S1, S6, S7）。社会的・文化的インパクトの定量化や、生成音楽の倫理的・法的課題への対応も今後の課題として認識されています。最終的には、ユーザー参加型のインタラクティブな生成や、説明性・透明性を備えた評価パイプラインの構築が、音楽生成技術の社会的受容と発展に不可欠となるでしょう。",
+          "sourceIds": [
+            "S1",
+            "S4",
+            "S7"
+          ]
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "slug": "2026-07-14-primer-human-preference-reward-text-to-music",
+  "type": "primer",
+  "date": "2026-07-14",
+  "generatedAt": "2026-07-16T03:02:00.739750+00:00",
+  "topicKey": "human-preference-reward-text-to-music",
+  "searchTerms": [
+    "human-preference reward",
+    "text-to-music generation",
+    "TuneJury",
+    "audio-text alignment"
+  ],
+  "sources": [
+    {
+      "arxivId": "2606.21670",
+      "title": "Improving Text-to-Music Generation with Human Preference Rewards",
+      "abstract": "We describe our entry to the efficiency track of the Academic Text-to-Music (ATTM) Grand Challenge at ICME 2026. Beyond the challenge protocol's FAD-CLAP and CLAP score, we add a learned human-preference reward from TuneJury, a twin pairwise ranker trained over open music-preference datasets. The reward serves both as a training-time conditioning signal and as a sample-selection criterion. The pipeline combines five engineering decisions on a 120M-parameter FluxAudio-S backbone, four at training time and one at inference: (i) training-time reward conditioning that doubles as an inference-time CFG axis, (ii) a sweep over five score-conditioning architectures, where training and inference use different variants, (iii) expert iteration on the top decile, (iv) a short preference-tuning pass (CRPO) for audio-text alignment, and (v) inference post-processing via joint CFG, source separation, and loudness normalization. Per-stage decomposition on 100 Song Describer prompts shows training-time reward conditioning as a functional conditioning axis, expert iteration as the dominant contributor, the preference-tuning pass adding only noise-level gain, and the inference-time score scalar already saturated by the end of the chain.",
+      "authors": [
+        "Yonghyun Kim",
+        "Junwon Lee",
+        "Haiwen Xia",
+        "Yinghao Ma",
+        "Chris Donahue"
+      ],
+      "publishedAt": "2026-06-26",
+      "url": "https://arxiv.org/abs/2606.21670",
+      "origin": "archive",
+      "archiveDate": "2026-06-26",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/yonghyunk1m/TTM-HumanPref"
+        },
+        {
+          "label": "Project",
+          "url": "https://huggingface.co/spaces/yonghyunk1m/TTM-HumanPref"
+        }
+      ],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2607.03806",
+      "title": "Probing Low-Level Acoustic Attribute Encoding in CLAP Audio Embeddings",
+      "abstract": "Audio foundation models are widely adopted as general-purpose feature extractors, yet the internal structure of their learned representations remains insufficiently understood. In this work, we analyze CLAP audio embeddings through a probing framework, studying the encoding of three fundamental perceptual dimensions: reverberation (RT60), loudness (LUFS), and spectral content, measured via spectral centroid (SC) and relative pitch (RP). Probes of increasing complexity are trained to predict each attribute from frozen embeddings across five datasets spanning noise, speech, monophonic musical notes, and music mixtures. Our primary finding is that all of these attributes are reliably recoverable from the CLAP embedding space across the examined datasets. Within this global picture, two encoding regimes emerge: RT60, LUFS, and RP are approximately linearly encoded, while SC requires non-linear probes. Both regimes generalize across eight additional audio foundation models, with the notable exception that amplitude-invariant architectures discard loudness entirely by construction. The identified linear feature directions are geometrically consistent across datasets for RT60 and LUFS, while highly domain-specific for RP. Finally, we provide a qualitative demonstration of cross-modal consistency, showing that text embeddings of acoustic descriptors align geometrically with the identified RT60 feature direction.",
+      "authors": [
+        "Héctor Martel",
+        "Joe Hennessy-Priest",
+        "Taemin Cho"
+      ],
+      "publishedAt": "2026-07-10",
+      "url": "https://arxiv.org/abs/2607.03806",
+      "origin": "archive",
+      "archiveDate": "2026-07-10",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2607.06611",
+      "title": "Audio Sentiment Analysis via Distillation and Cross-Modal Integration of Generated Multilingual Transcripts",
+      "abstract": "Automatically recognizing the sentiment, positive or negative, from speech is a challenging task, requiring both the analysis of vocal inflections and the interpretation of uttered words. Recent solutions rely on audio foundation models to solve the task, but it remains unclear if such models can take all aspects into account. To this end, we propose a multimodal solution that integrates audio and text information via cross-modal transformers, where text transcripts are automatically generated via an automatic speech recognition (ASR) tool. Moreover, we create multiple text modalities by automatically translating the transcripts into multiple languages via machine translation tools. Audio and multilingual text features are combined via a cascaded architecture comprising cross-modal transformer blocks that integrate modalities one by one. We further distill knowledge from the multimodal model, called teacher, into a unimodal (audio only) model, called student. We conduct experiments on a large-scale dataset, demonstrating that the automatically generated textual information can bring significant performance boosts in multimodal sentiment polarity classification. Our ablation study confirms that both automatic transcripts and automatic translations are helpful. Moreover, we show that the audio-only model can be enhanced via distillation, boosting performance without any computational overhead during inference. To reproduce the reported results, we publicly release our code at https://github.com/andreidurdun/cross-modal-audio-sentiment.",
+      "authors": [
+        "Andrei-George Durdun",
+        "Victor Constantinescu",
+        "Radu Tudor Ionescu"
+      ],
+      "publishedAt": "2026-07-13",
+      "url": "https://arxiv.org/abs/2607.06611",
+      "origin": "archive",
+      "archiveDate": "2026-07-13",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2606.30682",
+      "title": "ALM2Vec: Learning Audio Embeddings for Universal Audio Retrieval with Large Audio-Language Models",
+      "abstract": "Recent advances in language--audio retrieval have been largely driven by contrastive dual-encoder architectures that align audio and text in a shared embedding space. While effective, existing retrieval embeddings are primarily optimized for audio--caption matching, limiting their ability to support diverse retrieval objectives and controllable retrieval behaviors. We present ALM2Vec, a universal audio embedding framework derived from pretrained large audio--language models (LALMs). By transferring the audio understanding, instruction-following, and reasoning capabilities acquired through large-scale multimodal training, ALM2Vec learns a unified embedding space for retrieval across audio domains and task types. Beyond conventional text--audio retrieval, ALM2Vec incorporates natural-language instructions into the embedding process, enabling instruction-aware retrieval for scenarios such as audio question answering and aspect-conditioned retrieval. Experimental results show that ALM2Vec achieves competitive performance on standard audio and speech retrieval benchmarks while exhibiting promising compositional and controllable retrieval capabilities, highlighting its potential as a unified audio embedding model for retrieval across domains, tasks, and user intents.",
+      "authors": [
+        "Fengjie Lu",
+        "Chenang Jiang",
+        "Jiarui Hai",
+        "Helin Wang",
+        "Aaron Yee"
+      ],
+      "publishedAt": "2026-07-03",
+      "url": "https://arxiv.org/abs/2606.30682",
+      "origin": "archive",
+      "archiveDate": "2026-07-03",
+      "primaryLinks": [],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2605.21433",
+      "title": "Instrumental Text-to-Music Generation with Auxiliary Conditioning Branches",
+      "abstract": "Text-to-music generation has advanced rapidly, with modern autoregressive and diffusion-based models producing convincing music from natural-language prompts. However, much of this progress relies on large-scale training data and external pretraining, making it difficult to isolate which design choices remain effective when data and pretraining are controlled. We study this setting using a Diffusion Transformer backbone with lyric and timbre conditioning, adapted to an instrumental-only text-to-music task in which the auxiliary lyric and timbre branches receive only degenerate conditioning signals. Through controlled ablations, we find that models retrained without these branches score lower across AudioBox aesthetics, LLM-as-judge, and human MOS, and that reinvesting the saved parameters as additional DiT depth recovers only marginally. This suggests the auxiliary branches may act as training-time architectural anchors whose contribution goes beyond their explicit conditioning content. We validate the same model through comparisons with external instrumental baselines and through our submission to the ICME 2026 Academic Text-to-Music (ATTM) Grand Challenge, where our Performance submission ranked first under both the objective metrics and the subsequent organizer-administered MOS over 35 raters, attaining the highest overall MOS across all challenge submissions, while our Efficiency submission was a finalist that tied for second under the objective metrics.",
+      "authors": [
+        "Junyoung Koh"
+      ],
+      "publishedAt": "2026-05-20T17:23:58Z",
+      "url": "https://arxiv.org/abs/2605.21433",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2607.01669",
+      "title": "UT-AISTimprt submission for ICME 2026 Grand Challenge on Academic Text-to-Music Generation",
+      "abstract": "This work investigates the effect of batch sampling strategies during training for text-to-audio music generation under low-data and small-scale model settings. This paper describes our approach and findings for the ICME 2026 Grand Challenge on Academic Text-to-Music Generation. Training data are clustered using either text embeddings or audio embeddings, and samples with similar characteristics are grouped within the same mini-batch to mitigate gradient interference. The effects of modality and cluster granularity on clustering are analyzed. Results show that clustering based on text embeddings achieves better performance on objective evaluation metrics than clustering based on audio embeddings. In addition, different cluster granularity leads to different behaviors across evaluation criteria: a moderate number of clusters performs best on objective metrics, while a larger number of clusters tends to exhibit music with more coherent structure in listening tests.",
+      "authors": [
+        "Shunsuke Yoshida",
+        "Yu-Hua Chen",
+        "Satoru Fukayama"
+      ],
+      "publishedAt": "2026-07-02T03:51:01Z",
+      "url": "https://arxiv.org/abs/2607.01669",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2606.17006",
+      "title": "TuneJury: An Open Metric for Improving Music Generation Preference Alignment",
+      "abstract": "We introduce TuneJury, an open, instance-level pairwise reward model for text-to-music that predicts a music preference score from a text prompt and an audio clip. The released checkpoint is trained on publicly available human-preference labels covering arena-style (A vs. B) votes, metric-alignment preference pairs, crowdsourced pairwise comparisons, and expert aesthetic ratings. The predicted score margin between two clips is well calibrated on our held-out test split, supporting data filtering via a simple score threshold. TuneJury generalizes to both held-out test pairs and out-of-distribution benchmarks, remaining competitive with prior baselines on the latter. For generators released after training, we introduce anchor calibration, a post-hoc, per-system Bradley-Terry calibration that recovers agreement at substantially better data efficiency than from-scratch retraining. The same frozen reward drives consistent reward-axis gains across three downstream applications: inference-time best-of-N selection, DITTO-style latent optimization, and expert-iteration post-training. TuneJury is available at https://github.com/yonghyunk1m/TuneJury.",
+      "authors": [
+        "Yonghyun Kim",
+        "Junwon Lee",
+        "Haiwen Xia",
+        "Yinghao Ma",
+        "Junghyun Koo",
+        "Koichi Saito",
+        "Yuki Mitsufuji",
+        "Chris Donahue"
+      ],
+      "publishedAt": "2026-06-15T17:39:30Z",
+      "url": "https://arxiv.org/abs/2606.17006",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2506.08570",
+      "title": "Auto-Regressive vs Flow-Matching: a Comparative Study of Modeling Paradigms for Text-to-Music Generation",
+      "abstract": "Recent progress in text-to-music generation has enabled models to synthesize high-quality musical segments, full compositions, and even respond to fine-grained control signals, e.g. chord progressions. State-of-the-art (SOTA) systems differ significantly in many dimensions, such as training datasets, modeling paradigms, and architectural choices. This diversity complicates efforts to evaluate models fairly and identify which design choices influence performance the most. While factors like data and architecture are important, in this study we focus exclusively on the modeling paradigm. We conduct a systematic empirical analysis to isolate its effects, offering insights into associated trade-offs and emergent behaviors that can guide future text-to-music generation systems. Specifically, we compare the two arguably most common modeling paradigms: auto-regressive decoding and conditional flow-matching. We conduct a controlled comparison by training all models from scratch using identical datasets, training configurations, and similar backbone architectures. Performance is evaluated across multiple axes, including generation quality, robustness to inference configurations, scalability, adherence to both textual and temporally aligned conditioning, and editing capabilities in the form of audio inpainting. This comparative study sheds light on distinct strengths and limitations of each paradigm, providing actionable insights that can inform future architectural and training decisions in the evolving landscape of text-to-music generation. Audio sampled examples are available at: https://huggingface.co/spaces/ortal1602/ARvsFM",
+      "authors": [
+        "Or Tal",
+        "Felix Kreuk",
+        "Yossi Adi"
+      ],
+      "publishedAt": "2025-06-10T08:37:45Z",
+      "url": "https://arxiv.org/abs/2506.08570",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 10,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 1,
+    "verifiedAt": "2026-07-16T03:02:00.739750+00:00"
+  }
+}
