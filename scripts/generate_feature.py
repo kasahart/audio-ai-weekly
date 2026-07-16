@@ -33,7 +33,14 @@ FEATURE_SETTINGS = SETTINGS["features"]
 PROMPT_DIR = ROOT / "config" / "prompts"
 PROMPTS = {
     name: (PROMPT_DIR / f"feature_{name}.txt").read_text().strip()
-    for name in ("select", "generate", "verify", "revise", "expand")
+    for name in (
+        "select",
+        "generate",
+        "verify",
+        "revise",
+        "expand",
+        "grounding_patch",
+    )
 }
 
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
@@ -1632,6 +1639,181 @@ def expand_short_body(
     return body
 
 
+def revise_grounding_blocks(
+    model: Any,
+    feature: dict,
+    plan: dict,
+    sources: list[dict],
+    issues: list[dict],
+    cfg: Mapping[str, Any] = FEATURE_SETTINGS,
+) -> dict:
+    """Apply compact, verifier-directed block replacements to a complete draft."""
+    blocks: list[dict] = []
+    for section in feature.get("sections", []):
+        if not isinstance(section, dict):
+            continue
+        for block in section.get("blocks", []):
+            if not isinstance(block, dict):
+                continue
+            blocks.append(
+                {
+                    "id": block.get("id"),
+                    "sectionId": section.get("id"),
+                    "sectionHeading": section.get("heading"),
+                    "text": block.get("text"),
+                    "sourceIds": block.get("sourceIds"),
+                }
+            )
+    expected_ids = [block["id"] for block in blocks]
+    if not expected_ids or not _unique_strings(expected_ids):
+        raise FeatureValidationError(
+            ["Grounding patch requires unique existing block IDs"]
+        )
+    block_by_id = {block["id"]: block for block in blocks}
+    known_source_ids = {
+        source.get("sourceId")
+        for source in sources
+        if isinstance(source, dict) and isinstance(source.get("sourceId"), str)
+    }
+    if not known_source_ids or not all(
+        _valid_source_ids(block.get("sourceIds"), known_source_ids)
+        for block in blocks
+    ):
+        raise FeatureValidationError(
+            ["Grounding patch requires valid existing source IDs"]
+        )
+
+    required_block_ids = {
+        issue.get("blockId")
+        for issue in issues
+        if isinstance(issue, dict) and issue.get("blockId") != "_article"
+    }
+    if not required_block_ids <= set(expected_ids):
+        raise FeatureValidationError(
+            ["Grounding patch issues reference an unknown block ID"]
+        )
+    block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
+    if len(required_block_ids) > block_max:
+        raise FeatureValidationError(
+            [
+                "Grounding patch has more specifically affected blocks than its "
+                f"limit ({len(required_block_ids)}>{block_max})"
+            ]
+        )
+
+    instructions = render_prompt(
+        PROMPTS["grounding_patch"],
+        patch_block_max=str(block_max),
+        validation_min_chars=str(cfg["validation_min_chars"]),
+        validation_max_chars=str(cfg["validation_max_chars"]),
+    )
+    retry_max = max(1, int(cfg.get("grounding_patch_retry_max", 1)))
+    validation_feedback: list[str] | None = None
+    for attempt in range(retry_max):
+        payload: dict[str, Any] = {
+            "featurePlan": plan,
+            "primarySources": grounding_source_payload(sources),
+            "blocks": blocks,
+            "issues": issues,
+        }
+        if validation_feedback is not None:
+            payload["validationFeedback"] = {
+                "errors": validation_feedback,
+                "remainingAttempts": retry_max - attempt,
+            }
+        raw = model.complete(
+            instructions,
+            payload,
+            cfg["grounding_patch_max_tokens"],
+            "grounding patch",
+        )
+        errors: list[str] = []
+        replacements = raw.get("blockReplacements") if isinstance(raw, dict) else None
+        if not isinstance(replacements, list):
+            errors.append("Grounding patch must return a blockReplacements array")
+            replacements = []
+        if not 1 <= len(replacements) <= block_max:
+            errors.append(
+                f"Grounding patch must replace between 1 and {block_max} blocks"
+            )
+
+        replacement_by_id: dict[str, dict] = {}
+        for replacement in replacements:
+            if not isinstance(replacement, dict):
+                errors.append("Every grounding replacement must be an object")
+                continue
+            block_id = replacement.get("id")
+            text = replacement.get("text")
+            source_ids = replacement.get("sourceIds")
+            if (
+                not isinstance(block_id, str)
+                or block_id not in block_by_id
+                or block_id in replacement_by_id
+                or not isinstance(text, str)
+                or not text.strip()
+                or _japanese_ratio(text) < cfg["japanese_body_min_ratio"]
+                or not _valid_source_ids(source_ids, known_source_ids)
+            ):
+                errors.append("Grounding patch returned an invalid block replacement")
+                continue
+            current = block_by_id[block_id]
+            if text.strip() == current["text"].strip() and source_ids == current["sourceIds"]:
+                errors.append("Grounding patch must change every replacement block")
+                continue
+            replacement_by_id[block_id] = {
+                "text": text.strip(),
+                "sourceIds": source_ids,
+            }
+        if not required_block_ids <= set(replacement_by_id):
+            errors.append(
+                "Grounding patch must replace every specifically affected block"
+            )
+
+        body = dict(_body_from_feature(feature))
+        patched_sections: list[dict] = []
+        for section in feature["sections"]:
+            patched_section = dict(section)
+            patched_blocks: list[dict] = []
+            for block in section["blocks"]:
+                patched_block = dict(block)
+                replacement = replacement_by_id.get(block["id"])
+                if replacement is not None:
+                    patched_block.update(replacement)
+                patched_blocks.append(patched_block)
+            patched_section["blocks"] = patched_blocks
+            patched_sections.append(patched_section)
+        body["sections"] = patched_sections
+
+        if not errors:
+            patched_feature = dict(feature)
+            patched_feature.update(body)
+            patched_feature["readTimeMinutes"] = max(
+                1,
+                math.ceil(
+                    article_character_count(patched_feature)
+                    / cfg["reading_chars_per_minute"]
+                ),
+            )
+            try:
+                validate_feature(patched_feature, cfg)
+            except FeatureValidationError as exc:
+                errors.extend(
+                    f"Patched feature failed local validation: {error}"
+                    for error in exc.errors
+                )
+        if not errors:
+            return body
+        if attempt == retry_max - 1:
+            raise FeatureValidationError(errors)
+        validation_feedback = errors
+        print(
+            "  [warn] AI grounding patch failed local validation "
+            f"(attempt {attempt + 1}/{retry_max}, errors={len(errors)}); "
+            "requesting corrected replacements"
+        )
+    raise FeatureError("AI grounding patch validation loop exited unexpectedly")
+
+
 def verify_feature(
     model: Any,
     feature: dict,
@@ -1811,7 +1993,9 @@ def run_feature_pipeline(
             "  [warn] AI grounding verification requested a revision "
             f"({verifier_revision_count + 1}/{verifier_revision_max})"
         )
-        body = revise_body(model, feature, plan, sources, verdict["issues"], cfg)
+        body = revise_grounding_blocks(
+            model, feature, plan, sources, verdict["issues"], cfg
+        )
         revision_count += 1
         verifier_revision_count += 1
         feature = assemble_feature(

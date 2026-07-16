@@ -707,6 +707,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["generation_max_tokens"] == 16000
     assert cfg["verification_max_tokens"] >= 16000
     assert cfg["revision_max_tokens"] == 16000
+    assert cfg["grounding_patch_max_tokens"] == 4000
     assert cfg["model_max_tokens"] >= max(
         cfg["selection_max_tokens"],
         cfg["generation_max_tokens"],
@@ -718,10 +719,13 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["selection_validation_retry_max"] >= 2
     assert cfg["feature_generation_reasoning_effort"] == "low"
     assert cfg["single_revision_reasoning_effort"] == "low"
+    assert cfg["grounding_patch_reasoning_effort"] == "low"
     assert cfg["model_fallback_providers"] == ["github_models"]
     assert cfg["model_fallback_after"] == 2
     assert cfg["short_body_expansion_retry_max"] >= 2
     assert cfg["verification_revision_max"] == 1
+    assert cfg["grounding_patch_retry_max"] >= 2
+    assert cfg["grounding_patch_block_max"] == 3
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
     assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
     assert (
@@ -950,6 +954,98 @@ def test_short_body_expansion_trims_overlong_additions(capsys):
     assert "trimming complete additions proportionally" in capsys.readouterr().out
 
 
+def test_grounding_patch_replaces_only_affected_blocks():
+    captured = []
+    feature = generate_feature.assemble_feature(
+        make_body(),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+    original_sections = json.loads(json.dumps(feature["sections"]))
+
+    class PatchModel:
+        def complete(self, *args):
+            captured.append(args)
+            block = next(block for block in args[1]["blocks"] if block["id"] == "block-2")
+            return {
+                "blockReplacements": [
+                    {
+                        "id": block["id"],
+                        "text": "修" * 550,
+                        "sourceIds": block["sourceIds"],
+                    }
+                ]
+            }
+
+    body = generate_feature.revise_grounding_blocks(
+        PatchModel(),
+        feature,
+        make_plan(),
+        make_sources(),
+        [{"blockId": "block-2", "reason": "unsupported specificity"}],
+    )
+    patched = generate_feature.assemble_feature(
+        body,
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    generate_feature.validate_feature(patched)
+    assert body["sections"][1]["blocks"][0]["text"] == "修" * 550
+    assert body["sections"][0] == original_sections[0]
+    assert body["sections"][2:] == original_sections[2:]
+    instructions, payload, max_tokens, purpose = captured[0]
+    assert "never the full\narticle" in instructions
+    assert purpose == "grounding patch"
+    assert max_tokens == 4000
+    assert "primaryLinks" not in payload["primarySources"][0]
+
+
+def test_grounding_patch_retries_invalid_replacement():
+    calls = []
+    feature = generate_feature.assemble_feature(
+        make_body(),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    class PatchModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            block_id = "missing-block" if len(calls) == 1 else "block-1"
+            return {
+                "blockReplacements": [
+                    {
+                        "id": block_id,
+                        "text": "修" * 550,
+                        "sourceIds": ["S1", "S7", "S8"],
+                    }
+                ]
+            }
+
+    body = generate_feature.revise_grounding_blocks(
+        PatchModel(),
+        feature,
+        make_plan(),
+        make_sources(),
+        [{"blockId": "block-1", "reason": "citation mismatch"}],
+    )
+
+    assert len(calls) == 2
+    assert "validationFeedback" not in calls[0]
+    assert calls[1]["validationFeedback"]["remainingAttempts"] == 1
+    assert body["sections"][0]["blocks"][0]["text"] == "修" * 550
+
+
 def test_complete_feature_passes_local_publication_gates():
     feature = make_feature()
     generate_feature.validate_feature(feature)
@@ -1095,7 +1191,12 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
         calls.append("revise")
         return valid_body
 
+    def patch(*_args):
+        calls.append("patch")
+        return valid_body
+
     monkeypatch.setattr(generate_feature, "revise_body", revise)
+    monkeypatch.setattr(generate_feature, "revise_grounding_blocks", patch)
     monkeypatch.setattr(
         generate_feature,
         "verify_feature",
@@ -1117,7 +1218,7 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
             model=object(),
             now=datetime(2026, 7, 14, tzinfo=timezone.utc),
         )
-    assert calls == ["revise", "revise"]
+    assert calls == ["revise", "patch"]
 
 
 def test_pipeline_allows_verifier_revision_after_local_correction(
@@ -1154,7 +1255,12 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         calls.append("revise")
         return valid_body
 
+    def patch(*_args):
+        calls.append("patch")
+        return valid_body
+
     monkeypatch.setattr(generate_feature, "revise_body", revise)
+    monkeypatch.setattr(generate_feature, "revise_grounding_blocks", patch)
     monkeypatch.setattr(
         generate_feature, "verify_feature", lambda *_args: next(verdicts)
     )
@@ -1169,7 +1275,7 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         now=datetime(2026, 7, 14, tzinfo=timezone.utc),
     )
 
-    assert calls == ["revise", "revise"]
+    assert calls == ["revise", "patch"]
     assert feature["verification"] == {
         "status": "passed",
         "revisionCount": 2,
