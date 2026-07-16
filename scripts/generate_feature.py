@@ -1639,7 +1639,7 @@ def expand_short_body(
     return body
 
 
-def revise_grounding_blocks(
+def _revise_grounding_block_batch(
     model: Any,
     feature: dict,
     plan: dict,
@@ -1693,14 +1693,6 @@ def revise_grounding_blocks(
             ["Grounding patch issues reference an unknown block ID"]
         )
     block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
-    if len(required_block_ids) > block_max:
-        raise FeatureValidationError(
-            [
-                "Grounding patch has more specifically affected blocks than its "
-                f"limit ({len(required_block_ids)}>{block_max})"
-            ]
-        )
-
     instructions = render_prompt(
         PROMPTS["grounding_patch"],
         patch_block_max=str(block_max),
@@ -1812,6 +1804,63 @@ def revise_grounding_blocks(
             "requesting corrected replacements"
         )
     raise FeatureError("AI grounding patch validation loop exited unexpectedly")
+
+
+def revise_grounding_blocks(
+    model: Any,
+    feature: dict,
+    plan: dict,
+    sources: list[dict],
+    issues: list[dict],
+    cfg: Mapping[str, Any] = FEATURE_SETTINGS,
+) -> dict:
+    """Apply all verifier issues in output-bounded batches of block patches."""
+    block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
+    issue_groups: dict[str, list[dict]] = {}
+    block_order: list[str] = []
+    article_issues: list[dict] = []
+    for issue in issues:
+        block_id = issue.get("blockId") if isinstance(issue, dict) else None
+        if block_id == "_article":
+            article_issues.append(issue)
+            continue
+        if block_id not in issue_groups:
+            issue_groups[block_id] = []
+            block_order.append(block_id)
+        issue_groups[block_id].append(issue)
+
+    batches: list[list[dict]] = []
+    for start in range(0, len(block_order), block_max):
+        batch: list[dict] = []
+        for block_id in block_order[start : start + block_max]:
+            batch.extend(issue_groups[block_id])
+        batches.append(batch)
+    if article_issues:
+        batches.append(article_issues)
+    if not batches:
+        raise FeatureValidationError(
+            ["Grounding patch requires at least one verifier issue"]
+        )
+    if len(batches) > 1:
+        print(
+            "  [warn] AI grounding patch split "
+            f"{len(block_order)} affected blocks into {len(batches)} bounded batches"
+        )
+
+    patched_feature = dict(feature)
+    for batch in batches:
+        body = _revise_grounding_block_batch(
+            model, patched_feature, plan, sources, batch, cfg
+        )
+        patched_feature.update(body)
+        patched_feature["readTimeMinutes"] = max(
+            1,
+            math.ceil(
+                article_character_count(patched_feature)
+                / cfg["reading_chars_per_minute"]
+            ),
+        )
+    return _body_from_feature(patched_feature)
 
 
 def verify_feature(
