@@ -62,10 +62,10 @@ features:
   reading_minutes_max: 12
   japanese_body_min_ratio: 0.5
   japanese_metadata_min_ratio: 0.25
-  english_body_target_min_words: 1200
-  english_body_target_max_words: 1500
-  english_body_validation_min_words: 1050
-  english_body_validation_max_words: 1700
+  english_body_target_min_words: 800
+  english_body_target_max_words: 1100
+  english_body_validation_min_words: 700
+  english_body_validation_max_words: 1300
   english_reading_words_per_minute: 225
   english_summary_min_words: 60
   english_summary_max_words: 250
