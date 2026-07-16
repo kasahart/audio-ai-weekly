@@ -11,7 +11,8 @@ export default function FeatureSpotlight({ feature, lang = 'ja' }) {
     ? (feature.dekEn || feature.dek)
     : (feature.dek || feature.dekEn)
   const type = copy.featureTypes[feature.type] || feature.type
-  const articleHref = `./features/${encodeURIComponent(feature.slug)}/${lang === 'en' ? '#english-summary' : ''}`
+  const articleHref = `./features/${encodeURIComponent(feature.slug)}/${lang === 'en' ? 'en/' : ''}`
+  const archiveHref = lang === 'en' ? './features/en/' : './features/'
 
   return (
     <section className="feature-spotlight fd" aria-labelledby={`feature-${feature.slug}`}>
@@ -19,7 +20,7 @@ export default function FeatureSpotlight({ feature, lang = 'ja' }) {
         <div style={{ fontSize: 11, color: '#f472b6', letterSpacing: 3, fontWeight: 600 }}>
           {copy.latestFeature}
         </div>
-        <a href="./features/" className="feature-archive-link">
+        <a href={archiveHref} className="feature-archive-link">
           {copy.featureArchive} <span aria-hidden="true">→</span>
         </a>
       </div>
