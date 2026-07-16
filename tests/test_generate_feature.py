@@ -721,6 +721,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["model_fallback_providers"] == ["github_models"]
     assert cfg["model_fallback_after"] == 2
     assert cfg["short_body_expansion_retry_max"] >= 2
+    assert cfg["verification_revision_max"] == 1
     assert generate_feature.SETTINGS["github_models"]["model"] == "openai/gpt-4.1"
     assert generate_feature.SETTINGS["github_models"]["feature_max_tokens"] == 4000
     assert (
@@ -1071,7 +1072,9 @@ def test_scheduled_rerun_returns_existing_feature_without_model(tmp_path):
     assert result == feature
 
 
-def test_pipeline_never_performs_a_second_revision(monkeypatch, tmp_path):
+def test_pipeline_bounds_verifier_revisions_after_local_correction(
+    monkeypatch, tmp_path
+):
     plan = make_plan()
     sources = make_sources()
     valid_body = make_body()
@@ -1103,7 +1106,7 @@ def test_pipeline_never_performs_a_second_revision(monkeypatch, tmp_path):
     )
 
     with pytest.raises(
-        generate_feature.FeatureValidationError, match="exceed one revision"
+        generate_feature.FeatureValidationError, match="after 1 verifier revision"
     ):
         generate_feature.run_feature_pipeline(
             as_of=date(2026, 7, 14),
@@ -1114,7 +1117,64 @@ def test_pipeline_never_performs_a_second_revision(monkeypatch, tmp_path):
             model=object(),
             now=datetime(2026, 7, 14, tzinfo=timezone.utc),
         )
-    assert calls == ["revise"]
+    assert calls == ["revise", "revise"]
+
+
+def test_pipeline_allows_verifier_revision_after_local_correction(
+    monkeypatch, tmp_path
+):
+    plan = make_plan()
+    sources = make_sources()
+    valid_body = make_body()
+    calls = []
+    verdicts = iter(
+        [
+            {
+                "status": "revise",
+                "issues": [
+                    {"blockId": "_article", "reason": "qualify unsupported claim"}
+                ],
+            },
+            {"status": "pass", "issues": []},
+        ]
+    )
+    monkeypatch.setattr(
+        generate_feature, "load_recent_weekly_papers", lambda *_args: make_candidates()
+    )
+    monkeypatch.setattr(generate_feature, "choose_topic", lambda *_args: plan)
+    monkeypatch.setattr(
+        generate_feature, "fetch_additional_arxiv_sources", lambda *_args, **_kwargs: []
+    )
+    monkeypatch.setattr(generate_feature, "build_source_packet", lambda *_args: sources)
+    monkeypatch.setattr(
+        generate_feature, "generate_body", lambda *_args: {**valid_body, "sections": []}
+    )
+
+    def revise(*_args):
+        calls.append("revise")
+        return valid_body
+
+    monkeypatch.setattr(generate_feature, "revise_body", revise)
+    monkeypatch.setattr(
+        generate_feature, "verify_feature", lambda *_args: next(verdicts)
+    )
+
+    feature = generate_feature.run_feature_pipeline(
+        as_of=date(2026, 7, 14),
+        article_type="primer",
+        dry_run=True,
+        data_root=tmp_path,
+        output_dir=tmp_path / "features",
+        model=object(),
+        now=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    assert calls == ["revise", "revise"]
+    assert feature["verification"] == {
+        "status": "passed",
+        "revisionCount": 2,
+        "verifiedAt": "2026-07-14T00:00:00+00:00",
+    }
 
 
 def test_pipeline_expands_short_body_with_uncited_source_without_full_revision(

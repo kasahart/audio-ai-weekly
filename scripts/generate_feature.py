@@ -1800,14 +1800,20 @@ def run_feature_pipeline(
         )
         validate_feature(feature, cfg)
 
+    verifier_revision_max = max(0, int(cfg.get("verification_revision_max", 1)))
+    verifier_revision_count = 0
     verdict = verify_feature(model, feature, plan, sources, cfg)
-    if verdict["status"] == "revise":
-        if revision_count:
-            raise FeatureValidationError(
-                ["Verifier requested another revision; refusing to exceed one revision"]
-            )
+    while (
+        verdict["status"] == "revise"
+        and verifier_revision_count < verifier_revision_max
+    ):
+        print(
+            "  [warn] AI grounding verification requested a revision "
+            f"({verifier_revision_count + 1}/{verifier_revision_max})"
+        )
         body = revise_body(model, feature, plan, sources, verdict["issues"], cfg)
-        revision_count = 1
+        revision_count += 1
+        verifier_revision_count += 1
         feature = assemble_feature(
             body,
             plan=plan,
@@ -1819,10 +1825,13 @@ def run_feature_pipeline(
         )
         validate_feature(feature, cfg)
         verdict = verify_feature(model, feature, plan, sources, cfg)
-        if verdict["status"] != "pass":
-            raise FeatureValidationError(
-                ["Revised feature failed the final grounding verification"]
-            )
+    if verdict["status"] != "pass":
+        raise FeatureValidationError(
+            [
+                "Feature failed grounding verification after "
+                f"{verifier_revision_count} verifier revision(s)"
+            ]
+        )
 
     feature["verification"] = {
         "status": "passed",
