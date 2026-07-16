@@ -763,7 +763,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["model_fallback_providers"] == ["github_models"]
     assert cfg["model_fallback_after"] == 2
     assert cfg["short_body_expansion_retry_max"] >= 2
-    assert cfg["verification_revision_max"] == 1
+    assert cfg["verification_revision_max"] == 2
     assert cfg["grounding_patch_retry_max"] >= 2
     assert cfg["grounding_patch_block_max"] == 3
     assert cfg["arxiv_retry_max"] >= 5
@@ -1352,7 +1352,7 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
     )
 
     with pytest.raises(
-        generate_feature.FeatureValidationError, match="after 1 verifier revision"
+        generate_feature.FeatureValidationError, match="after 2 verifier revision"
     ):
         generate_feature.run_feature_pipeline(
             as_of=date(2026, 7, 14),
@@ -1363,7 +1363,7 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
             model=object(),
             now=datetime(2026, 7, 14, tzinfo=timezone.utc),
         )
-    assert calls == ["revise", "patch"]
+    assert calls == ["revise", "patch", "patch"]
 
 
 def test_pipeline_allows_verifier_revision_after_local_correction(
@@ -1379,6 +1379,12 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
                 "status": "revise",
                 "issues": [
                     {"blockId": "_article", "reason": "qualify unsupported claim"}
+                ],
+            },
+            {
+                "status": "revise",
+                "issues": [
+                    {"blockId": "B1", "reason": "narrow the remaining claim"}
                 ],
             },
             {"status": "pass", "issues": []},
@@ -1420,10 +1426,10 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         now=datetime(2026, 7, 14, tzinfo=timezone.utc),
     )
 
-    assert calls == ["revise", "patch"]
+    assert calls == ["revise", "patch", "patch"]
     assert feature["verification"] == {
         "status": "passed",
-        "revisionCount": 2,
+        "revisionCount": 3,
         "verifiedAt": "2026-07-14T00:00:00+00:00",
     }
 
