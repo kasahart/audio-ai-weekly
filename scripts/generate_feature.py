@@ -464,7 +464,17 @@ def fetch_additional_arxiv_sources(
     url = f"https://export.arxiv.org/api/query?{params}"
     user_agent = SETTINGS["arxiv"]["user_agent"]
     request = urllib.request.Request(url, headers={"User-Agent": user_agent})
-    retry_max = max(1, int(cfg.get("retry_max", 3)))
+    retry_max = max(
+        1, int(cfg.get("arxiv_retry_max", cfg.get("retry_max", 3)))
+    )
+    retry_interval = max(
+        0.0,
+        float(cfg.get("arxiv_retry_interval", cfg.get("retry_interval", 5.0))),
+    )
+    retry_max_interval = max(
+        retry_interval,
+        float(cfg.get("arxiv_retry_max_interval", retry_interval)),
+    )
     retryable_statuses = list(cfg.get("retryable_http_statuses", []))
     for attempt in range(retry_max):
         try:
@@ -495,7 +505,28 @@ def fetch_additional_arxiv_sources(
                 raise FeatureError(
                     f"arXiv primary-source retrieval failed: {exc}"
                 ) from exc
-            sleep(float(cfg["retry_interval"]) * (2**attempt))
+            retry_delay = min(
+                retry_max_interval,
+                retry_interval * (2**attempt),
+            )
+            if isinstance(exc, urllib.error.HTTPError):
+                retry_after = exc.headers.get("Retry-After") if exc.headers else None
+                try:
+                    retry_delay = min(
+                        retry_max_interval,
+                        max(retry_delay, float(retry_after)),
+                    )
+                except (TypeError, ValueError):
+                    pass
+                error_label = f"HTTP {exc.code}"
+            else:
+                error_label = type(exc).__name__
+            print(
+                "  [warn] arXiv primary-source retrieval "
+                f"attempt {attempt + 1}/{retry_max} failed ({error_label}); "
+                f"retrying in {retry_delay:g}s"
+            )
+            sleep(retry_delay)
     raise FeatureError("arXiv primary-source retry loop exited unexpectedly")
 
 
