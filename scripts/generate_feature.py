@@ -530,6 +530,90 @@ def fetch_additional_arxiv_sources(
     raise FeatureError("arXiv primary-source retry loop exited unexpectedly")
 
 
+def select_archived_fallback_sources(
+    search_terms: list[str],
+    candidates: list[dict],
+    exclude_ids: set[str],
+    *,
+    limit: int,
+) -> list[dict]:
+    """Rank unused weekly-archive papers when the live arXiv API is unavailable."""
+    excluded = {canonical_arxiv_id(value) for value in exclude_ids}
+    query_phrases = [_normalized_term(term) for term in search_terms]
+    query_tokens = {
+        token
+        for phrase in query_phrases
+        for token in re.findall(r"[a-z0-9]+", phrase)
+        if len(token) >= 2
+    }
+    eligible: list[tuple[dict, str, set[str]]] = []
+    for paper in candidates:
+        arxiv_id = canonical_arxiv_id(paper.get("id"))
+        title = _clean_text(paper.get("title"))
+        abstract = _clean_text(paper.get("abstract"))
+        if not arxiv_id or arxiv_id in excluded or not title or not abstract:
+            continue
+        searchable = _normalized_term(
+            " ".join(
+                str(paper.get(field) or "")
+                for field in (
+                    "title",
+                    "abstract",
+                    "task",
+                    "proposedMethod",
+                    "category",
+                )
+            )
+        )
+        tokens = set(re.findall(r"[a-z0-9]+", searchable))
+        eligible.append((paper, searchable, tokens))
+
+    document_frequency = {
+        token: sum(token in tokens for _paper, _text, tokens in eligible)
+        for token in query_tokens
+    }
+    ranked: list[tuple[float, str, str, dict]] = []
+    document_count = len(eligible)
+    for paper, searchable, tokens in eligible:
+        matched_tokens = query_tokens & tokens
+        if not matched_tokens:
+            continue
+        token_score = sum(
+            math.log((document_count + 1) / (document_frequency[token] + 1)) + 1
+            for token in matched_tokens
+        )
+        phrase_score = 6 * sum(
+            bool(phrase and phrase in searchable) for phrase in query_phrases
+        )
+        arxiv_id = canonical_arxiv_id(paper.get("id"))
+        ranked.append(
+            (
+                token_score + phrase_score,
+                str(paper.get("archiveDate") or ""),
+                arxiv_id,
+                paper,
+            )
+        )
+
+    result: list[dict] = []
+    for _score, _archive_date, arxiv_id, paper in sorted(
+        ranked, key=lambda item: item[:3], reverse=True
+    )[: max(0, limit)]:
+        result.append(
+            {
+                "arxivId": arxiv_id,
+                "title": _clean_text(paper.get("title")),
+                "abstract": _clean_text(paper.get("abstract")),
+                "authors": [str(author) for author in paper.get("authors", [])],
+                "publishedAt": paper.get("published_iso")
+                or paper.get("archiveDate", ""),
+                "url": f"https://arxiv.org/abs/{arxiv_id}",
+                "origin": "historical",
+            }
+        )
+    return result
+
+
 def build_source_packet(
     plan: dict,
     candidates: list[dict],
@@ -2012,12 +2096,47 @@ def run_feature_pipeline(
     model = model or JsonModel(SETTINGS)
     plan = choose_topic(model, resolved_type, candidates, feature_index, cfg)
     excluded_ids = {canonical_arxiv_id(paper.get("id")) for paper in candidates}
-    external = fetch_additional_arxiv_sources(
-        plan["searchTerms"],
-        excluded_ids,
-        cfg=cfg,
-        opener=opener,
+    required_external = max(
+        cfg["external_source_min"],
+        cfg["source_target"] - len(plan["archivePaperIds"]),
     )
+    retrieval_error: FeatureError | None = None
+    try:
+        external = fetch_additional_arxiv_sources(
+            plan["searchTerms"],
+            excluded_ids,
+            cfg=cfg,
+            opener=opener,
+        )
+    except FeatureError as exc:
+        retrieval_error = exc
+        external = []
+    if len(external) < required_external:
+        fallback = select_archived_fallback_sources(
+            plan["searchTerms"],
+            candidates,
+            set(plan["archivePaperIds"])
+            | {canonical_arxiv_id(source.get("arxivId")) for source in external},
+            limit=cfg["external_candidate_limit"],
+        )
+        missing = required_external - len(external)
+        external.extend(fallback[:missing])
+        if fallback:
+            reason = (
+                "live API failed"
+                if retrieval_error is not None
+                else "live API returned too few results"
+            )
+            print(
+                "  [warn] arXiv primary-source retrieval fallback "
+                f"used {min(len(fallback), missing)} archived source(s) "
+                f"because the {reason}"
+            )
+    if retrieval_error is not None and len(external) < required_external:
+        raise FeatureError(
+            f"{retrieval_error}; archived fallback supplied only "
+            f"{len(external)} of {required_external} required sources"
+        ) from retrieval_error
     sources = build_source_packet(plan, candidates, external, cfg)
     generated_at = now or datetime.now(timezone.utc)
 

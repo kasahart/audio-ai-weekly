@@ -85,7 +85,7 @@ features:
   verification_revision_max: 2
   grounding_patch_retry_max: 2
   grounding_patch_block_max: 3
-  arxiv_retry_max: 6
+  arxiv_retry_max: 3
   arxiv_retry_interval: 15.0
   arxiv_retry_max_interval: 120.0
   retry_max: 3
