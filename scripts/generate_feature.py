@@ -1507,8 +1507,8 @@ def expand_short_body(
     expanded_min = min(
         absolute_max,
         max(
-            cfg["target_min_chars"] + 500,
-            cfg["validation_min_chars"] + 500,
+            cfg["target_min_chars"],
+            cfg["validation_min_chars"],
         ),
     )
     expanded_max = absolute_max
