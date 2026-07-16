@@ -1443,6 +1443,23 @@ def test_complete_feature_passes_local_publication_gates():
     assert feature["readTimeMinutes"] == math.ceil((6 * 550) / 450)
 
 
+def test_english_body_length_matches_the_japanese_translation_budget():
+    generate_feature.validate_english_body(
+        make_english_body(words_per_section=135),
+        make_sources(),
+        "primer",
+    )
+
+    with pytest.raises(
+        generate_feature.FeatureValidationError, match="English body has 660 words"
+    ):
+        generate_feature.validate_english_body(
+            make_english_body(words_per_section=110),
+            make_sources(),
+            "primer",
+        )
+
+
 @pytest.mark.parametrize("chars_per_section", [500, 901])
 def test_feature_rejects_bodies_outside_eight_to_twelve_minutes(chars_per_section):
     feature = generate_feature.assemble_feature(
