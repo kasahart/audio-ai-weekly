@@ -27,6 +27,11 @@ VALIDATION_MIN_CHARS = 3151
 VALIDATION_MAX_CHARS = 5400
 READING_CHARS_PER_MINUTE = 450
 JAPANESE_BODY_MIN_RATIO = 0.5
+JAPANESE_METADATA_MIN_RATIO = 0.25
+ENGLISH_BODY_MIN_WORDS = 1050
+ENGLISH_BODY_MAX_WORDS = 1700
+ENGLISH_READING_WORDS_PER_MINUTE = 225
+ENGLISH_WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z'-]*\b")
 REQUIRED_SECTIONS = {
     "primer": {
         "why-needed",
@@ -113,6 +118,17 @@ def _japanese_ratio(value: str) -> float:
     return japanese / max(1, japanese + latin)
 
 
+def _predominantly_english(value: str) -> bool:
+    return bool(LATIN_CHAR_RE.search(value)) and _japanese_ratio(value) <= 0.1
+
+
+def _predominantly_japanese(value: str) -> bool:
+    return (
+        bool(JAPANESE_CHAR_RE.search(value))
+        and _japanese_ratio(value) >= JAPANESE_METADATA_MIN_RATIO
+    )
+
+
 def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
     """Check the rendering contract independently of generator dependencies."""
     if not isinstance(feature, dict):
@@ -131,6 +147,23 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
         or not 8 <= feature["readTimeMinutes"] <= 12
     ):
         raise RenderError("readTimeMinutes must be between 8 and 12")
+    has_full_english = feature.get("sourceLanguage") == "en"
+    if has_full_english:
+        translation = feature.get("translation")
+        if (
+            not isinstance(translation, dict)
+            or translation.get("targetLanguage") != "ja"
+            or translation.get("status") != "passed"
+        ):
+            raise RenderError("Bilingual feature translation must be verifier-passed")
+        if not isinstance(feature.get("readTimeMinutesEn"), int):
+            raise RenderError("readTimeMinutesEn must be an integer")
+        for field in ("title", "dek"):
+            if not _predominantly_japanese(feature[field]):
+                raise RenderError(f"feature.{field} must be predominantly Japanese")
+        for field in ("titleEn", "dekEn"):
+            if not _predominantly_english(feature[field]):
+                raise RenderError(f"feature.{field} must be predominantly English")
 
     key_points = feature.get("keyPointsEn")
     if (
@@ -182,6 +215,18 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
             raise RenderError("Each perspective must be an object")
         for field in ("id", "label", "description"):
             _require_text(perspective, field, "perspective")
+        if has_full_english:
+            for field in ("label", "description"):
+                if not _predominantly_japanese(perspective[field]):
+                    raise RenderError(
+                        f"perspective.{field} must be predominantly Japanese"
+                    )
+            for field in ("labelEn", "descriptionEn"):
+                value = _require_text(perspective, field, "perspective")
+                if not _predominantly_english(value):
+                    raise RenderError(
+                        f"perspective.{field} must be predominantly English"
+                    )
         ids = perspective.get("sourceIds")
         if (
             not isinstance(ids, list)
@@ -198,6 +243,7 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
     section_ids: set[str] = set()
     block_ids: set[str] = set()
     body_texts: list[str] = []
+    english_body_texts: list[str] = []
     for section in sections:
         if not isinstance(section, dict):
             raise RenderError("Each section must be an object")
@@ -205,7 +251,13 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
         if not SLUG_RE.fullmatch(section_id) or section_id in section_ids:
             raise RenderError("Section IDs must be unique lowercase kebab-case values")
         section_ids.add(section_id)
-        _require_text(section, "heading", "section")
+        heading = _require_text(section, "heading", "section")
+        if has_full_english:
+            if not _predominantly_japanese(heading):
+                raise RenderError("section.heading must be predominantly Japanese")
+            heading_en = _require_text(section, "headingEn", "section")
+            if not _predominantly_english(heading_en):
+                raise RenderError("section.headingEn must be predominantly English")
         blocks = section.get("blocks")
         if not isinstance(blocks, list) or not blocks:
             raise RenderError("Every section must contain blocks")
@@ -218,7 +270,15 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
                     "Block IDs must be unique lowercase kebab-case values"
                 )
             block_ids.add(block_id)
-            body_texts.append(_require_text(block, "text", "block"))
+            block_text = _require_text(block, "text", "block")
+            body_texts.append(block_text)
+            if has_full_english:
+                if _japanese_ratio(block_text) < JAPANESE_BODY_MIN_RATIO:
+                    raise RenderError("block.text must be predominantly Japanese")
+                block_text_en = _require_text(block, "textEn", "block")
+                if not _predominantly_english(block_text_en):
+                    raise RenderError("block.textEn must be predominantly English")
+                english_body_texts.append(block_text_en)
             ids = block.get("sourceIds")
             if (
                 not isinstance(ids, list)
@@ -248,6 +308,22 @@ def _validate_feature_for_render(feature: Any, expected_slug: str) -> dict:
     expected_read_time = math.ceil(character_count / READING_CHARS_PER_MINUTE)
     if feature["readTimeMinutes"] != expected_read_time:
         raise RenderError(f"readTimeMinutes must be {expected_read_time}")
+    if has_full_english:
+        english_word_count = sum(
+            len(ENGLISH_WORD_RE.findall(text)) for text in english_body_texts
+        )
+        if not ENGLISH_BODY_MIN_WORDS <= english_word_count <= ENGLISH_BODY_MAX_WORDS:
+            raise RenderError(
+                f"English body must contain {ENGLISH_BODY_MIN_WORDS}-"
+                f"{ENGLISH_BODY_MAX_WORDS} words"
+            )
+        expected_english_read_time = math.ceil(
+            english_word_count / ENGLISH_READING_WORDS_PER_MINUTE
+        )
+        if feature["readTimeMinutesEn"] != expected_english_read_time:
+            raise RenderError(
+                f"readTimeMinutesEn must be {expected_english_read_time}"
+            )
     return feature
 
 
@@ -383,7 +459,11 @@ def _archive_card(feature: dict, language: str) -> str:
         href = f'../{_escape(feature["slug"])}/en/'
         title = feature["titleEn"]
         description = feature["dekEn"]
-        reading_meta = "English summary"
+        reading_meta = (
+            f"~ {_escape(feature['readTimeMinutesEn'])} min"
+            if isinstance(feature.get("readTimeMinutesEn"), int)
+            else "English summary"
+        )
         source_meta = f"{len(feature['sources'])} primary sources"
     return f"""<a class="archive-card" href="{href}"><span class="badge {_escape(feature['type'])}">{_escape(_feature_kind(feature['type'], language))}</span>
 <h2>{_escape(title)}</h2><p>{_escape(description)}</p>
@@ -438,6 +518,21 @@ def render_feature_page(
             f'<aside class="perspectives" aria-label="3つの視点">{perspectives}</aside>'
             f"{sections}"
         )
+    elif feature.get("sourceLanguage") == "en":
+        perspectives = "".join(
+            f"""<article class="card"><h3>{_escape(item['labelEn'])}</h3>
+<p>{_escape(item['descriptionEn'])}{_source_links(item['sourceIds'])}</p></article>"""
+            for item in feature["perspectives"]
+        )
+        sections = "".join(
+            f"""<section class="article-section" id="{_escape(section['id'])}"><h2>{_escape(section['headingEn'])}</h2>
+{''.join(f'<p>{_escape(block["textEn"])}{_source_links(block["sourceIds"])}</p>' for block in section['blocks'])}</section>"""
+            for section in feature["sections"]
+        )
+        main_content = (
+            '<aside class="perspectives" aria-label="Three perspectives">'
+            f"{perspectives}</aside>{sections}"
+        )
     else:
         english_points = "".join(
             f"<li>{_escape(point)}</li>" for point in feature["keyPointsEn"]
@@ -464,9 +559,20 @@ def render_feature_page(
         home_link = '<a href="../../../?lang=en">← Audio AI Weekly</a>'
         archive_link = '<a href="../../en/">Feature archive</a>'
         language_switch = '<a href="../" hreflang="ja">JA</a><span>/</span><span aria-current="page">EN</span>'
-        meta = f"""<span>{_escape(feature['date'])}</span><span>English summary</span><span>{len(feature['sources'])} primary sources</span><span>AI-generated · auto-verified</span>"""
+        english_reading = (
+            f"~ {_escape(feature['readTimeMinutesEn'])} min"
+            if isinstance(feature.get("readTimeMinutesEn"), int)
+            else "English summary"
+        )
+        meta = f"""<span>{_escape(feature['date'])}</span><span>{english_reading}</span><span>{len(feature['sources'])} primary sources</span><span>AI-generated · auto-verified</span>"""
         sources_heading = "Primary sources"
-        sources_note = "This summary is grounded in the titles and abstracts of the following arXiv papers."
+        sources_note = (
+            "This article is grounded in the titles and abstracts of the following "
+            "arXiv papers."
+            if feature.get("sourceLanguage") == "en"
+            else "This summary is grounded in the titles and abstracts of the "
+            "following arXiv papers."
+        )
         footer = '<a href="../../en/">Feature archive</a> · <a href="../../../?lang=en">Back to weekly report</a>'
     return f"""{head}<body><div class="shell"><nav class="nav">{home_link}{archive_link}<span class="language-switch" aria-label="Language">{language_switch}</span></nav></div>
 <header class="hero"><div class="shell"><span class="badge {_escape(feature['type'])}">{_escape(kind)}</span>
