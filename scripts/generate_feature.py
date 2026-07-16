@@ -1801,6 +1801,14 @@ def _revise_grounding_block_batch(
         raise FeatureValidationError(
             ["Grounding patch issues reference an unknown block ID"]
         )
+    requested_blocks = (
+        [block for block in blocks if block["id"] in required_block_ids]
+        if required_block_ids
+        else blocks
+    )
+    required_block_order = [
+        block["id"] for block in blocks if block["id"] in required_block_ids
+    ]
     block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
     instructions = render_prompt(
         PROMPTS["grounding_patch"],
@@ -1814,8 +1822,9 @@ def _revise_grounding_block_batch(
         payload: dict[str, Any] = {
             "featurePlan": plan,
             "primarySources": grounding_source_payload(sources),
-            "blocks": blocks,
+            "blocks": requested_blocks,
             "issues": issues,
+            "requiredBlockIds": required_block_order,
         }
         if validation_feedback is not None:
             payload["validationFeedback"] = {

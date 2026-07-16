@@ -83,7 +83,7 @@ features:
   selection_validation_retry_max: 3
   short_body_expansion_retry_max: 2
   verification_revision_max: 2
-  grounding_patch_retry_max: 2
+  grounding_patch_retry_max: 3
   grounding_patch_block_max: 3
   arxiv_retry_max: 3
   arxiv_retry_interval: 15.0

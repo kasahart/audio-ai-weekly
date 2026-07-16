@@ -782,7 +782,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["model_fallback_after"] == 2
     assert cfg["short_body_expansion_retry_max"] >= 2
     assert cfg["verification_revision_max"] == 2
-    assert cfg["grounding_patch_retry_max"] >= 2
+    assert cfg["grounding_patch_retry_max"] == 3
     assert cfg["grounding_patch_block_max"] == 3
     assert cfg["arxiv_retry_max"] == 3
     assert cfg["arxiv_retry_max_interval"] >= cfg["arxiv_retry_interval"]
@@ -1108,6 +1108,8 @@ def test_grounding_patch_replaces_only_affected_blocks():
     assert purpose == "grounding patch"
     assert max_tokens == 4000
     assert "primaryLinks" not in payload["primarySources"][0]
+    assert [block["id"] for block in payload["blocks"]] == ["block-2"]
+    assert payload["requiredBlockIds"] == ["block-2"]
 
 
 def test_grounding_patch_retries_invalid_replacement():
@@ -1145,8 +1147,47 @@ def test_grounding_patch_retries_invalid_replacement():
 
     assert len(calls) == 2
     assert "validationFeedback" not in calls[0]
-    assert calls[1]["validationFeedback"]["remainingAttempts"] == 1
+    assert calls[1]["validationFeedback"]["remainingAttempts"] == 2
     assert body["sections"][0]["blocks"][0]["text"] == "修" * 550
+
+
+def test_grounding_patch_retries_unchanged_required_block():
+    calls = []
+    feature = generate_feature.assemble_feature(
+        make_body(),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    class PatchModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            block = payload["blocks"][0]
+            return {
+                "blockReplacements": [
+                    {
+                        "id": block["id"],
+                        "text": block["text"] if len(calls) < 3 else "改" * 550,
+                        "sourceIds": block["sourceIds"],
+                    }
+                ]
+            }
+
+    body = generate_feature.revise_grounding_blocks(
+        PatchModel(),
+        feature,
+        make_plan(),
+        make_sources(),
+        [{"blockId": "block-1", "reason": "unsupported claim"}],
+    )
+
+    assert len(calls) == 3
+    assert calls[1]["validationFeedback"]["remainingAttempts"] == 2
+    assert calls[2]["validationFeedback"]["remainingAttempts"] == 1
+    assert body["sections"][0]["blocks"][0]["text"] == "改" * 550
 
 
 def test_grounding_patch_batches_many_affected_blocks(capsys):
