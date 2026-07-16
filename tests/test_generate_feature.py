@@ -1089,6 +1089,66 @@ def test_grounding_patch_retries_invalid_replacement():
     assert body["sections"][0]["blocks"][0]["text"] == "修" * 550
 
 
+def test_grounding_patch_batches_many_affected_blocks(capsys):
+    calls = []
+    feature = generate_feature.assemble_feature(
+        make_body(),
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    class PatchModel:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            marker = "修" if len(calls) == 1 else "改"
+            block_by_id = {block["id"]: block for block in payload["blocks"]}
+            return {
+                "blockReplacements": [
+                    {
+                        "id": issue["blockId"],
+                        "text": marker * 550,
+                        "sourceIds": block_by_id[issue["blockId"]]["sourceIds"],
+                    }
+                    for issue in payload["issues"]
+                ]
+            }
+
+    body = generate_feature.revise_grounding_blocks(
+        PatchModel(),
+        feature,
+        make_plan(),
+        make_sources(),
+        [
+            {"blockId": f"block-{index}", "reason": "unsupported claim"}
+            for index in range(1, 7)
+        ],
+    )
+    patched = generate_feature.assemble_feature(
+        body,
+        plan=make_plan(),
+        sources=make_sources(),
+        article_type="primer",
+        as_of=date(2026, 7, 14),
+        generated_at=datetime(2026, 7, 14, tzinfo=timezone.utc),
+    )
+
+    generate_feature.validate_feature(patched)
+    assert len(calls) == 2
+    assert [[issue["blockId"] for issue in call["issues"]] for call in calls] == [
+        ["block-1", "block-2", "block-3"],
+        ["block-4", "block-5", "block-6"],
+    ]
+    assert [
+        block["text"][0]
+        for section in body["sections"]
+        for block in section["blocks"]
+    ] == ["修", "修", "修", "改", "改", "改"]
+    assert "split 6 affected blocks into 2 bounded batches" in capsys.readouterr().out
+
+
 def test_complete_feature_passes_local_publication_gates():
     feature = make_feature()
     generate_feature.validate_feature(feature)
