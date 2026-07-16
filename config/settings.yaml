@@ -67,9 +67,11 @@ features:
   generation_max_tokens: 16000
   verification_max_tokens: 16000
   revision_max_tokens: 16000
+  grounding_patch_max_tokens: 4000
   model_max_tokens: 64000
   feature_generation_reasoning_effort: low
   single_revision_reasoning_effort: low
+  grounding_patch_reasoning_effort: low
   temperature: 0.2
   request_timeout: 30
   model_timeout: 180
@@ -81,6 +83,8 @@ features:
   selection_validation_retry_max: 3
   short_body_expansion_retry_max: 2
   verification_revision_max: 1
+  grounding_patch_retry_max: 2
+  grounding_patch_block_max: 3
   retry_max: 3
   retry_interval: 5.0
   retryable_http_statuses: [429, 500, 502, 503, 504]
