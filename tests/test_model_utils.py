@@ -13,7 +13,9 @@ from model_utils import (
     create_client,
     get_ai_config,
     get_api_key,
+    get_request_budget,
     supports_custom_temperature,
+    RequestLimitExceeded,
 )
 
 
@@ -47,6 +49,7 @@ class TestProviderConfiguration:
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "model": "gemini-3.5-flash",
+            "request_limit_per_run": 20,
             "feature_max_tokens": 64000,
             "max_tokens": 16000,
             "batch_size": 5,
@@ -101,6 +104,45 @@ class TestProviderConfiguration:
             "base_url": "https://gemini.example/openai/",
             "api_key": "secret",
         }
+
+    def test_create_client_enforces_provider_request_limit(self, monkeypatch):
+        calls = []
+        client_options = {}
+
+        class Completions:
+            def create(self, **kwargs):
+                calls.append(kwargs)
+                return "ok"
+
+        class FakeClient:
+            chat = type("Chat", (), {"completions": Completions()})()
+
+        def fake_openai(**kwargs):
+            client_options.update(kwargs)
+            return FakeClient()
+
+        monkeypatch.setattr(model_utils, "OpenAI", fake_openai)
+        settings = {
+            **SETTINGS,
+            "ai": {"provider": "gemini"},
+            "gemini": {**SETTINGS["gemini"], "request_limit_per_run": 2},
+        }
+        client = create_client(settings, {"GEMINI_API_KEY": "secret"})
+
+        assert client.chat.completions.create(model="test") == "ok"
+        assert client.chat.completions.create(model="test") == "ok"
+        with pytest.raises(RequestLimitExceeded, match=r"per-run request limit \(2\)"):
+            client.chat.completions.create(model="test")
+        assert len(calls) == 2
+        assert client_options["max_retries"] == 0
+
+    def test_request_budget_is_shared_by_provider_in_one_process(self, monkeypatch):
+        monkeypatch.setattr(model_utils, "_REQUEST_BUDGETS", {})
+
+        assert get_request_budget("gemini", 20) is get_request_budget("gemini", 20)
+        assert get_request_budget("gemini", 20) is not get_request_budget(
+            "github_models", 20
+        )
 
 
 class TestSupportsCustomTemperature:

@@ -10,6 +10,7 @@ from analyze_papers import (
     SYSTEM_PROMPT,
     build_next_reads,
     chunk_papers,
+    get_analysis_providers,
     sanitize_json_text,
 )
 
@@ -77,12 +78,60 @@ def test_analyze_batch_fails_closed_after_empty_response(monkeypatch, capsys):
     })
     paper = {"id": "1234.5678", "title": "Title", "abstract": "Abstract"}
 
-    with pytest.raises(RuntimeError, match="refusing to publish fallback data"):
+    with pytest.raises(RuntimeError, match="github_models failed after 1 attempts"):
         analyze_papers.analyze_batch(client, [paper], None)
 
     output = capsys.readouterr().out
     assert "finish_reason=length" in output
     assert "reasoning_tokens=1000" in output
+
+
+def test_get_analysis_providers_deduplicates_primary(monkeypatch):
+    monkeypatch.setattr(analyze_papers, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "analysis": {"fallback_providers": ["gemini", "github_models"]},
+        "gemini": {},
+        "github_models": {},
+    })
+
+    assert get_analysis_providers() == ["gemini", "github_models"]
+
+
+def test_analyze_batch_uses_explicit_fallback_provider(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            message = type(
+                "Message", (), {"content": json.dumps({"1234.5678": {}})}
+            )()
+            choice = type("Choice", (), {"message": message})()
+            return type("Response", (), {"choices": [choice]})()
+
+    client = type(
+        "Client", (), {"chat": type("Chat", (), {"completions": Completions()})()}
+    )()
+    monkeypatch.setattr(analyze_papers, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "gemini": {},
+        "github_models": {
+            "model": "openai/gpt-4.1",
+            "retry_max": 1,
+            "retry_interval": 0,
+            "min_request_interval": 0,
+            "batch_max_tokens": 1000,
+        },
+    })
+
+    analyze_papers.analyze_batch(
+        client,
+        [{"id": "1234.5678", "title": "Title", "abstract": "Abstract"}],
+        None,
+        "github_models",
+    )
+
+    assert calls[0]["model"] == "openai/gpt-4.1"
 
 
 def test_system_prompt_preserves_exact_japanese_terminology():
