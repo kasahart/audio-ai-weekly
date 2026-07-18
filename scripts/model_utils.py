@@ -7,6 +7,10 @@ from collections.abc import Mapping
 from openai import OpenAI
 
 
+_REQUEST_BUDGETS: dict[tuple[str, int], "RequestBudget"] = {}
+_REQUEST_BUDGETS_LOCK = threading.Lock()
+
+
 class RequestLimitExceeded(RuntimeError):
     """Raised before a provider request would exceed the configured run budget."""
 
@@ -66,6 +70,15 @@ class RequestBudget:
             )
 
 
+def get_request_budget(provider: str, limit: int) -> RequestBudget:
+    """Return the process-wide request budget for a provider and limit."""
+    key = (provider, max(1, int(limit)))
+    with _REQUEST_BUDGETS_LOCK:
+        if key not in _REQUEST_BUDGETS:
+            _REQUEST_BUDGETS[key] = RequestBudget(*key)
+        return _REQUEST_BUDGETS[key]
+
+
 def get_ai_config(
     settings: Mapping, provider: str | None = None
 ) -> tuple[str, Mapping]:
@@ -112,7 +125,7 @@ def create_client(
     )
     request_limit = config.get("request_limit_per_run")
     if request_limit is not None:
-        client = BudgetedOpenAI(client, RequestBudget(provider, request_limit))
+        client = BudgetedOpenAI(client, get_request_budget(provider, request_limit))
     return client
 
 

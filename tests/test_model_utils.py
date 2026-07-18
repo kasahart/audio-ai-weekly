@@ -13,6 +13,7 @@ from model_utils import (
     create_client,
     get_ai_config,
     get_api_key,
+    get_request_budget,
     supports_custom_temperature,
     RequestLimitExceeded,
 )
@@ -128,6 +129,14 @@ class TestProviderConfiguration:
         with pytest.raises(RequestLimitExceeded, match=r"per-run request limit \(2\)"):
             client.chat.completions.create(model="test")
         assert len(calls) == 2
+
+    def test_request_budget_is_shared_by_provider_in_one_process(self, monkeypatch):
+        monkeypatch.setattr(model_utils, "_REQUEST_BUDGETS", {})
+
+        assert get_request_budget("gemini", 20) is get_request_budget("gemini", 20)
+        assert get_request_budget("gemini", 20) is not get_request_budget(
+            "github_models", 20
+        )
 
 
 class TestSupportsCustomTemperature:

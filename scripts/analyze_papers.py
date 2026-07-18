@@ -156,7 +156,7 @@ def main():
     print(f"[analyze] Analyzing {len(papers)} papers ...")
 
     providers = get_analysis_providers()
-    clients = {provider: get_client(provider) for provider in providers}
+    clients = {}
     _, cfg = get_ai_config(SETTINGS, providers[0])
     analyzed = []
     batches = chunk_papers(papers, cfg["batch_size"])
@@ -172,18 +172,21 @@ def main():
         for provider_index in range(active_provider_index, len(providers)):
             provider = providers[provider_index]
             try:
+                if provider not in clients:
+                    clients[provider] = get_client(provider)
                 batch_results, last_request_at[provider] = analyze_batch(
                     clients[provider], batch, last_request_at[provider], provider
                 )
-                active_provider_index = provider_index
-                break
-            except RuntimeError as exc:
+            except (EnvironmentError, RuntimeError, ValueError) as exc:
                 errors.append(str(exc))
                 if provider_index + 1 < len(providers):
                     print(
                         f"  [warn] {exc}; falling back to "
                         f"{providers[provider_index + 1]}"
                     )
+                continue
+            active_provider_index = provider_index
+            break
         else:
             raise RuntimeError(
                 "AI analysis failed closed across all configured providers: "
