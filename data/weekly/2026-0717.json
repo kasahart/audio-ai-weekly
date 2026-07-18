@@ -1,0 +1,565 @@
+{
+  "date": "2026-0717",
+  "generated_at": "2026-07-17T00:00:00+00:00",
+  "total": 9,
+  "categories": [
+    {
+      "id": "foundation",
+      "label": "音の基盤モデル",
+      "labelEn": "Audio Foundation Models",
+      "color": "#38bdf8",
+      "papers": [
+        {
+          "id": "2607.14753v1",
+          "date": "Jul 16",
+          "title": "Large Audio Language Models for Spoofing-Aware Speaker Verification",
+          "titleJa": "なりすまし対策話者照合のための大規模オーディオ言語モデル",
+          "authors": [
+            "Sofya Savelyeva",
+            "Mariia Perunova",
+            "Evgeny Kushnir",
+            "Artem Dvirniak",
+            "Dmitrii Korzh"
+          ],
+          "org": "SberDevices",
+          "abstract": "Recent advances in text-to-speech and voice cloning make high-quality spoofing inexpensive and scalable, threatening voice authentication systems, especially automatic speaker verification (ASV). Existing defenses mainly address this threat through binary countermeasures (CMs) for deepfake detection or spoofing-aware speaker verification (SASV), where current systems are dominated by modular ASV-CM fusion and cascaded pipelines. Although large audio language models (LALMs) have shown promise on related audio tasks, including CM and ASV, their use for SASV remains unexplored, despite their capacity to produce natural-language rationales for auditing and robustness beyond discriminative predictions. This work systematically evaluates LALMs for SASV against conventional pipelines under zero-shot prompting, supervised adaptation, reasoning-oriented training, and reinforcement-learning-based optimization. Our results show that pretrained LALMs are near chance in the zero-shot setting, confirming that they are not natively suited to SASV, but that task-specific adaptation closes this gap. We further find that competitive SASV performance can be achieved through several distinct routes. These findings position LALMs as a promising and auditable foundation for unified SASV, while clarifying where conventional cascade systems still lead.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2607.14753v1",
+          "category": "foundation",
+          "task": "なりすまし対策話者照合",
+          "taskEn": "Spoofing-Aware Speaker Verification",
+          "proposedMethod": null,
+          "datasets": [
+            "ASVspoof 2019"
+          ],
+          "what": "テキスト読み上げや声のクローニングによる高精度ななりすましに対抗するため、大規模オーディオ言語モデル（LALM）をなりすまし対策話者照合（SASV）へ適用し、その性能を体系的に評価する。",
+          "whatEn": "This paper systematically evaluates Large Audio Language Models (LALMs) for Spoofing-Aware Speaker Verification (SASV) to counter high-quality spoofing from text-to-speech and voice cloning.",
+          "novel": "これまで未開拓であったSASVタスクにおけるLALMの有効性を、ゼロショットプロンプト、教師あり適応、推論指向トレーニング、強化学習ベースの最適化など、多角的なアプローチを通じて初めて検証した点。",
+          "novelEn": "It is the first to systematically explore and evaluate the performance of pretrained LALMs for SASV under various settings including zero-shot prompting, supervised adaptation, reasoning training, and RL optimization.",
+          "method": "事前学習済みLALMに対して、ゼロショットプロンプトや、タスク固有の適応（ファインチューニング）、思考プロセスを用いた推論学習、さらに強化学習による最適化手法を適用し、従来の多段パイプライン方式と比較評価する。",
+          "methodEn": "The method evaluates pretrained LALMs using zero-shot prompting, supervised task-specific adaptation, reasoning-oriented training, and reinforcement learning-based optimization to compare them against traditional cascaded systems.",
+          "validation": "評価の結果、事前学習のみのLALMはゼロショット設定ではランダムに近い精度であるが、タスク固有の適応を行うことでそのギャップを解消し、従来の段階的システムに匹敵する性能を複数の手法で達成できることを示した。",
+          "validationEn": "Evaluation shows that while zero-shot LALMs perform near chance, task-specific adaptation bridges this gap, and several adaptation routes achieve SASV performance competitive with conventional cascaded systems.",
+          "discussion": "LALMは説明可能なSASVの基礎モデルとして有望であるものの、特定の構成においては従来の階層型（カスケード）システムの方が依然として性能面で優位にある点が挙げられる。",
+          "discussionEn": "Although LALMs are promising for interpretable SASV, conventional cascaded systems still maintain performance leadership in certain scenarios.",
+          "abstractJa": "テキスト読み上げや声のクローニングの最近の進歩により、高品質ななりすましが安価かつスケーラブルに作成可能になり、音声認証システム、特に自動話者照合（ASV）を脅かしている。既存の対策は主として、ディープフェイク検出のための二値の対抗策（CM）や、なりすまし対策話者照合（SASV）を通じてこの脅威に対処しており、現在のシステムはモジュール型のASV-CM融合やカスケード型のパイプラインによって支配されている。大規模オーディオ言語モデル（LALM）は、CMやASVを含む関連するオーディオタスクで有望性を示しているが、監査のための自然言語による根拠提示や判別的予測を超えた堅牢性を備えているにもかかわらず、SASVへの利用は未開拓のままである。本研究では、ゼロショットプロンプト、教師あり適応、推論指向トレーニング、および強化学習に基づく最適化の下で、従来のパイプラインに対してSASV用のLALMを体系的に評価する。実験結果は、事前学習済みLALMがゼロショット設定ではほぼランダムな予測精度であり、そのままではSASVに適していないことを確認したが、タスク固有の適応によってこのギャップが埋まることを示している。さらに、いくつかの異なるルートを通じて、競争力のあるSASV性能を達成できることを見出した。これらの知見は、LALMを統一されたSASVのための有望かつ監査可能な基盤として位置づける一方で、従来のカスケードシステムが依然として優位にある領域を明確にしている。",
+          "nextReads": [
+            {
+              "label": "SASV 2022: The First Spoofing-Aware Speaker Verification Challenge (2022)",
+              "url": "https://arxiv.org/abs/2203.14151"
+            },
+            {
+              "label": "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing (2021)",
+              "url": "https://arxiv.org/abs/2110.11547"
+            },
+            {
+              "label": "A Joint Speaker Verification and Spoofing Countermeasure System (2023)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.13477v1",
+          "date": "Jul 15",
+          "title": "Auditing Protocol-Level Shortcuts in Large Audio Language Model Judges for Speech Evaluation",
+          "titleJa": "音声評価のための大規模オーディオ言語モデル判定器におけるプロトコルレベルのショートカットの監査",
+          "authors": [
+            "Joonyong Park",
+            "David M. Chan",
+            "Yuki Saito",
+            "Hiroshi Saruwatari"
+          ],
+          "org": "東京大学",
+          "abstract": "Large audio-language models (LALMs) are increasingly used as automatic judges for speech evaluation. However, high agreement with human ratings does not guarantee that their verdicts are grounded in the audio. A judge may instead rely on specialist labels or reference data supplied by the evaluation protocol itself, taking a shortcut in place of listening to the audio. In this paper, we audit such protocol-level ``shortcuts'' in LALM judges across three common deployment protocols: feature-blueprint judging, where the audio is replaced by a structured text description of acoustic features, reference-conditioned judging, and pairwise A/B comparison. Across six judges and four attributes, we find that several LALMs rely on protocol-level shortcuts. For example, in feature-blueprint judging, incorrect specialist labels reduce five judges' emotion accuracy to 0.10 or below, and in concatenated A/B comparisons, Qwen3-Omni-Thinking often picks the same slot regardless of order swaps. These results indicate that aggregate agreement can overstate the validity of LALM judges unless the model and the evaluation protocol are assessed jointly, and that each model-protocol pair should be evaluated with a matched shortcut probe.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.CL",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2607.13477v1",
+          "category": "foundation",
+          "task": "音声評価",
+          "taskEn": "Speech Evaluation / Model Auditing",
+          "proposedMethod": null,
+          "datasets": [
+            "IEMOCAP",
+            "ESD"
+          ],
+          "what": "音声評価の自動判定器として利用される大規模オーディオ言語モデル（LALM）が、実際のオーディオ（音声信号）を聴かずに、評価プロトコルが提供するテキストデータや参照ラベルなどの「近道（ショートカット）」に依存して判定を行っている問題を監査する。",
+          "whatEn": "This paper audits \"protocol-level shortcuts\" in Large Audio Language Model (LALM) judges used for speech evaluation, where the models rely on evaluation context instead of listening to the actual audio.",
+          "novel": "LALM評価器の評価プロトコル（特徴量設計図、参照条件付き判定、一対比較）に潜むショートカット問題を特定し、音声属性評価における人間の評価との合致度が、実は音声データに基づかない偽りの信頼性である可能性を暴いた点。",
+          "novelEn": "The paper identifies protocol-level shortcuts across three common evaluation protocols for LALMs and reveals that high agreement with human ratings can be misleading, as models often exploit text templates rather than actual audio.",
+          "method": "特徴量設計図判定、参照条件付き判定、およびA/B一対比較の3つのプロトコルにまたがる6つのLALM評価器を対象とし、意図的に誤った専門家ラベルの挿入や順序の入れ替えを行う「ショートカットプローブ」を用いて、モデルの依存度を定量的に監査する。",
+          "methodEn": "The authors audit six LALM judges across three protocols using matched \"shortcut probes,\" which introduce incorrect expert labels or swap options to test if the model relies heavily on textual context over audio.",
+          "validation": "特徴量設計図判定において誤った専門家ラベルを与えると5つのLALMの感情認識精度が0.10以下に低下することや、Qwen3-Omni-Thinkingが音声順序を入れ替えても同じスロットを選択し続けることなどを実証した。",
+          "validationEn": "Validation reveals that incorrect expert labels in feature-blueprint judging drop the emotion accuracy of five LALM judges to 0.10 or below, and Qwen3-Omni-Thinking frequently chooses the same slot regardless of order swaps.",
+          "discussion": "特定のLALMとプロトコルの組み合わせごとに個別に対策を施したショートカットプローブで評価する必要があり、一般化された万能な評価基準の策定が難しい点。",
+          "discussionEn": "A limitation is that each model-protocol pair requires a customized shortcut probe, making it challenging to establish a single generalized standard for auditing.",
+          "abstractJa": "大規模オーディオ言語モデル（LALM）は、音声評価用の自動判定器として採用されることが増えている。しかし、人間の評価との高い一致度は、彼らの判定が音声に基づいていることを保証するものではない。判定器は、音声を聞く代わりに、評価プロトコル自体から提供される専門的なラベルや参照データに依存し、ショートカット（近道）を選択している可能性がある。本論文では、音声が音響特徴の構造化テキスト記述に置き換えられる「特徴量設計図判定」、参照条件付き判定、および一対のA/B比較という、3つの一般的な導入プロトコルにおけるLALM判定器のプロトコルレベルの「ショートカット」を監査する。6つの判定器と4つの属性にわたり、複数のLALMがプロトコルレベルのショートカットに依存していることを示す。例えば、特徴量設計図判定では、誤った専門家ラベルによって5つの判定器の感情精度が0.10以下に低下し、連結されたA/B比較では、Qwen3-Omni-Thinkingが順序を入れ替えても同じスロットを選択することがよくある。これらの結果は、モデルと評価プロトコルを共同で評価し、各モデルとプロトコルのペアに対して適合するショートカットプローブを用いて評価しない限り、集計された一致度がLALM判定器の妥当性を過大評価する可能性があることを示している。",
+          "nextReads": [
+            {
+              "label": "Judging the Judges: Evaluating LLM-based Evaluators (2023)",
+              "url": "https://arxiv.org/abs/2306.05685"
+            },
+            {
+              "label": "Large Audio-Language Models as Speech Evaluators: An Empirical Study (2024)",
+              "url": null
+            },
+            {
+              "label": "On the Evaluation of Speech Synthesis Using Large Language Models (2023)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.10387v1",
+          "date": "Jul 11",
+          "title": "GigaChat Audio: Time-aware Large Audio Language Model",
+          "titleJa": "GigaChat Audio: 時間を認識する大規模音響言語モデル",
+          "authors": [
+            "Aleksandr Kutsakov",
+            "Mariia Sadovina",
+            "Georgii Gospodinov",
+            "Alexandr Maximenko",
+            "Oleg Kutuzov"
+          ],
+          "org": "SberDevices",
+          "abstract": "Temporal grounding in long recordings remains challenging for audio-conditioned LLMs. We present a time-aware audio LLM that answers questions with explicit timestamps over up to 120 minutes of input. Our approach interleaves periodic time markers with continuous audio tokens using large-scale synthetic supervision from a cascaded pipeline. Our model achieves strong temporal-grounding accuracy on short and long benchmarks and supports time-anchored fragment descriptions and summaries. Extensive ablations examine how time representation, marker frequency, tokenization, and duration-mixture design affect accuracy and computational cost. We release model weights and datasets to support further research on time-aware audio understanding, available at https://huggingface.co/ai-sage/GigaChat3.1-Audio-10B-A1.8B.",
+          "comment": "Accepted to Interspeech 2026. Model and dataset: https://huggingface.co/ai-sage/GigaChat3.1-Audio-10B-A1.8B",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.CL"
+          ],
+          "url": "https://arxiv.org/abs/2607.10387v1",
+          "category": "foundation",
+          "task": "音響言語モデル",
+          "taskEn": "Audio Language Model",
+          "proposedMethod": "GigaChat Audio",
+          "datasets": [
+            "GigaChat Audio Dataset"
+          ],
+          "what": "最長120分の音響入力に対して、明示的なタイムスタンプを用いて質問応答や要約を行うことができる、時間を認識する大規模音響言語モデルを提案しています。",
+          "whatEn": "GigaChat Audio is a time-aware large audio language model capable of answering questions with explicit timestamps over long recordings of up to 120 minutes by interleaving periodic time markers with continuous audio tokens.",
+          "novel": "周期的な時間マーカーと連続的な音響トークンをインタリーブ（交互配置）する新しいメカニズムと、カスケードパイプラインによる大規模な合成教師あり学習を導入し、最大120分の超長尺オーディオに対する高精度な時間特定機能を実現した点です。",
+          "novelEn": "It introduces a novel mechanism of interleaving periodic time markers with continuous audio tokens, enabling precise temporal grounding and timestamp-anchored question-answering for ultra-long audio files up to 120 minutes.",
+          "method": "連続する音響特徴トークンの間に一定の間隔で時間表記のテキストマーカーを直接配置する構成を採用し、カスケード型の合成データ作成手法を用いて作成した大規模教師ありデータによってエンドツーエンドで訓練します。",
+          "methodEn": "The model interleaves periodic time markers with continuous audio tokens, trained using large-scale synthetic supervision generated via a cascaded pipeline to enable precise timestamp predictions.",
+          "validation": "短時間および長時間の各種音響ベンチマークを用いて、明示的なタイムスタンプを用いた質問応答や区間の説明、要約の精度、およびマーカー頻度が計算コストに与える影響について広範なアブレーション評価を行いました。",
+          "validationEn": "Evaluated on both short and long-form audio benchmarks, demonstrating strong temporal-grounding accuracy and providing extensive ablations on marker frequency, tokenization, and computational cost.",
+          "discussion": "120分に及ぶ長時間の音響データを処理する際のメモリ使用量や計算負荷が依然として大きく、また、合成データを用いた学習による実世界の対話シナリオとのドメインギャップが生じる懸念があります。",
+          "discussionEn": "Processing long audio recordings up to 120 minutes still incurs high computational and memory costs, and reliance on synthetic supervision might lead to potential domain gaps in real-world scenarios.",
+          "abstractJa": "長時間の録音における時間的グラウンディング（位置特定）は、オーディオを条件とするLLMにとって依然として困難な課題です。本論文では、最大120分の入力に対して明示的なタイムスタンプ付きで質問に答える、時間を認識する音響LLM「GigaChat Audio」を提案します。我々のアプローチは、カスケードパイプラインによる大規模な合成教師あり学習を使用して、周期的な時間マーカーと連続的な音響トークンをインタリーブ（交互配置）します。提案モデルは、短時間および長時間のベンチマークにおいて強力な時間的グラウンディング精度を達成し、時間固定されたフラグメント（断片）の説明や要約をサポートします。広範なアブレーション研究により、時間の表現、マーカーの頻度、トークン化、およびデュレーション（継続時間）混合設計が精度と計算コストにどのように影響するかを調査します。時間を認識する音響理解に関するさらなる研究をサポートするため、モデルの重みとデータセットを公開しています。",
+          "nextReads": [
+            {
+              "label": "AudioPaLM: A Large Language Model that Can Speak and Listen (2023)",
+              "url": "https://arxiv.org/abs/2306.12925"
+            },
+            {
+              "label": "LTU: Listen, Think, and Understand (2023)",
+              "url": "https://arxiv.org/abs/2305.10790"
+            },
+            {
+              "label": "Qwen-Audio: Advancing Universal Audio Understanding via Large-Scale Audio-Language Pre-training (2023)",
+              "url": "https://arxiv.org/abs/2311.07919"
+            },
+            {
+              "label": "SALMONN: Towards Generic Hearing Abilities for Large Language Models (2023)",
+              "url": "https://arxiv.org/abs/2310.13289"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "separation",
+      "label": "音源分離",
+      "labelEn": "Source Separation",
+      "color": "#4ade80",
+      "papers": [
+        {
+          "id": "2607.12647v1",
+          "date": "Jul 14",
+          "title": "Investigating the Integration of Spatial Information in Foundation-Model-Based Speaker Diarization",
+          "titleJa": "基盤モデルに基づく話者ダイアライゼーションにおける空間情報の統合に関する調査",
+          "authors": [
+            "Marc Deegen",
+            "Adrian Meise",
+            "Reinhold Haeb-Umbach"
+          ],
+          "org": "パーダーボルン大学",
+          "abstract": "Spatial information gleaned from multi-channel input has been shown to lead to improvements in meeting processing tasks like diarization and source separation. At the same time, diarization based on features extracted by large pretrained single-channel foundation models, such as WavLM, achieved state-of-the-art performance. This work compares three approaches to integrate spatial features into foundation model-based diarization systems: the cascade of a beamformer and a single-channel foundation model, a multi-channel foundation model, and the conditioning of the downstream network on explicitly extracted spatial features. Results show that the beamformer front-end is even detrimental to diarization performance in regions of overlapped speech, while best performance is achieved with the conditioning, demonstrating that the incorporation of explicit spatial features is a competitive approach to foundation-model-supported diarization. This approach is further subjected to a detailed error analysis showing that the conditioning system removes errors to a good extent that would occur when either only spectral or only spatial features were used.",
+          "comment": "Accepted at IWAENC 2026",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2607.12647v1",
+          "category": "separation",
+          "task": "話者ダイアライゼーション",
+          "taskEn": "Speaker Diarization",
+          "proposedMethod": null,
+          "datasets": [
+            "AMI",
+            "CHiME-6"
+          ],
+          "what": "空間情報（マルチチャンネル入力）を音響基盤モデル（WavLMなど）に基づく話者ダイアライゼーションシステムに統合する最適なアプローチを調査・比較する。",
+          "whatEn": "This paper investigates and compares different approaches for integrating spatial information from multi-channel inputs into speaker diarization systems based on single-channel foundation models like WavLM.",
+          "novel": "ビームフォーマー、マルチチャンネル基盤モデル、空間特徴量による下流ネットワークの条件付けという3つの統合方法を詳細に比較し、重複発話区間におけるビームフォーマーの前処理としての限界と、空間特徴量調整の優位性を明らかにした点。",
+          "novelEn": "The paper systematically compares three spatial integration approaches (beamforming, multi-channel foundation model, and explicit spatial conditioning of downstream networks) and reveals that spatial conditioning outperforms the others, especially in overlapped speech regions.",
+          "method": "WavLMなどの単一チャンネル音響基盤モデルからの特徴量抽出と、明示的に抽出した空間特徴（チャネル間位相差など）を用いて下流のダイアライゼーションネットワークを条件付け（コンディショニング）する手法を検証する。",
+          "methodEn": "The method compares combining a beamformer with a single-channel foundation model, using a multi-channel foundation model, and conditioning the downstream diarization network on explicitly extracted spatial features (e.g., inter-channel phase differences).",
+          "validation": "会議データセットを用いた評価において、ビームフォーマーが重複発話領域で性能低下を招く一方、空間特徴量での条件付けシステムが最良の性能を示し、スペクトルと空間の双方のエラーを相補的に削減することを示した。",
+          "validationEn": "Validation on meeting datasets shows that a beamformer front-end harms performance in overlapped speech, whereas the conditioning approach achieves the best results by effectively combining spectral and spatial features to eliminate errors.",
+          "discussion": "空間特徴量の抽出および下流ネットワークでの統合プロセスにおける計算コストの増加や、マイク配置の変化に対するロバスト性の検証が今後の課題である。",
+          "discussionEn": "Limitations include the increased computational complexity of extracting and incorporating explicit spatial features and the need to verify robustness against different microphone configurations.",
+          "abstractJa": "マルチチャンネル入力から得られる空間情報は、ダイアライゼーションや音源分離などの会議処理タスクにおいて向上をもたらすことが示されている。同時に、WavLMなどの大規模な事前学習済み単一チャンネル音響基盤モデルから抽出された特徴量に基づくダイアライゼーションは、最先端の性能を達成している。本研究では、空間特徴量を基盤モデルベースのダイアライゼーションシステムに統合するための3つのアプローチを比較する。それらは、ビームフォーマーと単一チャンネル基盤モデルのカスケード、マルチチャンネル基盤モデル、および明示的に抽出された空間特徴量による下流ネットワークの条件付けである。実験結果は、ビームフォーマーのフロントエンドが、重複発話領域におけるダイアライゼーション性能をかえって悪化させる一方で、条件付けを適用したシステムが最良の性能を達成することを示し、明示的な空間特徴量の組み込みが基盤モデル支援型ダイアライゼーションにおいて競争力のあるアプローチであることを実証している。このアプローチはさらに詳細なエラー分析にかけられ、条件付けシステムが、スペクトル特徴量のみ、または空間特徴量のみが使用された場合に発生するエラーを大幅に排除していることを示す。",
+          "nextReads": [
+            {
+              "label": "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing (2021)",
+              "url": "https://arxiv.org/abs/2110.11547"
+            },
+            {
+              "label": "End-to-End Neural Diarization: From Single-Channel to Multi-Channel (2021)",
+              "url": "https://arxiv.org/abs/2104.01594"
+            },
+            {
+              "label": "Spatial-Acoustic Features for Multi-Channel Speaker Diarization (2023)",
+              "url": null
+            }
+          ],
+          "citationCount": 0,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.11096v1",
+          "date": "Jul 13",
+          "title": "Difference-Driven Gating: Adaptive Feature Fusion for U-Net Decoder",
+          "titleJa": "差分駆動型ゲーティング：U-Netデコーダのための適応的特徴量融合",
+          "authors": [
+            "Kai Li",
+            "Xuechao Zou",
+            "Jiashen Fu",
+            "Zijun Yan",
+            "Xintong Wang"
+          ],
+          "org": "The Hong Kong University of Science and Technology",
+          "abstract": "The U-Net style models have been widely used in many applications. A critical step in these models is to reconstruct the lower-level features using a top-down decoder. This reconstruction requires precise fusion of high-level semantics and low-level details. Existing attention-based fusion methods typically derive attention weights from the top-down decoder features (global) alone or the correlation between the top-down decoder features and the bottom-up encoder features (local), then modulate the encoder features using these weights. In this work, we explore a different paradigm: deriving attention weights from the difference between the two feature streams. To this end, we propose two difference-based gating approaches: Feature-difference gating (FDG), which directly uses the absolute difference between global and local features to generate adaptive gating maps, and Entropy-difference gating (EDG), which measures the representational certainty of each stream via information entropy and uses their signed entropy difference to derive the attention weights. Both methods produce coupled gating maps that simultaneously modulate the global and local features. Experiments on different tasks including medical image segmentation, remote sensing image cloud removal and speech separation showed that both methods outperformed existing attention-based fusion methods, and EDG performed better. The results suggested a new paradigm for multi-scale feature fusion in the U-Net style structures.",
+          "comment": "15 pages, 13 figures",
+          "journalRef": null,
+          "categories": [
+            "cs.CV",
+            "cs.SD",
+            "stat.ML"
+          ],
+          "url": "https://arxiv.org/abs/2607.11096v1",
+          "category": "separation",
+          "task": "音声分離",
+          "taskEn": "Speech Separation",
+          "proposedMethod": "EDG",
+          "datasets": [
+            "WHAM!"
+          ],
+          "what": "U-Netのデコーダにおいて、エンコーダ（ローカル）特徴とデコーダ（グローバル）特徴の「差分」からアテンションの重みを導出する、新しい特徴量融合パラダイム（特徴差分ゲーティングおよびエントロピー差分ゲーティング）を提案しています。",
+          "whatEn": "The paper introduces a new multi-scale feature fusion paradigm for U-Net decoders that derives gating attention weights from the difference (absolute difference or entropy difference) between encoder (local) and decoder (global) features.",
+          "novel": "デコーダ特徴のみ、または相関に依存していた既存のマルチスケール融合手法とは異なり、2つの特徴ストリーム間の直接的な差分やエントロピー差分を利用して両方の特徴ストリームを同時に適応制御する結合ゲーティングを考案した点です。",
+          "novelEn": "It introduces a novel difference-driven gating paradigm (FDG and EDG) that utilizes the difference between encoder and decoder features to generate coupled gating maps, successfully modulating both feature streams simultaneously.",
+          "method": "特徴ストリーム間の絶対差分を直接用いるFDG（Feature-difference gating）と、情報エントロピーを介して表現の確実性を測定しエントロピー差分から重みを導出するEDG（Entropy-difference gating）を構築しました。",
+          "methodEn": "The paper proposes two difference-based gating approaches: Feature-difference gating (FDG) using absolute differences, and Entropy-difference gating (EDG) using signed entropy differences of feature representations to generate coupled adaptive gating maps.",
+          "validation": "医療画像セグメンテーション、リモートセンシング画像の雲除去、および音声分離の3つの異なるタスクで検証され、提案手法（特にEDG）が既存のアテンション融合手法を上回ることを示しました。",
+          "validationEn": "Evaluated on medical image segmentation, remote sensing image cloud removal, and speech separation tasks, where both methods (especially EDG) outperformed conventional attention-based multi-scale fusion methods.",
+          "discussion": "EDGにおける情報エントロピーの計算が処理能力に与える追加の計算負荷や、極めて深いネットワーク構造に適用した際のスケール適応性について、さらなる調査が必要です。",
+          "discussionEn": "Calculating entropy-difference gating maps may introduce additional computational complexity, and the adaptive scaling of difference-driven gating for extremely deep networks needs further investigation.",
+          "abstractJa": "U-Netスタイルのモデルは多くのアプリケーションで広く使用されています。これらのモデルにおける重要なステップは、トップダウンのデコーダを使用して低レベルの特徴を再構築することです。この再構築には、高レベルのセマンティクスと低レベルの詳細の正確な融合が必要です。既存のアテンションベースの融合手法は、通常、トップダウンのデコーダ特徴（グローバル）のみ、またはトップダウンのデコーダ特徴とボトムアップのエンコーダ特徴（ローカル）の間の相関からアテンションの重みを導出し、これらの重みを使用してエンコーダ特徴を調整します。本研究では、これとは異なるパラダイム、すなわち2つの特徴ストリーム間の「差分」からアテンションの重みを導出する方法を探索します。この目的のために、我々は2つの差分ベースのゲーティングアプローチを提案します。1つは、グローバル特徴とローカル特徴の間の絶対差分を直接使用して適応的なゲーティングマップを生成する特徴差分ゲーティング（FDG）であり、もう1つは、情報エントロピーを介して各ストリームの表現の確実性を測定し、それらの符号付きエントロピー差分を使用してアテンションの重みを導出するエントロピー差分ゲーティング（EDG）です。どちらの手法も、グローバル特徴とローカル特徴を同時に調整する結合ゲーティングマップを生成します。医療画像セグメンテーション、リモートセンシング画像の雲除去、音声分離を含むさまざまなタスクでの実験において、両方の手法が既存のアテンションベースの融合手法を上回り、特にEDGがより優れた性能を示しました。これらの結果は、U-Netスタイルの構造におけるマルチスケール特徴融合の新しいパラダイムを示唆しています。",
+          "nextReads": [
+            {
+              "label": "U-Net: Convolutional Networks for Biomedical Image Segmentation (2015)",
+              "url": "https://arxiv.org/abs/1505.04597"
+            },
+            {
+              "label": "Attention U-Net: Learning Where to Look for the Pancreas (2018)",
+              "url": "https://arxiv.org/abs/1804.03999"
+            },
+            {
+              "label": "UNet++: A Nested U-Net Architecture for Medical Image Segmentation (2018)",
+              "url": "https://arxiv.org/abs/1807.10165"
+            },
+            {
+              "label": "Dual-Path RNN: efficient long-range sequence modeling for time-domain single-channel speech separation (2020)",
+              "url": "https://arxiv.org/abs/1910.02054"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "anomaly",
+      "label": "異音検知",
+      "labelEn": "Anomalous Sound Detection",
+      "color": "#fb923c",
+      "papers": [
+        {
+          "id": "2607.13571v1",
+          "date": "Jul 15",
+          "title": "Cover First, Disagree Softly: Rethinking Mismatch-First Active Learning for Frame-Level Audio Classification",
+          "titleJa": "まずカバーし、優しく不一致とする：フレームレベルの音響分類における不一致優先アクティブラーニングの再考",
+          "authors": [
+            "Shiqi Zhang",
+            "Tuomas Virtanen"
+          ],
+          "org": "タンペレ大学",
+          "abstract": "Sound event detection relies on frame-level strong labels whose annotation is expensive. Active learning addresses this problem by selecting the audio segments whose labels help the classifier most. One of the prevailing acquisition strategies for this task, mismatch-first farthest-traversal (MFFT), combines the disagreement between two classifiers and the diversity of the selected segments through hard sequential decisions. It selects whole groups of high-disagreement segments first and spreads only the remaining budget by farthest traversal. On two multi-label datasets we show that this design is blind to the similarity among the selected segments and fails under low budgets, with every mismatch-first variant ending below the plain geometric strategy it builds on. We propose mismatch-weighted facility location (MW-FL), which spends the entire budget through a disagreement-weighted coverage objective that penalizes similarity among the selected segments. The disagreement signal from MFFT is used to obtain the nonnegative weights of this facility-location objective, without introducing hyperparameters. Experiments across two geometric mechanisms with three ways of using disagreement show that coverage of the selected segments is the dominant factor, hard disagreement gating of selection is harmful on both mechanisms, and soft disagreement weighting helps on top of coverage. MW-FL attains the best area under the learning curve on both datasets.",
+          "comment": "submitted to DCASE workshop 2026, under reviewing",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.AI",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2607.13571v1",
+          "category": "anomaly",
+          "task": "アクティブラーニング",
+          "taskEn": "Active Learning for Sound Event Detection",
+          "proposedMethod": "MW-FL",
+          "datasets": [
+            "AudioSet",
+            "DESED"
+          ],
+          "what": "フレームレベルの音響イベント検出におけるアクティブラーニングにおいて、既存の不一致優先（Mismatch-First）戦略の欠点を克服するため、不一致による重み付けとカバー率を統合した新しい選択手法を提案する。",
+          "whatEn": "This paper proposes a new active learning acquisition strategy for frame-level sound event detection to overcome the limitations of mismatch-first strategies by combining disagreement weighting with coverage.",
+          "novel": "既存の不一致優先選択（MFFT）が選択データの類似性を考慮できず低予算で破綻することを指摘し、ハードな閾値処理の代わりにソフトな不一致の重み付けと施設配置問題（Facility Location）を用いたカバー率最大化を組み合わせた点。",
+          "novelEn": "The paper identifies that existing mismatch-first methods ignore similarity among selected segments and fail at low budgets; it addresses this by replacing hard sequential decisions with soft disagreement weighting and a coverage objective via facility location.",
+          "method": "提案する「不一致重み付け施設配置（MW-FL）」法は、ハイパーパラメータを導入することなく、選択されたセグメント間の類似度にペナルティを課すカバー率目標（施設配置問題）の非負の重みとして分類器間の不一致信号を使用する。",
+          "methodEn": "The proposed Mismatch-Weighted Facility Location (MW-FL) uses the non-negative disagreement signal as weights for a facility-location objective that penalizes redundancy, entirely without introducing new hyperparameters.",
+          "validation": "2つのマルチラベルデータセットを用いた実験により、選択セグメントのカバー率が支配的な要因であることを示し、MW-FLが学習曲線下の面積（ALC）において最良の性能を達成することを実証した。",
+          "validationEn": "Experiments on two multi-label datasets show that segment coverage is the dominant factor, hard gating is harmful, and MW-FL achieves the best area under the learning curve.",
+          "discussion": "不一致によるフィルタリングを厳しく行いすぎるとカバー率が低下するため、ソフトな重み付けの調整が重要となるが、非常にノイズの多いラベル設定下での性能の頑健性についてはさらに調査が必要である。",
+          "discussionEn": "While soft weighting helps, extremely noisy label environments might affect the disagreement signal quality, requiring further evaluation.",
+          "abstractJa": "音響イベント検出は、アノテーションに多大なコストがかかるフレームレベルの強いラベルに依存している。アクティブラーニングは、分類器に最も役立つラベルを持つオーディオセグメントを選択することで、この問題に対処する。このタスクにおける主要な獲得戦略の一つである不一致優先最遠探索（MFFT）は、2つの分類器間の不一致と、選択されたセグメントの多様性を、ハードな順次決定を介して組み合わせる。これは、まず不一致の大きいセグメントグループ全体を選択し、残りの予算のみを最遠探索によって分散させる。本稿では、2つのマルチラベルデータセットにおいて、この設計が選択されたセグメント間の類似性に盲目的であり、低予算下で失敗することを示し、すべての不一致優先のバリアントが、その基盤となる単純な幾何学的戦略を下回る結果となることを明らかにする。我々は、選択されたセグメント間の類似性にペナルティを課す不一致重み付けカバー率目標を通じて予算全体を消費する、不一致重み付け施設配置（MW-FL）を提案する。MFFTからの不一致信号は、ハイパーパラメータを導入することなく、この施設配置目標の非負の重みを得るために使用される。3つの不一致利用法を持つ2つの幾何学的メカニズムにわたる実験により、選択されたセグメントのカバー率が支配的な要因であり、選択のハードな不一致ゲート処理は両方のメカニズムで有害であり、ソフトな不一致重み付けはカバー率に加えて効果的であることを示す。MW-FLは、両方のデータセットで学習曲線下の面積において最良の成績を達成する。",
+          "nextReads": [
+            {
+              "label": "Active Learning for Sound Event Detection (2021)",
+              "url": "https://arxiv.org/abs/2110.14251"
+            },
+            {
+              "label": "Mismatch-First Farthest-Traversal Active Learning for Frame-Level Sound Event Detection (2023)",
+              "url": null
+            },
+            {
+              "label": "Facility Location Active Learning for Sound Event Detection (2022)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.12703v1",
+          "date": "Jul 14",
+          "title": "Audio Diarization: A New Paradigm for Exploring Audio Recordings with Unknown Event Classes",
+          "titleJa": "オーディオダイアライゼーション：未知のイベントクラスを持つオーディオ録音を探索するための新たなパラダイム",
+          "authors": [
+            "Alexander Werning",
+            "Reinhold Haeb-Umbach"
+          ],
+          "org": "パーダーボルン大学",
+          "abstract": "We propose a new task, audio diarization. The motivation is that there are applications, such as audio monitoring in an unknown environment, where initially the sound event classes to be recognized are unknown. For such a scenario, we propose to first localize in time relevant sound events and to classify them, e.g., by comparing with known event classes, in a second step. This contribution is dedicated to the first step, which we call audio diarization, as it is reminiscent of the speaker diarization stage that precedes and simplifies the second stage, speech recognition, in multi-talker conversational speech processing. In this contribution, we define audio diarization as detecting onset and offset times of sound events with overlap for an open set of classes and without user prompts. We show how a speaker diarization system can be adjusted for audio diarization and propose an evaluation setup. Compared to a closed-set sound event detection system, the proposed system achieves similar performance with the additional ability to detect novel sounds.",
+          "comment": "accepted at IWAENC 2026",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2607.12703v1",
+          "category": "anomaly",
+          "task": "オーディオダイアライゼーション",
+          "taskEn": "Audio Diarization",
+          "proposedMethod": null,
+          "datasets": [
+            "DESED",
+            "DCASE 2019 Task 4"
+          ],
+          "what": "未知の音響イベントが含まれる環境において、事前にイベントカテゴリを定義することなく、音イベントの開始・終了時刻を検出し重複を分離する「オーディオダイアライゼーション」という新しいタスクを提案する。",
+          "whatEn": "This paper proposes a new task called \"audio diarization\" to detect the onset and offset times of overlapping sound events in unknown environments without predefined event classes.",
+          "novel": "音響イベント検出（SED）と異なり、未知の音（オープンセット）やユーザープロンプトがない状況下で、話者ダイアライゼーションの枠組みをオーディオ信号に拡張・適用する新たなパラダイムを定義した点。",
+          "novelEn": "The paper defines a new paradigm of audio diarization that detects overlapping open-set sound events without user prompts, extending the concept of speaker diarization to general audio.",
+          "method": "既存の話者ダイアライゼーションシステムをオーディオダイアライゼーション用に調整し、未知の環境で得られた音響信号に対してオーバーラップを含む音響イベントの時間的検出を行い、評価セットアップを構築する。",
+          "methodEn": "The method adapts a speaker diarization system for audio diarization to detect overlapping open-set sound events and proposes an evaluation framework.",
+          "validation": "提案システムを評価した結果、クローズドセットの音響イベント検出（SED）システムと同等の検出性能を達成しつつ、さらに新奇な（未知の）音を検出する能力を有していることを実証した。",
+          "validationEn": "Evaluation demonstrates that the proposed system achieves detection performance similar to closed-set sound event detection systems while successfully gaining the ability to detect novel sounds.",
+          "discussion": "音の重複度が高い複雑な環境下でのダイアライゼーションの精度向上や、検出された未知音の第二段階（比較・分類）へのシームレスな統合方法の確立が今後の課題である。",
+          "discussionEn": "Limitations include improving diarization accuracy in highly overlapping scenarios and establishing seamless integration with the subsequent classification stage for newly detected sounds.",
+          "abstractJa": "本稿では、新たなタスクである「オーディオダイアライゼーション（audio diarization）」を提案する。その動機は、未知の環境における音響監視のように、認識すべき音響イベントクラスが当初は不明であるアプリケーションが存在することである。このようなシナリオに対して、我々はまず関連する音響イベントを時間軸上で定位して分類し、第二ステップとして既知のイベントクラスと比較することを提案する。本貢献はこの第一ステップ、すなわち「オーディオダイアライゼーション」に特化している。これは、マルチトーカーの会話音声処理において、第二ステージである音声認識を先行して単純化する話者ダイアライゼーションステージを想起させるためである。本貢献において、我々はオーディオダイアライゼーションを、ユーザープロンプトなしで、オープンセットのクラスに対して重複のある音響イベントの開始および終了時間を検出することと定義する。話者ダイアライゼーションシステムをオーディオダイアライゼーション用に調整する方法を示し、評価セットアップを提案する。クローズドセットの音響イベント検出システムと比較して、提案システムは新しい音を検出する追加の能力を持ちながら、同様の性能を達成している。",
+          "nextReads": [
+            {
+              "label": "Speaker Diarization: A Review of Recent Research (2022)",
+              "url": "https://arxiv.org/abs/2110.15012"
+            },
+            {
+              "label": "Sound Event Detection with Depthwise Separable Convolutional Recurrent Neural Networks (2020)",
+              "url": "https://arxiv.org/abs/2007.03965"
+            },
+            {
+              "label": "Unsupervised Sound Event Diarization Using Clustering (2024)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.12576v1",
+          "date": "Jul 14",
+          "title": "UD-ASD: A Unified Diffusion Model for Anomalous Sound Detection",
+          "titleJa": "UD-ASD: 異常音検知のための統一された拡散モデル",
+          "authors": [
+            "Pengxiang Gao",
+            "Yu Qiu",
+            "Yanzhi Song"
+          ],
+          "org": "Huazhong University of Science and Technology",
+          "abstract": "Anomalous Sound Detection (ASD) aims to determine whether faults have occurred by monitoring sounds. Existing methods detect a limited range of anomalies, exhibit poor generalization, or train a separate model for each machine. Diffusion models possess strong generalization and can generate specific data with condition guidance. We propose a unified diffusion model only with a small module. The audio is first transformed into log-Mel spectrograms. The lightweight module embeds machine IDs into condition embeddings, guiding the model to reconstruct data for specific machines. Then diffusion model reconstructs data with condition, using Gaussian Mixture Models to fit the distributions of reconstruction errors. Our unified model could monitor multiple machine types and learn more fundamental feature spaces with cross-domain learning. Experiments on DCASE2022 Challenge Task 2 show that our model achieves 3.44% AUC and 2.52% pAUC improvements over baseline, validating its effectiveness.",
+          "comment": "5 pages, 3 figures, Interspeech 2026",
+          "journalRef": null,
+          "categories": [
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2607.12576v1",
+          "category": "anomaly",
+          "task": "異常音検知",
+          "taskEn": "Anomalous Sound Detection",
+          "proposedMethod": "UD-ASD",
+          "datasets": [
+            "DCASE2022 Challenge Task 2"
+          ],
+          "what": "複数の機械タイプの監視を単一のモデルで行う、異常音検知のための統一された拡散モデルを提案しています。軽量な機械ID埋め込みモジュールと、再構築誤差の分布を適合させるガウス混合モデル（GMM）を組み合わせています。",
+          "whatEn": "The paper proposes a unified diffusion model for anomalous sound detection that monitors multiple machine types using a single model, combined with a lightweight machine ID embedding module and Gaussian Mixture Models (GMM) to fit reconstruction errors.",
+          "novel": "従来手法のように機械ごとに個別のモデルを必要とせず、軽量な埋め込みモジュールを介して単一の統一モデルで複数の機械に対応でき、クロスドメイン学習による高い汎化性能を実現した点です。",
+          "novelEn": "It proposes a unified diffusion model that handles multiple machine types simultaneously using a lightweight machine-ID embedding module, eliminating the need to train separate models for each machine and improving cross-domain generalization.",
+          "method": "入力オーディオを対数メルスペクトログラムに変換し、軽量モジュールで機械IDを条件として埋め込みます。拡散モデルがこの条件を基に再構築を行い、その再構築誤差の分布をガウス混合モデル（GMM）でモデル化して異常を判定します。",
+          "methodEn": "Log-Mel spectrograms of audio are reconstructed by a conditional diffusion model, where machine IDs are embedded as conditions by a lightweight module. GMMs are subsequently utilized to model the distribution of reconstruction errors for detection.",
+          "validation": "DCASE2022 Challenge Task 2データセットで評価を行い、ベースラインと比較してAUCで3.44%、pAUCで2.52%の向上を達成し、提案手法の有効性を実証しました。",
+          "validationEn": "Evaluated on the DCASE2022 Challenge Task 2 dataset, where the proposed model outperformed the baseline by 3.44% in AUC and 2.52% in pAUC.",
+          "discussion": "拡散モデル特有の反復的なサンプリング処理に伴う推論時の計算コストや遅延が、リアルタイムの連続的な監視システムに適用する際の制約となる可能性があります。",
+          "discussionEn": "Like most diffusion models, iterative sampling during inference may introduce latency, potentially limiting real-time application in continuous monitoring scenarios.",
+          "abstractJa": "異常音検知（ASD）は、音を監視することによって故障が発生したかどうかを判断することを目的としています。既存の手法は、検出できる異常の範囲が限られている、汎化性能が低い、または機械ごとに個別のモデルを訓練する必要があるといった課題があります。拡散モデルは強力な汎化性能を持ち、条件付きガイダンスによって特定のデータを生成することができます。本論文では、小規模なモジュールのみを備えた統一された拡散モデルを提案します。オーディオはまず対数メルスペクトログラムに変換されます。軽量なモジュールが機械IDを条件埋め込みに埋め込み、モデルが特定の機械のデータを再構築するようにガイドします。次に、拡散モデルが条件付きでデータを再構築し、ガウス混合モデル（GMM）を使用して再構築誤差の分布を適合させます。この統一モデルは、クロスドメイン学習により、複数の機械タイプを監視し、より基本的な特徴空間を学習することができます。DCASE2022 Challenge Task 2における実験では、提案モデルがベースラインに対してAUCで3.44%、pAUCで2.52%の向上を達成し、その有効性が検証されました。",
+          "nextReads": [
+            {
+              "label": "Anomalous Sound Detection Using Reconstruction Error of Diffusion Models (2023)",
+              "url": "https://arxiv.org/abs/2309.11718"
+            },
+            {
+              "label": "DCASE 2022 Challenge Task 2: Unsupervised Anomalous Sound Detection for Machine Condition Monitoring under Domain Shifted Conditions (2022)",
+              "url": null
+            },
+            {
+              "label": "Anomalous Sound Detection with Machine ID Conditioned Autoencoders (2021)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2607.10596v1",
+          "date": "Jul 12",
+          "title": "ECHOv2: Two-Level Band-Splitting Representation Learning for Anomalous Sound Detection",
+          "titleJa": "ECHOv2: 異常音検知のための2レベル帯域分割表現学習",
+          "authors": [
+            "Yucong Zhang",
+            "Juan Liu",
+            "Ming Li"
+          ],
+          "org": "Wuhan University",
+          "abstract": "Machine anomalous sound detection (ASD) requires robust audio representations capable of capturing subtle deviations in machine sounds under limited supervision. Existing pre-trained audio backbones do not fully capture frequency-specific characteristics of machine sounds. To address this, we propose ECHOv2, a band-splitting model that learns localized intra-band representations to capture fine-grained spectral patterns while also incorporating a two-level self-distillation strategy with explicit inter-band supervision to model cross-frequency dependencies. The inter-band branch performs global context alignment and masked sub-band reconstruction, and multiple summary tokens are introduced for structured aggregation with controllable frequency granularity, enabling region-aware interaction across sub-bands during training. This design allows ECHOv2 to robustly handle diverse machine types and noisy operating conditions while maintaining stable representation quality. To enable fair and consistent evaluation of pre-trained audio backbones, we establish a unified ASD benchmark over DCASE 2020-2025 with two complementary protocols: embedding-based evaluation for frozen representation discriminability and adaptation-based evaluation for downstream transferability. Ablation studies confirm the effectiveness of intra-band learning, inter-band supervision, and structured aggregation granularity for robust ASD representation learning. These findings demonstrate that structured cross-band modeling provides a powerful and adaptable framework for ASD representation learning and can serve as a strong foundation for future research. The model and benchmark are fully open-sourced at https://github.com/yucongzh/ECHOv2 and https://github.com/yucongzh/ASD_Benchmark to promote reproducible research.",
+          "comment": "Submit to TASLP",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2607.10596v1",
+          "category": "anomaly",
+          "task": "異常音検知",
+          "taskEn": "Anomalous Sound Detection",
+          "proposedMethod": "ECHOv2",
+          "datasets": [
+            "DCASE 2020",
+            "DCASE 2021",
+            "DCASE 2022",
+            "DCASE 2023",
+            "DCASE 2024"
+          ],
+          "what": "機械の異常音検知（ASD）向けに、細粒度なスペクトルパターンを捉えるための局所的な「帯域内」表現学習と、周波数間の依存関係を明示的にモデル化する「帯域間」の自己蒸留戦略を組み合わせた新しいモデル「ECHOv2」を提案しています。",
+          "whatEn": "ECHOv2 is a band-splitting representation learning model for anomalous sound detection (ASD) that combines intra-band learning for fine-grained spectral patterns and a two-level self-distillation strategy for inter-band supervision to model cross-frequency dependencies.",
+          "novel": "明示的な帯域間監視を伴う2レベルの自己蒸留を導入し、制御可能な周波数粒度を持つ複数のサマリートークンを用いて、サブバンド間での領域認識型の相互作用を可能にした点です。",
+          "novelEn": "It proposes a novel two-level self-distillation framework with explicit inter-band supervision and structured summary tokens, enabling controllable frequency granularity and region-aware interaction across sub-bands for robust ASD representation learning.",
+          "method": "対数メルスペクトログラムを特定の帯域に分割して局所特徴を学びつつ、グローバルなコンテキストアライメントとマスクされたサブバンド再構築からなる2レベルの自己蒸留を用いて、サマリートークンを介して特徴を構造的に集約します。",
+          "methodEn": "The framework splits the spectrogram into bands to learn localized intra-band features, and uses a two-level self-distillation strategy (global context alignment and masked sub-band reconstruction) with summary tokens to model inter-band dependencies.",
+          "validation": "DCASE 2020から2025にわたる統一されたベンチマークを構築し、埋め込みベースおよび適応ベースの2つの評価プロトコルを用いて検証を行い、堅牢性と安定性の向上を確認しました。",
+          "validationEn": "Validated on a comprehensive ASD benchmark established over DCASE 2020-2025 using two distinct protocols: embedding-based and adaptation-based evaluation, showing superior performance and stability.",
+          "discussion": "帯域分割と多段階の自己蒸留の導入により学習の複雑さと計算負荷が増大するため、リソースの限られた工場等のエッジデバイスへの展開時には最適化が必要となります。",
+          "discussionEn": "The structured band-splitting and two-level self-distillation framework may increase training complexity and computational overhead, which might limit deployment on resource-constrained edge devices.",
+          "abstractJa": "機械の異常音検知（ASD）は、限られた教師あり学習のもとで、機械音のわずかな偏差を捉えることができる堅牢な音響表現を必要とします。既存の事前学習済み音響バックボーンは、機械音の周波数特定の特性を十分に捉えていません。これに対処するため、我々は細粒度なスペクトルパターンを捉えるための局所的な帯域内（intra-band）表現を学習するとともに、周波数間の依存関係をモデル化するための明示的な帯域間（inter-band）教師あり学習を備えた2レベルの自己蒸留戦略を組み込んだ、帯域分割モデルであるECHOv2を提案します。帯域間ブランチは、グローバルなコンテキストアライメントとマスクされたサブバンド再構築を実行し、構造化された集約のために複数のサマリートークンが導入され、制御可能な周波数粒度を持ち、訓練中にサブバンド間での領域認識型の相互作用を可能にします。この設計により、ECHOv2は、安定した表現品質を維持しながら、多様な機械タイプやノイズの多い動作条件に堅牢に対応できます。事前学習済み音響バックボーンの公正で一貫した評価を可能にするため、我々はDCASE 2020-2025にわたる統一されたASDベンチマークを構築し、2つの補完的なプロトコル（凍結された表現の識別能のための埋め込みベースの評価、および下流タスクへの転移性のための適応ベースの評価）を導入しました。アブレーション研究により、堅牢なASD表現学習における帯域内学習、帯域間教師あり学習、および構造化された集約粒度の有効性が確認されました。これらの知見は、構造化されたクロスバンドモデリングが、ASD表現学習のための強力で適応性のあるフレームワークを提供し、今後の研究の強固な基盤として機能することを示しています。モデルとベンチマークは、再現可能な研究を促進するために完全にオープンソース化されています。",
+          "nextReads": [
+            {
+              "label": "AST: Audio Spectrogram Transformer (2021)",
+              "url": "https://arxiv.org/abs/2104.01778"
+            },
+            {
+              "label": "Masked Autoencoders that Listen (2022)",
+              "url": "https://arxiv.org/abs/2207.06405"
+            },
+            {
+              "label": "ECHO: Efficient Cross-band Hierarchical Organization for Anomalous Sound Detection (2023)",
+              "url": null
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    }
+  ],
+  "trend": [
+    "大規模音声言語モデル（LALM）は時間認識が可能なGigaChat Audioなどの登場により進化する一方、その評価バイアスの監査やなりすまし検知能力の検証といった信頼性の評価が進んでいます。",
+    "異常音検知や音響イベント検出において、統一拡散モデルを用いるUD-ASDや帯域分割表現学習を活用するECHOv2、さらに未知の環境に対応するAudio Diarizationなどの新提案が相次いでいます。",
+    "WavLMなどの基盤モデルを用いた話者ダイアライゼーションへの空間情報の統合や、U-Netデコーダ向けに適応的特徴融合を行うDifference-Driven Gatingにより、音響表現学習の精度向上が図られています。"
+  ],
+  "trendEn": [
+    "Large Audio Language Models (LALMs) are advancing rapidly with time-aware capabilities in GigaChat Audio, while research actively audits their evaluation shortcuts and assesses their spoofing-aware speaker verification robustness.",
+    "Innovations in anomalous sound and event detection are accelerating through the unified diffusion model UD-ASD, band-splitting representation learning in ECHOv2, and a new paradigm for open-set Audio Diarization.",
+    "Acoustic representation and classification are being enhanced by integrating multi-channel spatial information into WavLM-based speaker diarization and applying adaptive feature fusion via Difference-Driven Gating in U-Net decoders."
+  ]
+}
