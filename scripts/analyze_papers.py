@@ -21,8 +21,8 @@ SYSTEM_PROMPT = (PROMPT_DIR / "analyze_system.txt").read_text().strip()
 BATCH_PROMPT_TEMPLATE = (PROMPT_DIR / "analyze_batch.txt").read_text().strip()
 
 
-def get_client() -> OpenAI:
-    return create_client(SETTINGS)
+def get_client(provider: str | None = None) -> OpenAI:
+    return create_client(SETTINGS, provider=provider)
 
 
 def sanitize_json_text(raw: str) -> str:
@@ -57,9 +57,12 @@ Abstract:
 
 
 def analyze_batch(
-    client: OpenAI, papers: list[dict], last_request_at: float | None
+    client: OpenAI,
+    papers: list[dict],
+    last_request_at: float | None,
+    provider: str | None = None,
 ) -> tuple[dict[str, dict], float | None]:
-    _, cfg = get_ai_config(SETTINGS)
+    provider, cfg = get_ai_config(SETTINGS, provider)
     prompt = build_batch_prompt(papers)
     paper_ids = {paper["id"] for paper in papers}
 
@@ -116,8 +119,14 @@ def analyze_batch(
         time.sleep(cfg["retry_interval"] * (2**attempt))
 
     raise RuntimeError(
-        f"AI analysis failed after {cfg['retry_max']} attempts; refusing to publish fallback data"
+        f"AI analysis with {provider} failed after {cfg['retry_max']} attempts"
     )
+
+
+def get_analysis_providers() -> list[str]:
+    primary, _ = get_ai_config(SETTINGS)
+    configured = SETTINGS.get("analysis", {}).get("fallback_providers", [])
+    return list(dict.fromkeys([primary, *configured]))
 
 
 def chunk_papers(papers: list[dict], batch_size: int) -> list[list[dict]]:
@@ -146,18 +155,40 @@ def main():
     papers = json.loads(raw_path.read_text())
     print(f"[analyze] Analyzing {len(papers)} papers ...")
 
-    client = get_client()
-    _, cfg = get_ai_config(SETTINGS)
+    providers = get_analysis_providers()
+    clients = {provider: get_client(provider) for provider in providers}
+    _, cfg = get_ai_config(SETTINGS, providers[0])
     analyzed = []
     batches = chunk_papers(papers, cfg["batch_size"])
-    last_request_at = None
+    last_request_at = {provider: None for provider in providers}
+    active_provider_index = 0
 
     for batch_index, batch in enumerate(batches, 1):
         batch_ids = ", ".join(paper["id"] for paper in batch)
         print(
             f"[analyze] batch ({batch_index}/{len(batches)}) size={len(batch)} ids={batch_ids}"
         )
-        batch_results, last_request_at = analyze_batch(client, batch, last_request_at)
+        errors = []
+        for provider_index in range(active_provider_index, len(providers)):
+            provider = providers[provider_index]
+            try:
+                batch_results, last_request_at[provider] = analyze_batch(
+                    clients[provider], batch, last_request_at[provider], provider
+                )
+                active_provider_index = provider_index
+                break
+            except RuntimeError as exc:
+                errors.append(str(exc))
+                if provider_index + 1 < len(providers):
+                    print(
+                        f"  [warn] {exc}; falling back to "
+                        f"{providers[provider_index + 1]}"
+                    )
+        else:
+            raise RuntimeError(
+                "AI analysis failed closed across all configured providers: "
+                + "; ".join(errors)
+            )
 
         for paper in batch:
             result = batch_results[paper["id"]]

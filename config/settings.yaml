@@ -28,6 +28,7 @@ metadata:
 
 # Analysis and report-generation settings
 analysis:
+  fallback_providers: [github_models]
   prompt_authors: 3
   temperature: 0.3
   enrichment_tokens_per_paper: 800
@@ -137,6 +138,7 @@ gemini:
   api_key_env: "GEMINI_API_KEY"
   endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
   model: "gemini-3.5-flash"
+  request_limit_per_run: 20
   feature_max_tokens: 64000
   max_tokens: 16000
   batch_size: 5
