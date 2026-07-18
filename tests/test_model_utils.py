@@ -107,6 +107,7 @@ class TestProviderConfiguration:
 
     def test_create_client_enforces_provider_request_limit(self, monkeypatch):
         calls = []
+        client_options = {}
 
         class Completions:
             def create(self, **kwargs):
@@ -116,7 +117,11 @@ class TestProviderConfiguration:
         class FakeClient:
             chat = type("Chat", (), {"completions": Completions()})()
 
-        monkeypatch.setattr(model_utils, "OpenAI", lambda **_kwargs: FakeClient())
+        def fake_openai(**kwargs):
+            client_options.update(kwargs)
+            return FakeClient()
+
+        monkeypatch.setattr(model_utils, "OpenAI", fake_openai)
         settings = {
             **SETTINGS,
             "ai": {"provider": "gemini"},
@@ -129,6 +134,7 @@ class TestProviderConfiguration:
         with pytest.raises(RequestLimitExceeded, match=r"per-run request limit \(2\)"):
             client.chat.completions.create(model="test")
         assert len(calls) == 2
+        assert client_options["max_retries"] == 0
 
     def test_request_budget_is_shared_by_provider_in_one_process(self, monkeypatch):
         monkeypatch.setattr(model_utils, "_REQUEST_BUDGETS", {})

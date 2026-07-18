@@ -119,11 +119,17 @@ def create_client(
 ) -> OpenAI:
     """Create an OpenAI client for the provider selected in settings."""
     provider, config = get_ai_config(settings, provider)
-    client = OpenAI(
-        base_url=config["endpoint"],
-        api_key=get_api_key(provider, config, environ),
-    )
     request_limit = config.get("request_limit_per_run")
+    client_options = {
+        "base_url": config["endpoint"],
+        "api_key": get_api_key(provider, config, environ),
+    }
+    if request_limit is not None:
+        # Application retry loops must consume one budget unit per HTTP attempt.
+        client_options["max_retries"] = 0
+    client = OpenAI(
+        **client_options,
+    )
     if request_limit is not None:
         client = BudgetedOpenAI(client, get_request_budget(provider, request_limit))
     return client
