@@ -1,4 +1,4 @@
-# 音声研究週報 自動更新システム
+# Audio AI Weekly / 音響AI週報
 ## 要件定義書 ／ アーキテクチャ設計書
 
 **バージョン:** v1.3　　**作成日:** 2026年4月25日　　**作成:** Claude Sonnet 4.6
@@ -31,7 +31,7 @@
 
 ### 1.2 システム名称
 
-ArXiv 音声研究週報 自動更新システム（Sound Research Weekly Report System）
+Audio AI Weekly / 音響AI週報
 
 ### 1.3 対象ユーザー
 
@@ -56,12 +56,12 @@ ArXiv 音声研究週報 自動更新システム（Sound Research Weekly Report
 
 - ★ GitHub Models から提供される Claude（`github-models` エンドポイント）を使用し、`GITHUB_TOKEN` で認証する
 - 各論文のアブストラクトを以下の 6 観点で日本語構造化要約する
-  - ① どんなもの？
-  - ② 先行研究と比べてすごい点
-  - ③ 技術・手法のキモ
-  - ④ 有効性の検証方法
-  - ⑤ 議論・限界
-  - ⑥ 次に読むべき論文（arXiv ハイパーリンク付き）
+  - ① 概要（抄録ベース）
+  - ② 著者が主張する新規性・差分（抄録ベース）
+  - ③ 抄録で説明される技術・手法
+  - ④ 抄録に記載された検証
+  - ⑤ 抄録から読み取れる注意点（推定を含む）
+  - ⑥ 検証済みの関連論文候補（公式 arXiv API 照合後のみリンク）
 - 今週の技術トレンドを 3 行で要約する
 
 > **変更（v1.1）:** `Anthropic Claude API + ANTHROPIC_API_KEY` から `GitHub Models + GITHUB_TOKEN` に変更。外部シークレット不要になりセットアップが簡素化される。
@@ -150,7 +150,7 @@ ArXiv 音声研究週報 自動更新システム（Sound Research Weekly Report
 ### 3.3 リポジトリ構成
 
 ```
-arxiv-weekly/
+audio-ai-weekly/
 ├── .devcontainer/
 │   └── devcontainer.json       # Python 3.11 ベース image + features + 初回セットアップ
 ├── .github/

@@ -16,7 +16,7 @@ describe('language resolution', () => {
 
 describe('stripPrefix', () => {
   it('removes circled number prefix ①', () => {
-    expect(stripPrefix('① どんなもの？')).toBe('どんなもの？')
+    expect(stripPrefix('① 概要（抄録ベース）')).toBe('概要（抄録ベース）')
   })
   it('removes circled number ⑨', () => {
     expect(stripPrefix('⑨ テキスト')).toBe('テキスト')

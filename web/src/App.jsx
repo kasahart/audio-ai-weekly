@@ -399,6 +399,12 @@ export default function App() {
       </div>
 
       <div className="content">
+        <aside style={{ marginBottom: 20, padding: '12px 14px', border: '1px solid #334155',
+          borderLeft: '4px solid #38bdf8', borderRadius: 3, color: '#94a3b8',
+          fontSize: 12, lineHeight: 1.75 }}>
+          <div style={{ color: '#cbd5e1', fontWeight: 600 }}>{t(lang).weeklyDisclosure}</div>
+          <div>{t(lang).weeklyCaution}</div>
+        </aside>
         <FeatureSpotlight feature={latestFeature} lang={lang} />
 
         {loading && (
@@ -490,9 +496,11 @@ export default function App() {
             {t(lang).allLoaded}
           </div>
         )}
-        <div style={{ marginTop: 22, fontSize: 11, color: '#1e293b', letterSpacing: 1,
-          borderTop: '1px solid #1e293b', paddingTop: 14 }}>
-          {t(lang).footer}
+        <div style={{ marginTop: 22, fontSize: 12, color: '#94a3b8', letterSpacing: 0.2,
+          borderTop: '1px solid #1e293b', paddingTop: 14, lineHeight: 1.8 }}>
+          <div>{t(lang).footer}</div>
+          <div style={{ marginTop: 8 }}><strong>{t(lang).arxivAcknowledgementLabel}:</strong>{' '}
+            {t(lang).arxivAcknowledgement}</div>
         </div>
       </div>
 

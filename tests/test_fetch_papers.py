@@ -9,6 +9,7 @@ import fetch_papers
 from fetch_papers import (
     build_query,
     fetch_arxiv,
+    fetch_arxiv_ids,
     get_retry_max,
     keyword_match,
     assign_category,
@@ -128,19 +129,19 @@ class TestExtractOrgs:
 
     def test_single_author_no_affiliation(self):
         entry = make_entry([("Alice", "")])
-        assert extract_orgs(entry) == "Alice"
+        assert extract_orgs(entry) == ""
 
     def test_two_authors_no_affiliation(self):
         entry = make_entry([("Alice", ""), ("Bob", "")])
-        assert extract_orgs(entry) == "Alice / Bob"
+        assert extract_orgs(entry) == ""
 
     def test_three_authors_no_affiliation(self):
         entry = make_entry([("A", ""), ("B", ""), ("C", "")])
-        assert extract_orgs(entry) == "A / B / C"
+        assert extract_orgs(entry) == ""
 
     def test_four_or_more_authors_et_al(self):
         entry = make_entry([("A", ""), ("B", ""), ("C", ""), ("D", "")])
-        assert extract_orgs(entry) == "A et al."
+        assert extract_orgs(entry) == ""
 
     def test_affiliation_truncated_at_60_chars(self):
         long_affil = "X" * 80
@@ -192,6 +193,11 @@ class TestParseAtom:
     def test_url_format(self):
         paper = parse_atom(SAMPLE_ATOM)[0]
         assert paper["url"] == "https://arxiv.org/abs/2601.12345v1"
+
+    def test_missing_affiliation_has_no_org_provenance(self):
+        paper = parse_atom(SAMPLE_ATOM)[0]
+        assert paper["org"] == ""
+        assert paper["orgSource"] is None
 
     def test_date_formatted(self):
         paper = parse_atom(SAMPLE_ATOM)[0]
@@ -252,6 +258,20 @@ class TestFetchArxiv:
 
         assert len(attempts) == 2
         assert result[0]["id"] == "2601.12345v1"
+
+    def test_fetches_related_ids_in_one_request(self, monkeypatch):
+        urls = []
+        monkeypatch.setattr(
+            fetch_papers.urllib.request,
+            "urlopen",
+            lambda req, timeout: (urls.append(req.full_url) or DummyResponse(SAMPLE_ATOM)),
+        )
+
+        result = fetch_arxiv_ids(["2601.12345", "2401.00001"])
+
+        assert len(urls) == 1
+        assert "id_list=2601.12345%2C2401.00001" in urls[0]
+        assert result[0]["title"] == "Test Paper Title"
 
     def test_retries_urlerror_wrapped_connection_error(self, monkeypatch):
         attempts = []

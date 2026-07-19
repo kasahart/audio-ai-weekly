@@ -5,13 +5,16 @@ Analyze each paper in Japanese from six perspectives using the configured AI pro
 """
 
 import json
+import re
 import time
+import unicodedata
 from pathlib import Path
 
 import yaml
 from openai import APIError, OpenAI
 
 from model_utils import build_chat_kwargs, create_client, get_ai_config
+from fetch_papers import fetch_arxiv_ids
 
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
@@ -136,13 +139,90 @@ def chunk_papers(papers: list[dict], batch_size: int) -> list[list[dict]]:
     ]
 
 
-def build_next_reads(items: list[dict]) -> list[dict]:
-    result = []
-    for item in items:
-        arxiv_id = item.get("id")
-        url = f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else None
-        result.append({"label": item.get("label", ""), "url": url})
-    return result
+ARXIV_ID_RE = re.compile(
+    r"^(?:\d{4}\.\d{4,5}|[a-z][a-z0-9.-]*/\d{7})(?:v\d+)?$", re.IGNORECASE
+)
+
+
+def normalize_arxiv_id(value) -> str | None:
+    if not isinstance(value, str):
+        return None
+    candidate = value.strip()
+    if not ARXIV_ID_RE.fullmatch(candidate):
+        return None
+    return re.sub(r"v\d+$", "", candidate, flags=re.IGNORECASE)
+
+
+def normalize_title(value) -> str:
+    if not isinstance(value, str):
+        return ""
+    value = re.sub(r"\s*\(\d{4}\)\s*$", "", value.strip())
+    value = unicodedata.normalize("NFKC", value).casefold()
+    return " ".join(re.findall(r"\w+", value, flags=re.UNICODE))
+
+
+def verify_related_papers(
+    candidates_by_paper: dict[str, list[dict]], fetcher=fetch_arxiv_ids
+) -> dict[str, list[dict]]:
+    """Fail closed unless candidate IDs and titles match official arXiv metadata."""
+    valid_ids = sorted(
+        {
+            arxiv_id
+            for items in candidates_by_paper.values()
+            for item in items
+            if isinstance(item, dict)
+            for arxiv_id in [normalize_arxiv_id(item.get("id"))]
+            if arxiv_id
+        }
+    )
+    verified = {paper_id: [] for paper_id in candidates_by_paper}
+    if not valid_ids:
+        return verified
+    try:
+        official_papers = fetcher(valid_ids)
+    except Exception as exc:
+        print(
+            "  [warn] Official arXiv related-paper verification unavailable; "
+            f"publishing no related-paper links ({type(exc).__name__}: {exc})"
+        )
+        return verified
+    official_by_id = {
+        normalized: paper
+        for paper in official_papers
+        for normalized in [normalize_arxiv_id(paper.get("id"))]
+        if normalized
+    }
+    for paper_id, items in candidates_by_paper.items():
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            arxiv_id = normalize_arxiv_id(item.get("id"))
+            official = official_by_id.get(arxiv_id)
+            if not arxiv_id or not official:
+                continue
+            if normalize_title(item.get("label")) != normalize_title(
+                official.get("title")
+            ):
+                continue
+            year = str(official.get("published_iso", ""))[:4]
+            title = official["title"].strip()
+            verified[paper_id].append(
+                {
+                    "label": f"{title} ({year})" if year.isdigit() else title,
+                    "arxivId": arxiv_id,
+                    "url": f"https://arxiv.org/abs/{arxiv_id}",
+                    "verified": True,
+                    "source": "arxiv_api",
+                }
+            )
+    return verified
+
+
+def trusted_affiliation(paper: dict) -> tuple[str, str | None]:
+    """Return only affiliations explicitly sourced from arXiv metadata."""
+    if paper.get("orgSource") == "arxiv_affiliation" and paper.get("org"):
+        return str(paper["org"]), "arxiv_affiliation"
+    return "", None
 
 
 def main():
@@ -159,6 +239,7 @@ def main():
     clients = {}
     _, cfg = get_ai_config(SETTINGS, providers[0])
     analyzed = []
+    next_read_candidates = {}
     batches = chunk_papers(papers, cfg["batch_size"])
     last_request_at = {provider: None for provider in providers}
     active_provider_index = 0
@@ -195,6 +276,11 @@ def main():
 
         for paper in batch:
             result = batch_results[paper["id"]]
+            raw_candidates = result.get("nextReads", [])
+            next_read_candidates[paper["id"]] = (
+                raw_candidates if isinstance(raw_candidates, list) else []
+            )
+            org, org_source = trusted_affiliation(paper)
             analyzed.append(
                 {
                     "id": paper["id"],
@@ -202,7 +288,8 @@ def main():
                     "title": paper["title"],
                     "titleJa": result.get("titleJa", paper["title"]),
                     "authors": paper.get("authors", []),
-                    "org": result.get("org") or paper.get("org", ""),
+                    "org": org,
+                    "orgSource": org_source,
                     "abstract": paper.get("abstract", ""),
                     "comment": paper.get("comment"),
                     "journalRef": paper.get("journalRef"),
@@ -224,12 +311,16 @@ def main():
                     "discussion": result.get("discussion", ""),
                     "discussionEn": result.get("discussionEn") or "",
                     "abstractJa": result.get("abstractJa", ""),
-                    "nextReads": build_next_reads(result.get("nextReads", [])),
+                    "nextReads": [],
                 }
             )
             for field in ("taskEn", "whatEn", "novelEn", "methodEn", "validationEn", "discussionEn"):
                 if not analyzed[-1].get(field):
                     analyzed[-1].pop(field, None)
+
+    verified_next_reads = verify_related_papers(next_read_candidates)
+    for paper in analyzed:
+        paper["nextReads"] = verified_next_reads.get(paper["id"], [])
 
     out_path = ROOT / "data" / "analyzed_papers.json"
     out_path.write_text(json.dumps(analyzed, ensure_ascii=False, indent=2))

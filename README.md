@@ -1,6 +1,19 @@
-# Audio Research Weekly — Automated Update System
+# Audio AI Weekly / 音響AI週報 — Automated Update System
 
 This system automatically collects and analyzes papers from the arXiv `cs.SD` and `eess.AS` categories every Friday and publishes the results on GitHub Pages.
+
+Published site: https://kasahart.github.io/audio-ai-weekly/
+
+Official acknowledgement required by the [arXiv brand guidelines](https://info.arxiv.org/brand/brand-guidelines.html):
+
+> Thank you to arXiv for use of its open access interoperability. This service was not reviewed or approved by, nor does it necessarily express or reflect the policies or opinions of, arXiv.
+
+Weekly summaries are **AI-generated from titles and abstracts · not human-reviewed**
+and may contain mistranslations, inaccurate summaries, or overgeneralizations.
+Consult the original paper for research decisions. Long-form features are
+**AI-generated from titles and abstracts · machine-checked for source and
+translation consistency · not human-reviewed**; those automated checks are not
+human fact-checking.
 
 ## Display language and data schema
 
@@ -69,7 +82,7 @@ python scripts/fetch_papers.py --dry-run # Test arXiv retrieval
 
 ### 4. Run manually
 
-Open the **Actions** tab, select **Weekly arXiv Update**, and choose **Run workflow**.
+Open the **Actions** tab, select **Weekly Audio AI Update**, and choose **Run workflow**.
 
 For a deep-dive preview, first restore published weekly JSON into `data/`, then run:
 

@@ -46,6 +46,8 @@ describe('App feature integration', () => {
     render(<App />)
 
     expect(await screen.findByRole('heading', { name: FEATURE.title })).toBeInTheDocument()
+    expect(screen.getByText('AI生成（タイトル・抄録ベース）・人手未校閲')).toBeInTheDocument()
+    expect(screen.getByText(/Thank you to arXiv for use of its open access interoperability/)).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith('./data/features/index.json')
   })
 

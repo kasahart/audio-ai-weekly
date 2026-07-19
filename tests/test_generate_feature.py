@@ -587,7 +587,7 @@ def model_settings(retry_max=3):
     return {
         "ai": {"provider": "test"},
         "test": {
-            "model": "gpt-4o",
+            "model": "gpt-4.1",
             "retry_max": retry_max,
             "retry_interval": 0,
             "min_request_interval": 0,

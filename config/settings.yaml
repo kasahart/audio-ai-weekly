@@ -12,15 +12,16 @@ arxiv:
   request_timeout: 30       # API request timeout in seconds
   retry_max: 3              # Maximum API attempts
   retry_interval: 5.0       # Initial retry interval in seconds
-  user_agent: "arxiv-weekly-report/1.0 (github.com/kasahart/arxiv-weekly)"
+  user_agent: "audio-ai-weekly/1.0 (github.com/kasahart/audio-ai-weekly)"
   page_size: 100             # Papers requested per arXiv API page
+  id_verification_batch_size: 50 # Related-paper IDs verified per API request
   max_authors: 5             # Authors retained in published data
   max_affiliation_length: 60
   retryable_http_statuses: [429, 500, 502, 503, 504]
 
 # External metadata API settings
 metadata:
-  user_agent: "arxiv-weekly/1.0"
+  user_agent: "audio-ai-weekly/1.0 (github.com/kasahart/audio-ai-weekly)"
   request_timeout: 10
   arxiv_request_timeout: 15
   paper_interval: 0.5

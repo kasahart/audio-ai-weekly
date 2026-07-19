@@ -18,7 +18,13 @@ from typing import Any
 
 DEFAULT_INPUT = Path("data/features")
 DEFAULT_OUTPUT = Path("web/public/features")
-DEFAULT_SITE_URL = "https://kasahart.github.io/arxiv-weekly"
+DEFAULT_SITE_URL = "https://kasahart.github.io/audio-ai-weekly"
+SITE_NAME = "Audio AI Weekly"
+ARXIV_ACKNOWLEDGEMENT = (
+    "Thank you to arXiv for use of its open access interoperability. This service "
+    "was not reviewed or approved by, nor does it necessarily express or reflect "
+    "the policies or opinions of, arXiv."
+)
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SOURCE_ID_RE = re.compile(r"^S[1-9][0-9]*$")
 JAPANESE_CHAR_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
@@ -364,7 +370,7 @@ STYLE = """
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Mono","Space Mono",ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.8}
 a{color:var(--accent)}.shell{width:min(960px,calc(100% - 32px));margin:auto}.nav{display:flex;justify-content:space-between;gap:16px;padding:24px 0;color:var(--muted)}.nav a{text-decoration:none;display:inline-flex;align-items:center;min-height:28px}.hero{padding:72px 0 44px;border-bottom:1px solid var(--line)}
 .badge{display:inline-block;padding:4px 9px;border:1px solid var(--feature);border-radius:3px;color:var(--feature);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}.badge.debate{border-color:var(--accent);color:var(--accent)}h1{font-size:clamp(2.1rem,6vw,4.2rem);line-height:1.14;margin:.5em 0 .3em;letter-spacing:-.04em}h2{font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.4;margin-top:2.3em}.dek{font-size:1.08rem;color:#cbd5e1;max-width:52rem}.meta{display:flex;flex-wrap:wrap;gap:10px 24px;color:var(--muted);font-size:.88rem}.language-switch{display:flex;align-items:center;gap:8px;margin-left:auto}.language-switch a,.language-switch span{min-height:28px;display:inline-flex;align-items:center}.language-switch [aria-current="page"]{color:var(--accent);font-weight:700}
-main{padding:30px 0 90px}.perspectives{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:40px 0}.card,.summary,.source{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px}.card h3{margin-top:0;color:var(--feature)}.article-section{max-width:780px;margin:0 auto}.article-section p{font-size:1rem}.citations{white-space:nowrap;font-size:.75rem;margin-left:.35rem}.citations a{display:inline-flex;align-items:center;justify-content:center;min-width:24px;min-height:24px;text-decoration:none;margin-right:.2rem}.summary{margin:40px 0 64px;border-color:var(--accent);background:var(--deep)}.summary h2{margin-top:0}.sources{margin-top:64px}.source{margin:10px 0}.source-title{font-weight:700}.source-meta,.primary-links{color:var(--muted);font-size:.82rem}.primary-links a{display:inline-flex;align-items:center;min-height:28px;margin-right:1rem}.archive-grid{display:grid;gap:12px;padding:40px 0 90px}.archive-card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:24px}.archive-card:hover{border-color:var(--feature)}.archive-card h2{margin:.35em 0 .1em}.archive-card p{color:#cbd5e1}.footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--muted)}
+main{padding:30px 0 90px}.perspectives{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:40px 0}.card,.summary,.source{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px}.card h3{margin-top:0;color:var(--feature)}.article-section{max-width:780px;margin:0 auto}.article-section p{font-size:1rem}.citations{white-space:nowrap;font-size:.75rem;margin-left:.35rem}.citations a{display:inline-flex;align-items:center;justify-content:center;min-width:24px;min-height:24px;text-decoration:none;margin-right:.2rem}.summary{margin:40px 0 64px;border-color:var(--accent);background:var(--deep)}.summary h2{margin-top:0}.sources{margin-top:64px}.source{margin:10px 0}.source-title{font-weight:700}.source-meta,.primary-links{color:var(--muted);font-size:.82rem}.primary-links a{display:inline-flex;align-items:center;min-height:28px;margin-right:1rem}.archive-grid{display:grid;gap:12px;padding:40px 0 40px}.archive-card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:24px}.archive-card:hover{border-color:var(--feature)}.archive-card h2{margin:.35em 0 .1em}.archive-card p{color:#cbd5e1}.disclosure{margin:28px 0;padding:16px;border:1px solid #334155;border-left:4px solid var(--accent);border-radius:3px;color:var(--muted);font-size:.86rem}.disclosure strong{color:#cbd5e1}.footer{border-top:1px solid var(--line);padding:30px 0 60px;color:var(--muted);font-size:.82rem}
 @media(max-width:720px){.perspectives{grid-template-columns:1fr}.hero{padding-top:40px}.shell{width:min(100% - 22px,960px)}}
 """
 
@@ -397,7 +403,7 @@ def _document_head(
 <link rel="alternate" hreflang="ja" href="{_escape(japanese_url)}"><link rel="alternate" hreflang="en" href="{_escape(english_url)}"><link rel="alternate" hreflang="x-default" href="{_escape(japanese_url)}">
 <meta property="og:type" content="article"><meta property="og:title" content="{_escape(title)}">
 <meta property="og:description" content="{_escape(description)}"><meta property="og:url" content="{_escape(canonical_url)}">
-<meta property="og:site_name" content="Audio Research Weekly"><meta name="twitter:card" content="summary">
+<meta property="og:site_name" content="Audio AI Weekly"><meta name="twitter:card" content="summary">
 <script type="application/ld+json">{_json_for_script(json_ld)}</script><style>{STYLE}</style></head>"""
 
 
@@ -490,11 +496,11 @@ def render_feature_page(
         "dateModified": feature.get("generatedAt", feature["date"]),
         "inLanguage": language,
         "mainEntityOfPage": canonical_url,
-        "publisher": {"@type": "Organization", "name": "Audio Research Weekly"},
+        "publisher": {"@type": "Organization", "name": SITE_NAME},
         "citation": [source["url"] for source in feature["sources"]],
     }
     head = _document_head(
-        title=f"{title} | Audio Research Weekly",
+        title=f"{title} | {SITE_NAME}",
         description=description,
         canonical_url=canonical_url,
         json_ld=json_ld,
@@ -551,7 +557,10 @@ def render_feature_page(
         home_link = '<a href="../../?lang=ja">← 音響AI週報</a>'
         archive_link = '<a href="../">特集一覧</a>'
         language_switch = '<span aria-current="page">JA</span><span>/</span><a href="./en/" hreflang="en">EN</a>'
-        meta = f"""<span>{_escape(feature['date'])}</span><span>約 {_escape(feature['readTimeMinutes'])} 分</span><span>出典 {len(feature['sources'])} 件</span><span>AI生成・自動検証</span>"""
+        meta = f"""<span>{_escape(feature['date'])}</span><span>約 {_escape(feature['readTimeMinutes'])} 分</span><span>出典 {len(feature['sources'])} 件</span>"""
+        disclosure = "AI生成（タイトル・抄録ベース）・出典と翻訳の機械的整合性チェック済み・人手未校閲"
+        caution = "誤訳、誤要約、過度な一般化を含む可能性があります。研究上の判断は原論文で確認してください。"
+        acknowledgement_label = "arXiv公式英文（原文）"
         sources_heading = "一次資料（原題）"
         sources_note = "本文は以下の arXiv 論文のタイトルとアブストラクトに基づき、出典 ID を段落ごとに付与しています。論文タイトルは原題のまま掲載しています。"
         footer = '<a href="../">特集一覧へ</a> · <a href="../../?lang=ja">週報へ戻る</a>'
@@ -564,7 +573,10 @@ def render_feature_page(
             if isinstance(feature.get("readTimeMinutesEn"), int)
             else "English summary"
         )
-        meta = f"""<span>{_escape(feature['date'])}</span><span>{english_reading}</span><span>{len(feature['sources'])} primary sources</span><span>AI-generated · auto-verified</span>"""
+        meta = f"""<span>{_escape(feature['date'])}</span><span>{english_reading}</span><span>{len(feature['sources'])} primary sources</span>"""
+        disclosure = "AI-generated from titles and abstracts · machine-checked for source and translation consistency · not human-reviewed"
+        caution = "May contain mistranslations, inaccurate summaries, or overgeneralizations; consult the original papers for research decisions."
+        acknowledgement_label = "Official arXiv statement"
         sources_heading = "Primary sources"
         sources_note = (
             "This article is grounded in the titles and abstracts of the following "
@@ -577,10 +589,10 @@ def render_feature_page(
     return f"""{head}<body><div class="shell"><nav class="nav">{home_link}{archive_link}<span class="language-switch" aria-label="Language">{language_switch}</span></nav></div>
 <header class="hero"><div class="shell"><span class="badge {_escape(feature['type'])}">{_escape(kind)}</span>
 <h1>{_escape(title)}</h1><p class="dek">{_escape(description)}</p>
-<div class="meta">{meta}</div></div></header>
+<div class="meta">{meta}</div><aside class="disclosure"><strong>{_escape(disclosure)}</strong><br>{_escape(caution)}</aside></div></header>
 <main class="shell">{main_content}
 <section class="sources"><h2>{sources_heading}</h2><p class="dek">{sources_note}</p>{sources}</section></main>
-<footer class="footer"><div class="shell">{footer}</div></footer></body></html>"""
+<footer class="footer"><div class="shell">{footer}<div class="disclosure"><strong>{_escape(acknowledgement_label)}:</strong><br>{_escape(ARXIV_ACKNOWLEDGEMENT)}</div></div></footer></body></html>"""
 
 
 def render_archive_page(
@@ -596,7 +608,7 @@ def render_archive_page(
         if language == "ja"
         else "Twice-monthly features explaining audio and speech AI research from primary sources."
     )
-    page_name = "Audio Research Weekly 特集" if language == "ja" else "Audio Research Weekly Features"
+    page_name = "音響AI週報 特集" if language == "ja" else "Audio AI Weekly Features"
     json_ld = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
@@ -617,7 +629,7 @@ def render_archive_page(
         ],
     }
     head = _document_head(
-        title=("特集 | Audio Research Weekly" if language == "ja" else "Features | Audio Research Weekly"),
+        title=("特集 | 音響AI週報" if language == "ja" else "Features | Audio AI Weekly"),
         description=description,
         canonical_url=canonical_url,
         json_ld=json_ld,
@@ -637,16 +649,21 @@ def render_archive_page(
         language_switch = '<span aria-current="page">JA</span><span>/</span><a href="./en/" hreflang="en">EN</a>'
         badge = "特集"
         heading = "研究の現在地を、一次資料から。"
+        disclosure = "AI生成（タイトル・抄録ベース）・出典と翻訳の機械的整合性チェック済み・人手未校閲"
+        acknowledgement_label = "arXiv公式英文（原文）"
         footer = '<a href="../?lang=ja">週報へ戻る</a>'
     else:
         home_link = '<a href="../../?lang=en">← Audio AI Weekly</a>'
         language_switch = '<a href="../" hreflang="ja">JA</a><span>/</span><span aria-current="page">EN</span>'
         badge = "Features"
         heading = "Research context, grounded in primary sources."
+        disclosure = "AI-generated from titles and abstracts · machine-checked for source and translation consistency · not human-reviewed"
+        acknowledgement_label = "Official arXiv statement"
         footer = '<a href="../../?lang=en">Back to weekly report</a>'
     return f"""{head}<body><div class="shell"><nav class="nav">{home_link}<span class="language-switch" aria-label="Language">{language_switch}</span></nav>
 <header class="hero"><span class="badge">{badge}</span><h1>{heading}</h1><p class="dek">{_escape(description)}</p></header>
-<main class="archive-grid">{cards}</main><footer class="footer">{footer}</footer></div></body></html>"""
+<aside class="disclosure"><strong>{_escape(disclosure)}</strong></aside>
+<main class="archive-grid">{cards}</main><footer class="footer">{footer}<div class="disclosure"><strong>{_escape(acknowledgement_label)}:</strong><br>{_escape(ARXIV_ACKNOWLEDGEMENT)}</div></footer></div></body></html>"""
 
 
 def _atomic_write_text(path: Path, content: str) -> None:

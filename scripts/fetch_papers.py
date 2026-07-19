@@ -101,6 +101,47 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     raise RuntimeError("fetch_arxiv retry loop exited unexpectedly")
 
 
+def fetch_arxiv_ids(arxiv_ids: list[str]) -> list[dict]:
+    """Fetch official metadata for arXiv IDs in rate-limited batches."""
+    if not arxiv_ids:
+        return []
+    cfg = SETTINGS["arxiv"]
+    retry_max = get_retry_max(cfg)
+    retry_interval = cfg.get("retry_interval", 5.0)
+    timeout = cfg.get("request_timeout", 30)
+    batch_size = max(1, int(cfg.get("id_verification_batch_size", 50)))
+    papers = []
+    for offset in range(0, len(arxiv_ids), batch_size):
+        batch_ids = arxiv_ids[offset : offset + batch_size]
+        params = urllib.parse.urlencode(
+            {"id_list": ",".join(batch_ids), "max_results": len(batch_ids)}
+        )
+        url = f"https://export.arxiv.org/api/query?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": cfg["user_agent"]})
+        for attempt in range(retry_max):
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    papers.extend(parse_atom(resp.read()))
+                break
+            except (
+                urllib.error.HTTPError,
+                urllib.error.URLError,
+                TimeoutError,
+                socket.timeout,
+            ) as exc:
+                if not is_retryable_fetch_error(exc) or attempt == retry_max - 1:
+                    raise
+                wait_seconds = retry_interval * (2**attempt)
+                print(
+                    f"[fetch] Related-paper verification failed "
+                    f"({type(exc).__name__}: {exc}). Retrying in {wait_seconds:.1f}s ..."
+                )
+                time.sleep(wait_seconds)
+        if offset + batch_size < len(arxiv_ids):
+            time.sleep(cfg["request_interval"])
+    return papers
+
+
 def parse_atom(xml_bytes: bytes) -> list[dict]:
     root = ET.fromstring(xml_bytes)
     papers = []
@@ -140,6 +181,7 @@ def parse_atom(xml_bytes: bytes) -> list[dict]:
                 "published_iso": published,
                 "authors": authors[: SETTINGS["arxiv"]["max_authors"]],
                 "org": orgs,
+                "orgSource": "arxiv_affiliation" if orgs else None,
                 "url": f"https://arxiv.org/abs/{arxiv_id}",
                 "categories": [
                     t.get("term", "") for t in entry.findall("atom:category", NS)
@@ -158,16 +200,7 @@ def extract_orgs(entry) -> str:
     affiliations = [a for a in affiliations if a]
     if affiliations:
         return affiliations[0][: SETTINGS["arxiv"]["max_affiliation_length"]]
-    # Fall back to a compact author-based label when affiliations are absent.
-    authors = [
-        a.findtext("atom:name", "", NS) for a in entry.findall("atom:author", NS)
-    ]
-    if len(authors) == 1:
-        return authors[0]
-    elif len(authors) <= 3:
-        return " / ".join(authors)
-    else:
-        return f"{authors[0]} et al."
+    return ""
 
 
 def is_within_window(

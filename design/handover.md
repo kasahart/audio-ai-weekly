@@ -1,5 +1,5 @@
 # GitHub Copilot への引き継ぎ書
-## 音声研究週報 自動更新システム
+## Audio AI Weekly / 音響AI週報
 
 **作成日:** 2026年4月25日　　**引き継ぎ元:** Claude Sonnet 4.6　　**引き継ぎ先:** GitHub Copilot
 
@@ -15,7 +15,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| プロジェクト名 | 音声研究週報 自動更新システム |
+| プロジェクト名 | Audio AI Weekly / 音響AI週報 |
 | 対象分野 | 音の基盤モデル・音源分離・異音検知 |
 | 更新頻度 | 毎週金曜日 21:00 JST（GitHub Actions cron） |
 | AI 解析エンジン | GitHub Models（Claude）／ `GITHUB_TOKEN` 認証 |
@@ -98,12 +98,12 @@ python scripts/fetch_papers.py --dry-run
 
 **☐ Actions タブから手動実行（workflow_dispatch）し、全ジョブが green になることを確認**
 ```
-Actions → Weekly arXiv Update → Run workflow → Run workflow
+Actions → Weekly Audio AI Update → Run workflow → Run workflow
 ```
 
 **☐ GitHub Pages の URL でフロントエンドが表示されることを確認する**
 ```
-https://YOUR_ORG.github.io/arxiv-weekly/
+https://YOUR_ORG.github.io/audio-ai-weekly/
 ```
 
 ---

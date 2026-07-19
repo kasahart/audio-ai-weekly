@@ -200,7 +200,11 @@ def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_pat
     assert "\\u003cscript\\u003e" in japanese
     assert "\\u003cscript\\u003e" in english
     assert "分野を解く" in japanese
-    assert "AI生成・自動検証" in japanese
+    assert "出典と翻訳の機械的整合性チェック済み・人手未校閲" in japanese
+    assert "machine-checked for source and translation consistency" in english
+    assert render_features.ARXIV_ACKNOWLEDGEMENT in japanese
+    assert render_features.ARXIV_ACKNOWLEDGEMENT in english
+    assert "Audio AI Weekly" in english
     assert "関連リソース:" in japanese
     assert "一次資料（原題）" in japanese
     assert feature["titleEn"] not in japanese
@@ -230,6 +234,8 @@ def test_render_all_writes_escaped_article_archive_seo_and_primary_links(tmp_pat
     assert "Source Separation &lt;script&gt;" not in japanese_archive
     assert "Source Separation &lt;script&gt;" in english_archive
     assert "音源分離 &lt;script&gt;" not in english_archive
+    assert render_features.ARXIV_ACKNOWLEDGEMENT in japanese_archive
+    assert render_features.ARXIV_ACKNOWLEDGEMENT in english_archive
     assert not list(output_dir.rglob(".*.html.*"))
 
 

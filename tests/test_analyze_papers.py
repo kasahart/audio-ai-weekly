@@ -8,10 +8,12 @@ import pytest
 from analyze_papers import (
     BATCH_PROMPT_TEMPLATE,
     SYSTEM_PROMPT,
-    build_next_reads,
     chunk_papers,
     get_analysis_providers,
     sanitize_json_text,
+    normalize_arxiv_id,
+    verify_related_papers,
+    trusted_affiliation,
 )
 
 
@@ -145,6 +147,20 @@ def test_prompt_requests_bilingual_analysis_fields():
         assert field in BATCH_PROMPT_TEMPLATE
 
 
+def test_prompt_forbids_affiliation_generation_and_overclaiming():
+    assert '"org"' not in BATCH_PROMPT_TEMPLATE
+    assert "Never generate or infer author affiliations" in SYSTEM_PROMPT
+    assert "authors claim" in SYSTEM_PROMPT
+    assert "paper body, tables, figures" in SYSTEM_PROMPT
+
+
+def test_only_arxiv_sourced_affiliation_is_trusted():
+    assert trusted_affiliation({"org": "Model guess"}) == ("", None)
+    assert trusted_affiliation(
+        {"org": "Official Lab", "orgSource": "arxiv_affiliation"}
+    ) == ("Official Lab", "arxiv_affiliation")
+
+
 class TestChunkPapers:
     PAPERS = [{"id": str(i)} for i in range(7)]
 
@@ -195,32 +211,60 @@ class TestSanitizeJsonText:
         assert sanitize_json_text("") == ""
 
 
-class TestBuildNextReads:
-    def test_with_arxiv_id(self):
-        items = [{"label": "Paper A (2024)", "id": "2401.12345"}]
-        result = build_next_reads(items)
-        assert result[0]["label"] == "Paper A (2024)"
-        assert result[0]["url"] == "https://arxiv.org/abs/2401.12345"
+class TestVerifyRelatedPapers:
+    OFFICIAL = [{
+        "id": "2401.12345v2",
+        "title": "A Real Related Paper",
+        "published_iso": "2024-01-20T00:00:00Z",
+    }]
 
-    def test_with_null_id(self):
-        items = [{"label": "Paper B (2023)", "id": None}]
-        result = build_next_reads(items)
-        assert result[0]["url"] is None
+    def test_matching_id_and_title_uses_official_metadata(self):
+        result = verify_related_papers(
+            {"source": [{"label": "A Real Related Paper (2024)", "id": "2401.12345"}]},
+            fetcher=lambda ids: self.OFFICIAL,
+        )["source"]
+        assert result == [{
+            "label": "A Real Related Paper (2024)",
+            "arxivId": "2401.12345",
+            "url": "https://arxiv.org/abs/2401.12345",
+            "verified": True,
+            "source": "arxiv_api",
+        }]
 
-    def test_multiple_items(self):
-        items = [
-            {"label": "A", "id": "2401.00001"},
-            {"label": "B", "id": None},
-        ]
-        result = build_next_reads(items)
-        assert len(result) == 2
-        assert result[0]["url"] == "https://arxiv.org/abs/2401.00001"
-        assert result[1]["url"] is None
+    def test_version_suffix_is_normalized(self):
+        assert normalize_arxiv_id("2401.12345v3") == "2401.12345"
 
-    def test_empty_list(self):
-        assert build_next_reads([]) == []
+    @pytest.mark.parametrize("bad_id", ["bad", "2401.1", None])
+    def test_invalid_or_null_id_is_not_fetched(self, bad_id):
+        calls = []
+        result = verify_related_papers(
+            {"source": [{"label": "A Real Related Paper", "id": bad_id}]},
+            fetcher=lambda ids: calls.append(ids) or self.OFFICIAL,
+        )
+        assert result["source"] == []
+        assert calls == []
 
-    def test_missing_label_defaults_empty(self):
-        items = [{"id": "2401.00001"}]
-        result = build_next_reads(items)
-        assert result[0]["label"] == ""
+    def test_nonexistent_id_is_not_published(self):
+        result = verify_related_papers(
+            {"source": [{"label": "Missing", "id": "2401.00001"}]},
+            fetcher=lambda ids: [],
+        )
+        assert result["source"] == []
+
+    def test_title_mismatch_is_not_published(self):
+        result = verify_related_papers(
+            {"source": [{"label": "Different Paper (2024)", "id": "2401.12345"}]},
+            fetcher=lambda ids: self.OFFICIAL,
+        )
+        assert result["source"] == []
+
+    def test_api_failure_fails_closed_with_warning(self, capsys):
+        def fail(_ids):
+            raise TimeoutError("temporary")
+
+        result = verify_related_papers(
+            {"source": [{"label": "A Real Related Paper", "id": "2401.12345"}]},
+            fetcher=fail,
+        )
+        assert result["source"] == []
+        assert "publishing no related-paper links" in capsys.readouterr().out

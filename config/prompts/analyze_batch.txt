@@ -4,15 +4,14 @@ Return one result per paper ID as a JSON object only. Use the paper ID as each k
 {
   "<paper_id>": {
     "titleJa": "Natural Japanese title translation",
-    "org": "Primary author affiliation",
     "task": "One- or two-word task classification",
     "taskEn": "English task classification",
     "proposedMethod": "Named method or abbreviation, or null",
     "datasets": ["Dataset name 1", "Dataset name 2"],
     "what": "One- or two-sentence overview",
     "whatEn": "Equivalent English overview",
-    "novel": "One- or two-sentence novelty summary",
-    "novelEn": "Equivalent English novelty summary",
+    "novel": "One- or two-sentence summary of novelty claimed by the authors in the abstract",
+    "novelEn": "Equivalent English summary framed as author-claimed novelty",
     "method": "One- or two-sentence technical summary",
     "methodEn": "Equivalent English technical summary",
     "validation": "One- or two-sentence validation summary",
@@ -26,6 +25,6 @@ Return one result per paper ID as a JSON object only. Use the paper ID as each k
   }
 }
 
-Return three or four nextReads entries per paper, keep their labels as original English paper titles, and use null for unknown arXiv IDs. List up to five training or evaluation datasets. Write base fields in Japanese and fields ending in En in English.
+Return three or four nextReads candidates per paper, keep their labels as original English paper titles, and use null for unknown arXiv IDs. Candidates will be published only after their IDs and titles are matched against official arXiv API metadata. List up to five training or evaluation datasets. Write base fields in Japanese and fields ending in En in English.
 
 {{papers}}

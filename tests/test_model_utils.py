@@ -147,10 +147,10 @@ class TestProviderConfiguration:
 
 class TestSupportsCustomTemperature:
     def test_gpt4o_supports_temperature(self):
-        assert supports_custom_temperature("gpt-4o") is True
+        assert supports_custom_temperature("gpt-4.1") is True
 
     def test_gpt4o_mini_supports_temperature(self):
-        assert supports_custom_temperature("gpt-4o-mini") is True
+        assert supports_custom_temperature("gpt-4.1-mini") is True
 
     def test_gpt5_does_not_support_temperature(self):
         assert supports_custom_temperature("gpt-5") is False
@@ -171,7 +171,7 @@ class TestSupportsCustomTemperature:
 
 class TestBuildTokenKwargs:
     def test_gpt4o_uses_max_tokens(self):
-        result = build_token_kwargs("gpt-4o", 1000)
+        result = build_token_kwargs("gpt-4.1", 1000)
         assert result == {"max_tokens": 1000}
 
     def test_gpt5_uses_max_completion_tokens(self):
@@ -197,11 +197,11 @@ class TestBuildTokenKwargs:
 
 class TestBuildChatKwargs:
     def test_gpt4o_with_temperature(self):
-        result = build_chat_kwargs("gpt-4o", 1000, temperature=0.3)
+        result = build_chat_kwargs("gpt-4.1", 1000, temperature=0.3)
         assert result == {"max_tokens": 1000, "temperature": 0.3}
 
     def test_gpt4o_without_temperature(self):
-        result = build_chat_kwargs("gpt-4o", 1000)
+        result = build_chat_kwargs("gpt-4.1", 1000)
         assert result == {"max_tokens": 1000}
         assert "temperature" not in result
 
@@ -221,7 +221,7 @@ class TestBuildChatKwargs:
         }
 
     def test_temperature_none_is_excluded(self):
-        result = build_chat_kwargs("gpt-4o", 800, temperature=None)
+        result = build_chat_kwargs("gpt-4.1", 800, temperature=None)
         assert "temperature" not in result
 
     def test_gemini3_uses_default_temperature_and_medium_reasoning(self):
@@ -236,6 +236,6 @@ class TestBuildChatKwargs:
 
     def test_non_reasoning_model_ignores_reasoning_override(self):
         result = build_chat_kwargs(
-            "gpt-4o", 1000, temperature=0.3, reasoning_effort="low"
+            "gpt-4.1", 1000, temperature=0.3, reasoning_effort="low"
         )
         assert result == {"max_tokens": 1000, "temperature": 0.3}

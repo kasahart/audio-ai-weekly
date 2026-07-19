@@ -96,7 +96,9 @@ export default function PaperCard({ paper, cat, lang = 'ja', animDelay = 0, cita
         </div>
 
         {/* Title and author row */}
-        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{paper.org}</div>
+        {paper.orgSource === 'arxiv_affiliation' && paper.org && (
+          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{paper.org}</div>
+        )}
         <div style={{ fontSize: 'clamp(13px,3.5vw,15px)', color: '#e2e8f0', lineHeight: 1.6, fontWeight: 500 }}>{paper.title}</div>
         {lang === 'ja' && <div style={{ fontSize: 'clamp(12px,3vw,14px)', color: '#94a3b8', lineHeight: 1.6, marginTop: 3 }}>{paper.titleJa || paper.title}</div>}
         {paper.authors?.length > 0 && (
@@ -140,7 +142,7 @@ export default function PaperCard({ paper, cat, lang = 'ja', animDelay = 0, cita
               </div>
               {sm.key === 'nextReads' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {(paper.nextReads ?? []).map((r, i) => (
+                  {(paper.nextReads ?? []).filter(r => r?.verified === true).map((r, i) => (
                     <div key={i} style={{ fontSize: 13, lineHeight: 1.7 }}>
                       <span style={{ color: sm.color, marginRight: 5, opacity: 0.6 }}>-</span>
                       {r.url

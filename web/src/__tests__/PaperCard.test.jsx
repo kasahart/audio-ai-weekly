@@ -23,6 +23,23 @@ describe('PaperCard localization', () => {
     expect(screen.getByText('English explanation.')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Original English Title'))
     expect(screen.getByText('Original English abstract.')).toBeInTheDocument()
-    expect(screen.getByText(/What is it\?/)).toBeInTheDocument()
+    expect(screen.getByText(/Overview \(abstract-based\)/)).toBeInTheDocument()
+    expect(screen.getByText('Original abstract')).toBeInTheDocument()
+  })
+
+  it('shows only sourced affiliations and verified related papers', () => {
+    const trustPaper = {
+      ...paper,
+      org: 'Untrusted legacy value',
+      nextReads: [
+        { label: 'Legacy candidate', url: 'https://arxiv.org/abs/2401.00001' },
+        { label: 'Verified candidate', url: 'https://arxiv.org/abs/2401.00002', verified: true },
+      ],
+    }
+    render(<PaperCard paper={trustPaper} cat={cat} lang="en" />)
+    fireEvent.click(screen.getByText('Original English Title'))
+    expect(screen.queryByText('Untrusted legacy value')).not.toBeInTheDocument()
+    expect(screen.queryByText('Legacy candidate')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Verified candidate' })).toBeInTheDocument()
   })
 })
