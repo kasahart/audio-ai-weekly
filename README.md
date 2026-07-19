@@ -145,3 +145,7 @@ scripts/
   test_connection.py # Test connectivity
 web/                 # React frontend
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
