@@ -11,7 +11,6 @@ const DATA_BASE = './data'
 const LS_FAVORITES = 'arxiv-favorites'
 const LS_READ      = 'arxiv-read'
 const EXTERNAL_API = {
-  openAlexEmail: 'beinvoked66@gmail.com',
   openAlexBatchSize: 5,
   openAlexBatchIntervalMs: 500,
   huggingFaceBatchSize: 10,
@@ -37,7 +36,7 @@ async function fetchCitationsForPapers(papers) {
       const id = p.id.split('v')[0]
       try {
         const url = `https://api.openalex.org/works/https://doi.org/10.48550/arXiv.${id}` +
-                    `?select=cited_by_count&mailto=${EXTERNAL_API.openAlexEmail}`
+                    '?select=cited_by_count'
         const res = await fetch(url)
         if (!res.ok) return
         const data = await res.json()
