@@ -25,6 +25,9 @@ concurrency:
   queue: max
   cancel-in-progress: false
 
+env:
+  ARXIV_CONTACT: ${{ secrets.ARXIV_CONTACT }}
+
 jobs:
   # Step 1: Retrieve papers from arXiv.
   fetch:
