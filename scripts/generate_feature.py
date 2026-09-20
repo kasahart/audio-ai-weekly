@@ -237,9 +237,32 @@ def _has_valid_primary_link(paper: Mapping[str, Any]) -> bool:
     )
 
 
-def _candidate_payload(papers: list[dict], limit: int) -> list[dict]:
+def _candidate_payload(
+    papers: list[dict], limit: int, linked_candidate_min: int = 0
+) -> list[dict]:
+    selected = list(papers[:limit])
+    linked_count = sum(_has_valid_primary_link(paper) for paper in selected)
+    if linked_count < linked_candidate_min:
+        missing_linked = [
+            paper
+            for paper in papers[limit:]
+            if _has_valid_primary_link(paper)
+        ][: linked_candidate_min - linked_count]
+        for linked_paper in missing_linked:
+            replace_at = next(
+                (
+                    index
+                    for index in range(len(selected) - 1, -1, -1)
+                    if not _has_valid_primary_link(selected[index])
+                ),
+                None,
+            )
+            if replace_at is None:
+                break
+            selected[replace_at] = linked_paper
+
     result = []
-    for paper in papers[:limit]:
+    for paper in selected:
         result.append(
             {
                 "id": canonical_arxiv_id(paper.get("id")),
@@ -1030,7 +1053,11 @@ def choose_topic(
     feature_index: dict,
     cfg: Mapping[str, Any] = FEATURE_SETTINGS,
 ) -> dict:
-    candidate_payload = _candidate_payload(candidates, cfg["topic_candidate_limit"])
+    candidate_payload = _candidate_payload(
+        candidates,
+        cfg["topic_candidate_limit"],
+        int(cfg.get("primary_link_min", 0)),
+    )
     prior_topics = [
         {
             "topicKey": entry.get("topicKey"),

@@ -317,6 +317,45 @@ def test_candidate_payload_exposes_only_validated_link_availability():
     assert "projectPage" not in payload[0]
 
 
+def test_choose_topic_preserves_late_linked_candidate_when_limiting_payload():
+    candidates = [
+        {
+            "id": f"2601.{index:05d}v1",
+            "title": f"Audio Source Separation Study {index}",
+            "abstract": "Audio source separation and foundation model evaluation.",
+            "archiveDate": "2026-07-10",
+            "githubRepo": (
+                "https://github.com/example/late-linked-paper"
+                if index == 61
+                else None
+            ),
+        }
+        for index in range(1, 62)
+    ]
+    plan = make_plan()
+    plan["archivePaperIds"][-1] = "2601.00061"
+
+    class CapturingModel:
+        def __init__(self):
+            self.payload = None
+
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            self.payload = payload
+            return plan
+
+    model = CapturingModel()
+
+    selected = generate_feature.choose_topic(
+        model, "primer", candidates, {"features": []}
+    )
+
+    payload_candidates = model.payload["archiveCandidates"]
+    assert len(payload_candidates) == 40
+    assert payload_candidates[-1]["id"] == "2601.00061"
+    assert payload_candidates[-1]["hasPrimaryLink"] is True
+    assert selected["archivePaperIds"][-1] == "2601.00061"
+
+
 def test_topic_plan_rejects_query_syntax_and_duplicate_topic():
     unsafe = make_plan()
     unsafe["searchTerms"] = ['audio" OR cat:cs.CV']
