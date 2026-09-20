@@ -1,5 +1,7 @@
 import sys
 import urllib.error
+
+import pytest
 from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
@@ -291,3 +293,58 @@ class TestFetchArxiv:
 
         assert len(attempts) == 2
         assert result[0]["id"] == "2601.12345v1"
+
+
+@pytest.mark.parametrize("fetch_by_id", [False, True])
+@pytest.mark.parametrize(
+    "override,contact,expected",
+    [
+        (None, None, "audio-ai-weekly/1.0"),
+        ("  ", "  ", "audio-ai-weekly/1.0"),
+        ("test-client/2.0", None, "test-client/2.0"),
+        (None, "https://example.org/contact", "audio-ai-weekly/1.0 (https://example.org/contact)"),
+        ("test-client/2.0", "operator@example.org", "test-client/2.0 (operator@example.org)"),
+    ],
+)
+def test_request_headers(monkeypatch, capsys, fetch_by_id, override, contact, expected):
+    for name, value in [("ARXIV_USER_AGENT", override), ("ARXIV_CONTACT", contact)]:
+        monkeypatch.delenv(name, raising=False)
+        if value is not None:
+            monkeypatch.setenv(name, value)
+    requests = []
+
+    def fake_urlopen(req, timeout):
+        requests.append(req)
+        assert req.get_header("User-agent") == expected
+        assert req.get_header("Accept") == (
+            "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
+        )
+        return DummyResponse(SAMPLE_ATOM)
+
+    monkeypatch.setattr(fetch_papers.urllib.request, "urlopen", fake_urlopen)
+    if fetch_by_id:
+        result = fetch_arxiv_ids(["2601.12345"])
+    else:
+        result = fetch_arxiv("cat:cs.SD", 0, 1)
+    assert len(requests) == 1
+    assert result[0]["id"] == "2601.12345v1"
+    output = capsys.readouterr()
+    assert output.out == output.err == ""
+
+
+@pytest.mark.parametrize("fetch_by_id", [False, True])
+def test_does_not_retry_http_406(monkeypatch, fetch_by_id):
+    requests = []
+
+    def fake_urlopen(req, timeout):
+        requests.append(req)
+        raise urllib.error.HTTPError(req.full_url, 406, "Not Acceptable", None, None)
+
+    monkeypatch.setattr(fetch_papers.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(urllib.error.HTTPError) as error:
+        if fetch_by_id:
+            fetch_arxiv_ids(["2601.12345"])
+        else:
+            fetch_arxiv("cat:cs.SD", 0, 1)
+    assert error.value.code == 406
+    assert len(requests) == 1
