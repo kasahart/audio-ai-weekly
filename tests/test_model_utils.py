@@ -239,3 +239,13 @@ class TestBuildChatKwargs:
             "gpt-4.1", 1000, temperature=0.3, reasoning_effort="low"
         )
         assert result == {"max_tokens": 1000, "temperature": 0.3}
+
+
+@pytest.mark.parametrize("endpoint", ["https://models.github.ai/inference", "https://models.inference.ai.azure.com"])
+def test_retired_endpoint_rejected_before_client_creation(monkeypatch, endpoint):
+    def forbidden_client(**kwargs):
+        pytest.fail("Retired service must not receive a client or credentials")
+    monkeypatch.setattr(model_utils, "OpenAI", forbidden_client)
+    settings = {**SETTINGS, "github_models": {**SETTINGS["github_models"], "endpoint": endpoint}}
+    with pytest.raises(RuntimeError, match="retired"):
+        create_client(settings, {})

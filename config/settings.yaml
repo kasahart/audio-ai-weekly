@@ -29,7 +29,7 @@ metadata:
 
 # Analysis and report-generation settings
 analysis:
-  fallback_providers: [github_models]
+  fallback_providers: []  # GitHub Models inference retired on 2026-07-30
   batch_size: 3
   batch_max_tokens: 12000
   reasoning_effort: low
@@ -96,7 +96,7 @@ features:
   model_retry_max: 6
   model_retry_interval: 15.0
   model_retry_max_interval: 240.0
-  model_fallback_providers: [github_models]
+  model_fallback_providers: []  # GitHub Models inference retired on 2026-07-30
   model_fallback_after: 2
   selection_validation_retry_max: 3
   english_generation_validation_retry_max: 3

@@ -132,21 +132,24 @@ Select one provider for all AI processing in `config/settings.yaml`:
 
 ```yaml
 ai:
-  provider: github_models  # or gemini
+  provider: gemini
 ```
 
 For local runs, export the API key used by the selected provider:
 
 ```bash
-export GITHUB_TOKEN="..."     # github_models
 export GEMINI_API_KEY="..."   # gemini
 ```
 
-The repository currently selects Gemini; GitHub Models remains available by changing
-`ai.provider`. Gemini uses its official
+GitHub Models [was retired on July 30, 2026](https://docs.github.com/en/github-models),
+including its inference API. Its former endpoint is rejected before sending credentials.
+The default fallback list is empty. If Gemini fails, publication stops safely.
+An alternative provider requires its own credentials.
+
+The repository currently selects Gemini. Gemini uses its official
 [OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
 with [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash);
-the existing `openai` SDK is used for both providers. When selecting Gemini in GitHub
+the existing `openai` SDK is used for the compatible API. When selecting Gemini in GitHub
 Actions, add `GEMINI_API_KEY` under **Settings → Secrets and variables → Actions
 → New repository secret**. `GITHUB_TOKEN` remains in use for deployment.
 

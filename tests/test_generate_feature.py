@@ -887,7 +887,7 @@ def test_feature_model_budgets_cover_reasoning_and_structured_output():
     assert cfg["grounding_patch_reasoning_effort"] == "low"
     assert cfg["feature_translation_reasoning_effort"] == "low"
     assert cfg["translation_verification_reasoning_effort"] == "low"
-    assert cfg["model_fallback_providers"] == ["github_models"]
+    assert cfg["model_fallback_providers"] == []
     assert cfg["model_fallback_after"] == 2
     assert cfg["short_body_expansion_retry_max"] >= 2
     assert cfg["verification_revision_max"] == 4

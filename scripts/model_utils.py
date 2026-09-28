@@ -2,6 +2,7 @@
 
 import os
 import threading
+from urllib.parse import urlparse
 from collections.abc import Mapping
 
 from openai import OpenAI
@@ -119,6 +120,13 @@ def create_client(
 ) -> OpenAI:
     """Create an OpenAI client for the provider selected in settings."""
     provider, config = get_ai_config(settings, provider)
+    if urlparse(config["endpoint"]).hostname in {
+        "models.github.ai", "models.inference.ai.azure.com"
+    }:
+        raise RuntimeError(
+            "GitHub Models inference was retired on July 30, 2026; "
+            "configure an available AI provider instead"
+        )
     request_limit = config.get("request_limit_per_run")
     client_options = {
         "base_url": config["endpoint"],
