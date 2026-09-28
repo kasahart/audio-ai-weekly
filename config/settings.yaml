@@ -29,7 +29,7 @@ metadata:
 
 # Analysis and report-generation settings
 analysis:
-  fallback_providers: [github_models]
+  fallback_providers: [gemini_flash_lite]
   batch_size: 3
   batch_max_tokens: 12000
   reasoning_effort: low
@@ -96,7 +96,7 @@ features:
   model_retry_max: 6
   model_retry_interval: 15.0
   model_retry_max_interval: 240.0
-  model_fallback_providers: [github_models]
+  model_fallback_providers: [gemini_flash_lite]
   model_fallback_after: 2
   selection_validation_retry_max: 3
   english_generation_validation_retry_max: 3
@@ -122,7 +122,7 @@ backfill:
 
 # AI provider selection
 ai:
-  provider: "gemini"  # "github_models" or "gemini"
+  provider: "gemini"  # Primary Gemini model
 
 # GitHub Models settings
 github_models:
@@ -141,12 +141,13 @@ github_models:
   retry_interval: 5.0       # Retry interval in seconds
 
 # Gemini settings (OpenAI-compatible API)
-gemini:
+gemini: &gemini_defaults
   api_key_env: "GEMINI_API_KEY"
   endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
   model: "gemini-3.5-flash"
   # 200-paper catch-up / 3-paper analysis batches require up to 67 requests;
   # leave additional budget for transient retries.
+  request_budget_group: gemini
   request_limit_per_run: 80
   feature_max_tokens: 64000
   max_tokens: 16000
@@ -155,6 +156,11 @@ gemini:
   min_request_interval: 60.0
   retry_max: 3
   retry_interval: 5.0       # Retry interval in seconds
+
+# Same credential and shared run budget; a different model, not a new account.
+gemini_flash_lite:
+  <<: *gemini_defaults
+  model: "gemini-3.5-flash-lite"
 
 # Data output settings
 data:

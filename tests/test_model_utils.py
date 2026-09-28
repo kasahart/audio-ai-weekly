@@ -49,6 +49,7 @@ class TestProviderConfiguration:
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "model": "gemini-3.5-flash",
+            "request_budget_group": "gemini",
             "request_limit_per_run": 80,
             "feature_max_tokens": 64000,
             "max_tokens": 16000,
@@ -239,3 +240,28 @@ class TestBuildChatKwargs:
             "gpt-4.1", 1000, temperature=0.3, reasoning_effort="low"
         )
         assert result == {"max_tokens": 1000, "temperature": 0.3}
+
+
+@pytest.mark.parametrize("endpoint", ["https://models.github.ai/inference", "https://models.inference.ai.azure.com"])
+def test_retired_endpoint_rejected_before_client_creation(monkeypatch, endpoint):
+    def forbidden_client(**kwargs):
+        pytest.fail("Retired service must not receive a client or credentials")
+    monkeypatch.setattr(model_utils, "OpenAI", forbidden_client)
+    settings = {**SETTINGS, "github_models": {**SETTINGS["github_models"], "endpoint": endpoint}}
+    with pytest.raises(RuntimeError, match="retired"):
+        create_client(settings, {})
+
+
+def test_gemini_fallback_shares_budget_and_credentials(monkeypatch):
+    from types import SimpleNamespace
+    root = Path(__file__).parent.parent
+    settings = yaml.safe_load((root / "config/settings.yaml").read_text())
+    monkeypatch.setattr(model_utils, "_REQUEST_BUDGETS", {})
+    monkeypatch.setattr(model_utils, "OpenAI", lambda **kwargs: SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: "ok"))))
+    clients = [create_client(settings, {"GEMINI_API_KEY":"test"}, provider=name) for name in ["gemini", "gemini_flash_lite"]]
+    assert clients[0]._budget is clients[1]._budget
+    clients[0]._budget.used = 79
+    clients[1].chat.completions.create()
+    with pytest.raises(RequestLimitExceeded):
+        clients[0].chat.completions.create()
+    assert settings["analysis"]["fallback_providers"] == ["gemini_flash_lite"]

@@ -132,21 +132,36 @@ Select one provider for all AI processing in `config/settings.yaml`:
 
 ```yaml
 ai:
-  provider: github_models  # or gemini
+  provider: gemini
 ```
 
 For local runs, export the API key used by the selected provider:
 
 ```bash
-export GITHUB_TOKEN="..."     # github_models
 export GEMINI_API_KEY="..."   # gemini
 ```
 
-The repository currently selects Gemini; GitHub Models remains available by changing
-`ai.provider`. Gemini uses its official
+GitHub Models [was retired on July 30, 2026](https://docs.github.com/en/github-models),
+including its inference API. Its former endpoint is rejected before sending credentials.
+Weekly analysis and feature generation fall back to `gemini-3.5-flash-lite`
+after the configured retries/threshold. Both models use `GEMINI_API_KEY` and
+share the process-wide 80-request budget. This is an availability attempt, not
+a guarantee: both models returned 503 in recent probes. If both fail, generation
+stops rather than publishing fabricated results. Trend and enrichment processing
+retain their existing primary-model retries and optional-output behavior.
+
+Analysis retries use exponential backoff with jitter (30 seconds, capped at
+300 seconds); features use exponential backoff (15 seconds, capped at 240).
+Trend generation also backs off exponentially and respects the model interval.
+The Google AI Studio endpoint is not configured with a selectable region.
+Regional routing would require a separately configured Vertex AI deployment;
+changing the runner region does not select the model-serving region.
+Do not configure retired Gemini 1.5 models as fallbacks.
+
+The repository currently selects Gemini. Gemini uses its official
 [OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
 with [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash);
-the existing `openai` SDK is used for both providers. When selecting Gemini in GitHub
+the existing `openai` SDK is used for the compatible API. When selecting Gemini in GitHub
 Actions, add `GEMINI_API_KEY` under **Settings → Secrets and variables → Actions
 → New repository secret**. `GITHUB_TOKEN` remains in use for deployment.
 

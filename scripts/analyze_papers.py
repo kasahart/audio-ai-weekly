@@ -106,7 +106,12 @@ def analyze_batch(
                 ),
             )
             last_request_at = time.monotonic()
-            choice = resp.choices[0]
+            choices = getattr(resp, "choices", None)
+            if not isinstance(choices, list) or not choices:
+                raise RuntimeError(
+                    f"AI analysis with {provider} returned an invalid completion response"
+                )
+            choice = choices[0]
             raw = sanitize_json_text(choice.message.content or "")
             if not raw:
                 usage = getattr(resp, "usage", None)

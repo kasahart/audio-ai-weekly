@@ -332,3 +332,13 @@ class TestVerifyRelatedPapers:
         )
         assert result["source"] == []
         assert "publishing no related-paper links" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("response", ["private response body", None, type("Response", (), {"choices": []})()])
+def test_invalid_completion_is_safe_provider_failure(monkeypatch, response):
+    from types import SimpleNamespace
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: response)))
+    monkeypatch.setattr(analyze_papers, "wait_for_next_request", lambda *args: None)
+    with pytest.raises(RuntimeError, match="invalid completion response") as exc:
+        analyze_papers.analyze_batch(client, [{"id":"1234.5678", "title":"Title", "abstract":"Abstract"}], None)
+    assert "private response body" not in str(exc.value)
