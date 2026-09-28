@@ -1,56 +1,36 @@
-name: Gemini API comparison probe
+name: GitHub Models probe
 on:
   workflow_dispatch:
 permissions:
   contents: read
+  models: read
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 5
     steps:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Compare native and compatible APIs
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - run: pip install openai
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           python - <<'PYCODE'
-          import os, json, time, urllib.request, urllib.error
-          key = os.environ['GEMINI_API_KEY']
-          model = 'gemini-3.8-flash'
-          prompt = 'Return a JSON object with status equal to ok.'
-          cases = [
-           ('native', 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent', {'x-goog-api-key':key}, {'contents':[{'role':'user','parts':[{'text':prompt}]}], 'generationConfig':{'responseMimeType':'application/json','thinkingConfig':{'thinkingLevel':'LOW'},'maxOutputTokens':12000}}),
-           ('openai', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {'Authorization':'Bearer '+key}, {'model':model,'messages':[{'role':'user','content':prompt}], 'response_format':{'type':'json_object'},'reasoning_effort':'low','max_tokens':12000})
-          ]
-          for i, (kind,url,headers,payload) in enumerate(cases):
-              if i: time.sleep(65)
-              result = {'api':kind,'model':model}
-              start = time.monotonic()
+          import os,json
+          from openai import OpenAI
+          client=OpenAI(api_key=os.environ['GITHUB_TOKEN'],base_url='https://models.github.ai/inference',max_retries=0,timeout=60)
+          try:
+              raw=client.chat.completions.with_raw_response.create(model='openai/gpt-4.1',messages=[{'role':'user','content':'Return JSON with status ok.'}],response_format={'type':'json_object'},max_tokens=100)
+              parsed=raw.parse()
+              result={'status':raw.status_code,'content_type':raw.headers.get('content-type'),'parsed_type':type(parsed).__name__}
               try:
-                  req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={**headers,'Content-Type':'application/json'})
-                  with urllib.request.urlopen(req, timeout=90) as response:
-                      result['http_status'] = response.status
-                      data = json.load(response)
-                  if kind == 'native':
-                      content = ''.join(p.get('text','') for p in data['candidates'][0]['content']['parts'] if not p.get('thought'))
-                  else:
-                      content = data['choices'][0]['message']['content']
-                  result['json_valid'] = json.loads(content).get('status') == 'ok'
-              except urllib.error.HTTPError as exc:
-                  result['http_status'] = exc.code
-                  try:
-                      body = json.loads(exc.read())
-                      if isinstance(body,list): body = body[0]
-                      error = body.get('error',{})
-                      status = error.get('status')
-                      result['error_status'] = status if status in ['UNAVAILABLE','RESOURCE_EXHAUSTED','INVALID_ARGUMENT','PERMISSION_DENIED','NOT_FOUND','UNAUTHENTICATED'] else 'OTHER'
-                      result['high_demand'] = 'high demand' in error.get('message','').lower()
-                  except Exception:
-                      result['error_body_json'] = False
-              except Exception as exc:
-                  result['error_type'] = type(exc).__name__
-              result['elapsed_seconds'] = round(time.monotonic()-start,2)
-              print('PROBE_RESULT '+json.dumps(result),flush=True)
+                  data=json.loads(raw.text)
+                  result['json_object']=isinstance(data,dict)
+                  result['has_choices']=isinstance(data,dict) and bool(data.get('choices'))
+              except Exception:
+                  result['json_object']=False
+              print('PROBE_RESULT '+json.dumps(result))
+          except Exception as exc:
+              print('PROBE_RESULT '+json.dumps({'error_type':type(exc).__name__,'status':getattr(exc,'status_code',None)}))
           PYCODE
