@@ -117,6 +117,14 @@ Do not put personal contact details in tracked configuration, workflow files, or
 documentation. These values are sent to arXiv in the User-Agent header; the fetcher
 does not log the headers.
 
+Category searches and related-paper ID lookups use an explicit default TLS
+context with ALPN set to `http/1.1` and post-handshake client authentication
+disabled. This handshake succeeded in local tests where arXiv returned empty
+HTTP 406 responses to the implicit urllib context. Server certificate and
+hostname verification remain enabled; this does not bypass TLS verification.
+It is a compatibility workaround, not a guarantee against arXiv outages or
+rate limits. Fetch failures still stop the run rather than publish empty data.
+
 ## AI Provider
 
 Select one provider for all AI processing in `config/settings.yaml`:

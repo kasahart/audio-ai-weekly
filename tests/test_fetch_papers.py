@@ -1,4 +1,5 @@
 import sys
+import ssl
 import urllib.error
 
 import pytest
@@ -248,7 +249,7 @@ class TestFetchArxiv:
         monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "retry_interval", 0.0)
         monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "request_timeout", 1)
 
-        def fake_urlopen(req, timeout):
+        def fake_urlopen(req, timeout, *, context):
             attempts.append(timeout)
             if len(attempts) == 1:
                 raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", None, None)
@@ -266,7 +267,7 @@ class TestFetchArxiv:
         monkeypatch.setattr(
             fetch_papers.urllib.request,
             "urlopen",
-            lambda req, timeout: (urls.append(req.full_url) or DummyResponse(SAMPLE_ATOM)),
+            lambda req, timeout, *, context: (urls.append(req.full_url) or DummyResponse(SAMPLE_ATOM)),
         )
 
         result = fetch_arxiv_ids(["2601.12345", "2401.00001"])
@@ -281,7 +282,7 @@ class TestFetchArxiv:
         monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "retry_interval", 0.0)
         monkeypatch.setitem(fetch_papers.SETTINGS["arxiv"], "request_timeout", 1)
 
-        def fake_urlopen(_req, timeout):
+        def fake_urlopen(_req, timeout, *, context):
             attempts.append(timeout)
             if len(attempts) == 1:
                 raise urllib.error.URLError(ConnectionResetError("connection reset"))
@@ -313,8 +314,12 @@ def test_request_headers(monkeypatch, capsys, fetch_by_id, override, contact, ex
             monkeypatch.setenv(name, value)
     requests = []
 
-    def fake_urlopen(req, timeout):
+    def fake_urlopen(req, timeout, *, context):
         requests.append(req)
+        assert isinstance(context, ssl.SSLContext)
+        assert context.verify_mode == ssl.CERT_REQUIRED
+        assert context.check_hostname is True
+        assert context.post_handshake_auth is False
         assert req.get_header("User-agent") == expected
         assert req.get_header("Accept") == (
             "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
@@ -336,7 +341,7 @@ def test_request_headers(monkeypatch, capsys, fetch_by_id, override, contact, ex
 def test_does_not_retry_http_406(monkeypatch, fetch_by_id):
     requests = []
 
-    def fake_urlopen(req, timeout):
+    def fake_urlopen(req, timeout, *, context):
         requests.append(req)
         raise urllib.error.HTTPError(req.full_url, 406, "Not Acceptable", None, None)
 

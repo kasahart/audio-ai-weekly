@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import socket
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -78,6 +79,16 @@ def arxiv_request_headers() -> dict[str, str]:
     }
 
 
+def arxiv_ssl_context() -> ssl.SSLContext:
+    """Use the tested TLS handshake while retaining server certificate checks."""
+    context = ssl.create_default_context()
+    context.set_alpn_protocols(["http/1.1"])
+    # urllib's implicit context enables PHA. Explicit contexts without that
+    # extension succeeded in local comparisons of arXiv's empty HTTP 406s.
+    context.post_handshake_auth = False
+    return context
+
+
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     cfg = SETTINGS["arxiv"]
     params = urllib.parse.urlencode(
@@ -94,10 +105,11 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
+    context = arxiv_ssl_context()
 
     for attempt in range(retry_max):
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
                 return parse_atom(resp.read())
         except (
             urllib.error.HTTPError,
@@ -125,6 +137,7 @@ def fetch_arxiv_ids(arxiv_ids: list[str]) -> list[dict]:
     retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
+    context = arxiv_ssl_context()
     batch_size = max(1, int(cfg.get("id_verification_batch_size", 50)))
     papers = []
     for offset in range(0, len(arxiv_ids), batch_size):
@@ -136,7 +149,7 @@ def fetch_arxiv_ids(arxiv_ids: list[str]) -> list[dict]:
         req = urllib.request.Request(url, headers=arxiv_request_headers())
         for attempt in range(retry_max):
             try:
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
                     papers.extend(parse_atom(resp.read()))
                 break
             except (
