@@ -1,4 +1,4 @@
-name: Gemini 3.8 connectivity probe
+name: Gemini API comparison probe
 on:
   workflow_dispatch:
 permissions:
@@ -6,29 +6,51 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install openai
-      - name: Probe Gemini without logging credentials or response bodies
+      - name: Compare native and compatible APIs
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python - <<'PYCODE'
-          import os, json
-          from openai import OpenAI, APIStatusError
-          client = OpenAI(api_key=os.environ['GEMINI_API_KEY'], base_url='https://generativelanguage.googleapis.com/v1beta/openai/', max_retries=0, timeout=90)
-          try:
-              response = client.chat.completions.create(model='gemini-3.8-flash', messages=[{'role':'user','content':'Return a JSON object with status equal to ok.'}], response_format={'type':'json_object'}, reasoning_effort='low', max_tokens=12000)
-              valid = json.loads(response.choices[0].message.content).get('status') == 'ok'
-              print(json.dumps({'model':'gemini-3.8-flash','request_succeeded':True,'json_valid':valid,'finish_reason':response.choices[0].finish_reason}))
-              if not valid: raise SystemExit(1)
-          except APIStatusError as exc:
-              print(json.dumps({'model':'gemini-3.8-flash','request_succeeded':False,'http_status':exc.status_code}))
-              raise SystemExit(1)
-          except Exception as exc:
-              print(json.dumps({'request_succeeded':False,'error_type':type(exc).__name__}))
-              raise SystemExit(1)
+          import os, json, time, urllib.request, urllib.error
+          key = os.environ['GEMINI_API_KEY']
+          model = 'gemini-3.8-flash'
+          prompt = 'Return a JSON object with status equal to ok.'
+          cases = [
+           ('native', 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent', {'x-goog-api-key':key}, {'contents':[{'role':'user','parts':[{'text':prompt}]}], 'generationConfig':{'responseMimeType':'application/json','thinkingConfig':{'thinkingLevel':'LOW'},'maxOutputTokens':12000}}),
+           ('openai', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {'Authorization':'Bearer '+key}, {'model':model,'messages':[{'role':'user','content':prompt}], 'response_format':{'type':'json_object'},'reasoning_effort':'low','max_tokens':12000})
+          ]
+          for i, (kind,url,headers,payload) in enumerate(cases):
+              if i: time.sleep(65)
+              result = {'api':kind,'model':model}
+              start = time.monotonic()
+              try:
+                  req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={**headers,'Content-Type':'application/json'})
+                  with urllib.request.urlopen(req, timeout=90) as response:
+                      result['http_status'] = response.status
+                      data = json.load(response)
+                  if kind == 'native':
+                      content = ''.join(p.get('text','') for p in data['candidates'][0]['content']['parts'] if not p.get('thought'))
+                  else:
+                      content = data['choices'][0]['message']['content']
+                  result['json_valid'] = json.loads(content).get('status') == 'ok'
+              except urllib.error.HTTPError as exc:
+                  result['http_status'] = exc.code
+                  try:
+                      body = json.loads(exc.read())
+                      if isinstance(body,list): body = body[0]
+                      error = body.get('error',{})
+                      status = error.get('status')
+                      result['error_status'] = status if status in ['UNAVAILABLE','RESOURCE_EXHAUSTED','INVALID_ARGUMENT','PERMISSION_DENIED','NOT_FOUND','UNAUTHENTICATED'] else 'OTHER'
+                      result['high_demand'] = 'high demand' in error.get('message','').lower()
+                  except Exception:
+                      result['error_body_json'] = False
+              except Exception as exc:
+                  result['error_type'] = type(exc).__name__
+              result['elapsed_seconds'] = round(time.monotonic()-start,2)
+              print('PROBE_RESULT '+json.dumps(result),flush=True)
           PYCODE
