@@ -1,9 +1,8 @@
-name: GitHub Models probe
+name: Gemini 3.5 Flash Lite connectivity probe
 on:
   workflow_dispatch:
 permissions:
   contents: read
-  models: read
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -13,24 +12,23 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install openai
-      - env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Probe Gemini without logging credentials or response bodies
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python - <<'PYCODE'
-          import os,json
-          from openai import OpenAI
-          client=OpenAI(api_key=os.environ['GITHUB_TOKEN'],base_url='https://models.github.ai/inference',max_retries=0,timeout=60)
+          import os, json
+          from openai import OpenAI, APIStatusError
+          client = OpenAI(api_key=os.environ['GEMINI_API_KEY'], base_url='https://generativelanguage.googleapis.com/v1beta/openai/', max_retries=0, timeout=90)
           try:
-              raw=client.chat.completions.with_raw_response.create(model='openai/gpt-4.1',messages=[{'role':'user','content':'Return JSON with status ok.'}],response_format={'type':'json_object'},max_tokens=100)
-              parsed=raw.parse()
-              result={'status':raw.status_code,'content_type':raw.headers.get('content-type'),'parsed_type':type(parsed).__name__}
-              try:
-                  data=json.loads(raw.text)
-                  result['json_object']=isinstance(data,dict)
-                  result['has_choices']=isinstance(data,dict) and bool(data.get('choices'))
-              except Exception:
-                  result['json_object']=False
-              print('PROBE_RESULT '+json.dumps(result))
+              response = client.chat.completions.create(model='gemini-3.5-flash-lite', messages=[{'role':'user','content':'Return a JSON object with status equal to ok.'}], response_format={'type':'json_object'}, reasoning_effort='low', max_tokens=12000)
+              valid = json.loads(response.choices[0].message.content).get('status') == 'ok'
+              print(json.dumps({'model':'gemini-3.5-flash-lite','request_succeeded':True,'json_valid':valid,'finish_reason':response.choices[0].finish_reason}))
+              if not valid: raise SystemExit(1)
+          except APIStatusError as exc:
+              print(json.dumps({'model':'gemini-3.5-flash-lite','request_succeeded':False,'http_status':exc.status_code}))
+              raise SystemExit(1)
           except Exception as exc:
-              print('PROBE_RESULT '+json.dumps({'error_type':type(exc).__name__,'status':getattr(exc,'status_code',None)}))
+              print(json.dumps({'request_succeeded':False,'error_type':type(exc).__name__}))
+              raise SystemExit(1)
           PYCODE
