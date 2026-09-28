@@ -27,5 +27,3 @@ def arxiv_ssl_context() -> ssl.SSLContext:
     # extension succeeded in local comparisons of arXiv's empty HTTP 406s.
     context.post_handshake_auth = False
     return context
-
-
