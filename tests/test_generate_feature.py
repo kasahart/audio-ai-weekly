@@ -1,6 +1,7 @@
 import json
 import math
 import sys
+import ssl
 import urllib.error
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -500,10 +501,17 @@ class DummyResponse:
         return ATOM
 
 
-def test_fetch_additional_sources_uses_atom_and_excludes_archive_ids():
+def test_fetch_additional_sources_uses_atom_and_excludes_archive_ids(monkeypatch):
+    monkeypatch.setenv("ARXIV_USER_AGENT", "feature-test/1.0")
+    monkeypatch.setenv("ARXIV_CONTACT", "operator@example.org")
     requests = []
 
-    def opener(request, timeout):
+    def opener(request, timeout, *, context):
+        assert context.verify_mode == ssl.CERT_REQUIRED
+        assert context.check_hostname is True
+        assert context.post_handshake_auth is False
+        assert request.get_header("User-agent") == "feature-test/1.0 (operator@example.org)"
+        assert "application/atom+xml" in request.get_header("Accept")
         requests.append((request.full_url, timeout))
         return DummyResponse()
 
@@ -533,7 +541,7 @@ def test_fetch_additional_sources_retries_rate_limit_with_bounded_backoff(capsys
         }
     )
 
-    def opener(request, timeout):
+    def opener(request, timeout, *, context):
         attempts.append((request.full_url, timeout))
         if len(attempts) < 4:
             raise urllib.error.HTTPError(

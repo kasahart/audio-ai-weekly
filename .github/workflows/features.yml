@@ -42,6 +42,10 @@ concurrency:
   queue: max
   cancel-in-progress: false
 
+env:
+  ARXIV_USER_AGENT: ${{ secrets.ARXIV_USER_AGENT }}
+  ARXIV_CONTACT: ${{ secrets.ARXIV_CONTACT }}
+
 jobs:
   feature:
     runs-on: ubuntu-latest

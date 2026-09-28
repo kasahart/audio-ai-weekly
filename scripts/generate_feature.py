@@ -23,6 +23,7 @@ from typing import Any, Callable, Mapping
 import yaml
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
+from arxiv_http import arxiv_request_headers, arxiv_ssl_context
 from model_utils import build_chat_kwargs, create_client, get_ai_config
 
 
@@ -492,7 +493,8 @@ def fetch_additional_arxiv_sources(
     )
     url = f"https://export.arxiv.org/api/query?{params}"
     user_agent = SETTINGS["arxiv"]["user_agent"]
-    request = urllib.request.Request(url, headers={"User-Agent": user_agent})
+    request = urllib.request.Request(url, headers=arxiv_request_headers(user_agent))
+    context = arxiv_ssl_context()
     retry_max = max(
         1, int(cfg.get("arxiv_retry_max", cfg.get("retry_max", 3)))
     )
@@ -507,7 +509,7 @@ def fetch_additional_arxiv_sources(
     retryable_statuses = list(cfg.get("retryable_http_statuses", []))
     for attempt in range(retry_max):
         try:
-            with opener(request, timeout=cfg["request_timeout"]) as response:
+            with opener(request, timeout=cfg["request_timeout"], context=context) as response:
                 parsed = parse_arxiv_atom(response.read())
             seen = {canonical_arxiv_id(value) for value in exclude_ids}
             result = []
