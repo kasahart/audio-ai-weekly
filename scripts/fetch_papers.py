@@ -6,7 +6,9 @@ Retrieve papers in target categories from the arXiv API and filter by keyword.
 
 import argparse
 import json
+import os
 import socket
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -62,6 +64,31 @@ def get_retry_max(cfg: dict) -> int:
         return 3
 
 
+def arxiv_request_headers() -> dict[str, str]:
+    """Keep optional operator contact details in the runtime environment only."""
+    user_agent = (
+        os.environ.get("ARXIV_USER_AGENT", "").strip()
+        or SETTINGS["arxiv"]["user_agent"]
+    )
+    contact = os.environ.get("ARXIV_CONTACT", "").strip()
+    if contact:
+        user_agent = f"{user_agent} ({contact})"
+    return {
+        "User-Agent": user_agent,
+        "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8",
+    }
+
+
+def arxiv_ssl_context() -> ssl.SSLContext:
+    """Use the tested TLS handshake while retaining server certificate checks."""
+    context = ssl.create_default_context()
+    context.set_alpn_protocols(["http/1.1"])
+    # urllib's implicit context enables PHA. Explicit contexts without that
+    # extension succeeded in local comparisons of arXiv's empty HTTP 406s.
+    context.post_handshake_auth = False
+    return context
+
+
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
     cfg = SETTINGS["arxiv"]
     params = urllib.parse.urlencode(
@@ -74,14 +101,15 @@ def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:
         }
     )
     url = f"https://export.arxiv.org/api/query?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": cfg["user_agent"]})
+    req = urllib.request.Request(url, headers=arxiv_request_headers())
     retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
+    context = arxiv_ssl_context()
 
     for attempt in range(retry_max):
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
                 return parse_atom(resp.read())
         except (
             urllib.error.HTTPError,
@@ -109,6 +137,7 @@ def fetch_arxiv_ids(arxiv_ids: list[str]) -> list[dict]:
     retry_max = get_retry_max(cfg)
     retry_interval = cfg.get("retry_interval", 5.0)
     timeout = cfg.get("request_timeout", 30)
+    context = arxiv_ssl_context()
     batch_size = max(1, int(cfg.get("id_verification_batch_size", 50)))
     papers = []
     for offset in range(0, len(arxiv_ids), batch_size):
@@ -117,10 +146,10 @@ def fetch_arxiv_ids(arxiv_ids: list[str]) -> list[dict]:
             {"id_list": ",".join(batch_ids), "max_results": len(batch_ids)}
         )
         url = f"https://export.arxiv.org/api/query?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": cfg["user_agent"]})
+        req = urllib.request.Request(url, headers=arxiv_request_headers())
         for attempt in range(retry_max):
             try:
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
                     papers.extend(parse_atom(resp.read()))
                 break
             except (

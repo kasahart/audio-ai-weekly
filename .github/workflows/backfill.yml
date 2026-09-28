@@ -21,6 +21,9 @@ concurrency:
   queue: max
   cancel-in-progress: false
 
+env:
+  ARXIV_CONTACT: ${{ secrets.ARXIV_CONTACT }}
+
 jobs:
   backfill:
     runs-on: ubuntu-latest

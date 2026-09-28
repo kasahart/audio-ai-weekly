@@ -95,6 +95,36 @@ or explicit article type, dry-run mode, and an explicit same-slot replacement mo
 Its scheduled run checks every Tuesday at 03:00 UTC (12:00 JST) and publishes only
 in the second and fourth Tuesday slots.
 
+## arXiv Request Identity
+
+arXiv requests explicitly accept Atom/XML and default to the generic
+`audio-ai-weekly/1.0` User-Agent. Optionally set `ARXIV_USER_AGENT` to override
+that identifier and `ARXIV_CONTACT` to append an operator contact URL or email.
+Empty values fall back to the configured User-Agent and omit the contact.
+
+For local runs, supply these as environment variables. To use them in GitHub
+Actions, add repository **Secrets** under **Settings → Secrets and variables →
+Actions**, then map them into the environment of the fetch/analysis steps (or
+workflow). Creating secrets alone does not expose them to the Python process:
+
+```yaml
+env:
+  ARXIV_USER_AGENT: ${{ secrets.ARXIV_USER_AGENT }}
+  ARXIV_CONTACT: ${{ secrets.ARXIV_CONTACT }}
+```
+
+Do not put personal contact details in tracked configuration, workflow files, or
+documentation. These values are sent to arXiv in the User-Agent header; the fetcher
+does not log the headers.
+
+Category searches and related-paper ID lookups use an explicit default TLS
+context with ALPN set to `http/1.1` and post-handshake client authentication
+disabled. This handshake succeeded in local tests where arXiv returned empty
+HTTP 406 responses to the implicit urllib context. Server certificate and
+hostname verification remain enabled; this does not bypass TLS verification.
+It is a compatibility workaround, not a guarantee against arXiv outages or
+rate limits. Fetch failures still stop the run rather than publish empty data.
+
 ## AI Provider
 
 Select one provider for all AI processing in `config/settings.yaml`:
