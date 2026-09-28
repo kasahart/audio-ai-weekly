@@ -1,257 +1,34 @@
-name: Weekly Audio AI Update
-
+name: Gemini 3.8 connectivity probe
 on:
-  schedule:
-    # Every Friday at 12:00 UTC / 21:00 JST.
-    - cron: '0 12 * * 5'
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: 'Dry run (retrieve only; do not commit)'
-        required: false
-        default: 'false'
-      target_date:
-        description: 'Reference date YYYY-MM-DD (default: today) for generating past weeks'
-        required: false
-        default: ''
-
 permissions:
-  actions: read
-  contents: write
-  models: read
-
-concurrency:
-  group: github-pages
-  queue: max
-  cancel-in-progress: false
-
-env:
-  ARXIV_USER_AGENT: ${{ secrets.ARXIV_USER_AGENT }}
-  ARXIV_CONTACT: ${{ secrets.ARXIV_CONTACT }}
-
+  contents: read
 jobs:
-  # Step 1: Retrieve papers from arXiv.
-  fetch:
+  probe:
     runs-on: ubuntu-latest
-    outputs:
-      paper_count: ${{ steps.fetch.outputs.paper_count }}
-      reference_date: ${{ steps.window.outputs.reference_date }}
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Resolve catch-up window
-        id: window
+      - run: pip install openai
+      - name: Probe Gemini without logging credentials or response bodies
         env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_DATE: ${{ github.event.inputs.target_date }}
-        run: |
-          RUN_CREATED_AT=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .created_at)
-          REF_DATE="${TARGET_DATE:-${RUN_CREATED_AT%%T*}}"
-          git fetch --no-tags origin gh-pages
-          PUBLISHED_REF=$(git rev-parse --verify origin/gh-pages)
-          git show "${PUBLISHED_REF}:data/index.json" > /tmp/existing_index.json
-          python -m json.tool /tmp/existing_index.json > /dev/null
-          python scripts/fetch_window.py \
-            --index /tmp/existing_index.json \
-            --settings config/settings.yaml \
-            --date "$REF_DATE" >> "$GITHUB_OUTPUT"
-          echo "reference_date=$REF_DATE" >> "$GITHUB_OUTPUT"
-
-      - name: Fetch papers from arXiv
-        id: fetch
-        run: |
-          python scripts/fetch_papers.py \
-            --date "${{ steps.window.outputs.reference_date }}" \
-            --lookback-days "${{ steps.window.outputs.lookback_days }}" \
-            --max-papers "${{ steps.window.outputs.max_papers }}"
-          COUNT=$(python -c "import json; print(len(json.load(open('data/raw_papers.json'))))")
-          echo "paper_count=$COUNT" >> $GITHUB_OUTPUT
-          echo "✅ Fetched $COUNT papers"
-
-      - name: Upload raw papers
-        uses: actions/upload-artifact@v4
-        with:
-          name: raw-papers
-          path: data/raw_papers.json
-          retention-days: 1
-
-  # Step 2: Analyze papers with the configured AI provider.
-  analyze:
-    needs: fetch
-    runs-on: ubuntu-latest
-    if: needs.fetch.outputs.paper_count > 0
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Download raw papers
-        uses: actions/download-artifact@v4
-        with:
-          name: raw-papers
-          path: data/
-
-      - name: Analyze papers
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python scripts/analyze_papers.py
-
-      - name: Upload analyzed papers
-        uses: actions/upload-artifact@v4
-        with:
-          name: analyzed-papers
-          path: data/analyzed_papers.json
-          retention-days: 1
-
-  # Step 3: Generate data.
-  build:
-    needs: [fetch, analyze]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Download analyzed papers
-        uses: actions/download-artifact@v4
-        with:
-          name: analyzed-papers
-          path: data/
-
-      - name: Build weekly JSON and update index
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python scripts/build_data.py --date "${{ needs.fetch.outputs.reference_date }}"
-
-      - name: Upload built data
-        uses: actions/upload-artifact@v4
-        with:
-          name: built-data
-          path: data/
-          retention-days: 1
-
-  # Step 4: Build the frontend and deploy to GitHub Pages.
-  deploy:
-    needs: build
-    if: github.event.inputs.dry_run != 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
-
-      - name: Restore published JSON from gh-pages
         run: |
-          git fetch --no-tags origin gh-pages
-          PUBLISHED_REF=$(git rev-parse --verify origin/gh-pages)
-          git cat-file -e "${PUBLISHED_REF}:data/index.json"
-
-          mapfile -t JSON_FILES < <(git ls-tree -r --name-only "$PUBLISHED_REF" -- data | grep '\.json$')
-          if [ "${#JSON_FILES[@]}" -eq 0 ]; then
-            echo "::error::No published JSON files found on gh-pages"
-            exit 1
-          fi
-
-          WEEKLY_COUNT=0
-          for file in "${JSON_FILES[@]}"; do
-            case "$file" in
-              data/index.json|data/weekly/*.json|data/features/*.json)
-                mkdir -p "$(dirname "$file")"
-                tmp="${file}.published-tmp"
-                git show "${PUBLISHED_REF}:${file}" > "$tmp"
-                python -m json.tool "$tmp" > /dev/null
-                mv "$tmp" "$file"
-                case "$file" in data/weekly/*.json) WEEKLY_COUNT=$((WEEKLY_COUNT + 1));; esac
-                ;;
-            esac
-          done
-
-          if [ "$WEEKLY_COUNT" -eq 0 ]; then
-            echo "::error::No published weekly JSON files found on gh-pages"
-            exit 1
-          fi
-          cp data/index.json /tmp/existing_index.json
-
-      - name: Download built data
-        uses: actions/download-artifact@v4
-        with:
-          name: built-data
-          path: /tmp/built-data
-
-      - name: Merge weekly data
-        run: |
-          python -m json.tool /tmp/built-data/index.json > /dev/null
-          mkdir -p data/weekly
-          find /tmp/built-data/weekly -maxdepth 1 -type f -name '*.json' -exec cp {} data/weekly/ \;
-          python3 - << 'EOF'
-          import json
-          existing = json.load(open('/tmp/existing_index.json'))
-          new = json.load(open('/tmp/built-data/index.json'))
-          merged = {w['date']: w for w in existing.get('weeks', [])}
-          for w in new.get('weeks', []):
-              merged[w['date']] = w
-          existing['weeks'] = sorted(merged.values(), key=lambda x: x['date'], reverse=True)
-          existing['generated_at'] = new.get('generated_at', '')
-          existing['categories'] = new.get('categories', existing.get('categories', []))
-          json.dump(existing, open('data/index.json', 'w'), ensure_ascii=False, indent=2)
-          print(f"[deploy] Merged index: {len(existing['weeks'])} weeks")
-          EOF
-
-      - name: Copy published JSON
-        run: |
-          mkdir -p web/public/data/weekly web/public/data/features
-          install -m 0644 data/index.json web/public/data/index.json
-          find data/weekly -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/weekly/ \;
-          if [ -d data/features ]; then
-            find data/features -maxdepth 1 -type f -name '*.json' -exec cp {} web/public/data/features/ \;
-          fi
-
-      - name: Render static feature pages
-        run: python scripts/render_features.py
-
-      - name: Build frontend
-        working-directory: web
-        run: |
-          npm ci
-          npm test -- --run
-          npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: web/dist
-          publish_branch: gh-pages
-          commit_message: "deploy: weekly update"
+          python - <<'PYCODE'
+          import os, json
+          from openai import OpenAI, APIStatusError
+          client = OpenAI(api_key=os.environ['GEMINI_API_KEY'], base_url='https://generativelanguage.googleapis.com/v1beta/openai/', max_retries=0, timeout=90)
+          try:
+              response = client.chat.completions.create(model='gemini-3.8-flash', messages=[{'role':'user','content':'Return a JSON object with status equal to ok.'}], response_format={'type':'json_object'}, reasoning_effort='low', max_tokens=12000)
+              valid = json.loads(response.choices[0].message.content).get('status') == 'ok'
+              print(json.dumps({'model':'gemini-3.8-flash','request_succeeded':True,'json_valid':valid,'finish_reason':response.choices[0].finish_reason}))
+              if not valid: raise SystemExit(1)
+          except APIStatusError as exc:
+              print(json.dumps({'model':'gemini-3.8-flash','request_succeeded':False,'http_status':exc.status_code}))
+              raise SystemExit(1)
+          except Exception as exc:
+              print(json.dumps({'request_succeeded':False,'error_type':type(exc).__name__}))
+              raise SystemExit(1)
+          PYCODE
