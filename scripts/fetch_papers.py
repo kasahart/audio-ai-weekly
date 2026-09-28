@@ -6,9 +6,7 @@ Retrieve papers in target categories from the arXiv API and filter by keyword.
 
 import argparse
 import json
-import os
 import socket
-import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -18,6 +16,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
+
+from arxiv_http import arxiv_request_headers as shared_arxiv_request_headers
+from arxiv_http import arxiv_ssl_context
 
 ROOT = Path(__file__).parent.parent
 SETTINGS = yaml.safe_load((ROOT / "config/settings.yaml").read_text())
@@ -65,28 +66,7 @@ def get_retry_max(cfg: dict) -> int:
 
 
 def arxiv_request_headers() -> dict[str, str]:
-    """Keep optional operator contact details in the runtime environment only."""
-    user_agent = (
-        os.environ.get("ARXIV_USER_AGENT", "").strip()
-        or SETTINGS["arxiv"]["user_agent"]
-    )
-    contact = os.environ.get("ARXIV_CONTACT", "").strip()
-    if contact:
-        user_agent = f"{user_agent} ({contact})"
-    return {
-        "User-Agent": user_agent,
-        "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8",
-    }
-
-
-def arxiv_ssl_context() -> ssl.SSLContext:
-    """Use the tested TLS handshake while retaining server certificate checks."""
-    context = ssl.create_default_context()
-    context.set_alpn_protocols(["http/1.1"])
-    # urllib's implicit context enables PHA. Explicit contexts without that
-    # extension succeeded in local comparisons of arXiv's empty HTTP 406s.
-    context.post_handshake_auth = False
-    return context
+    return shared_arxiv_request_headers(SETTINGS["arxiv"]["user_agent"])
 
 
 def fetch_arxiv(query: str, start: int, max_results: int) -> list[dict]:

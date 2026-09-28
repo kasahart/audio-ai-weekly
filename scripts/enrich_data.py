@@ -12,6 +12,7 @@ from pathlib import Path
 import yaml
 from openai import OpenAI
 
+from arxiv_http import arxiv_request_headers, arxiv_ssl_context
 from model_utils import build_chat_kwargs, create_client, get_ai_config
 from analyze_papers import wait_for_next_request
 from build_data import generate_trend
@@ -33,8 +34,10 @@ def fetch_arxiv_meta(arxiv_id: str) -> dict:
     clean_id = arxiv_id.split("v")[0]
     url = f"https://export.arxiv.org/api/query?id_list={clean_id}&max_results=1"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": METADATA_SETTINGS["user_agent"]})
-        with urllib.request.urlopen(req, timeout=METADATA_SETTINGS["arxiv_request_timeout"]) as r:
+        req = urllib.request.Request(url, headers=arxiv_request_headers(METADATA_SETTINGS["user_agent"]))
+        with urllib.request.urlopen(
+            req, timeout=METADATA_SETTINGS["arxiv_request_timeout"], context=arxiv_ssl_context()
+        ) as r:
             tree = ET.fromstring(r.read())
         entry = tree.find("atom:entry", NS)
         if entry is None:
