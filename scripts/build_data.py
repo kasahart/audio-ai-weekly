@@ -72,7 +72,13 @@ def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[
             raise ValueError("trend response does not match the expected JSON shape")
         except Exception as e:
             last_request_at = request_started_at
-            print(f"  [warn] trend generation error (attempt {attempt + 1}): {e}")
+            print(f"  [warn] trend generation error (attempt {attempt + 1}): {type(e).__name__}")
+            if attempt + 1 < cfg["retry_max"]:
+                delay = min(
+                    cfg.get("retry_interval", 5.0) * (2 ** attempt),
+                    cfg.get("retry_max_interval", 300.0),
+                )
+                time.sleep(delay)
     return [], []
 
 

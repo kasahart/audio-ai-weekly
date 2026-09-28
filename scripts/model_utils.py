@@ -139,7 +139,7 @@ def create_client(
         **client_options,
     )
     if request_limit is not None:
-        client = BudgetedOpenAI(client, get_request_budget(provider, request_limit))
+        client = BudgetedOpenAI(client, get_request_budget(config.get("request_budget_group", provider), request_limit))
     return client
 
 

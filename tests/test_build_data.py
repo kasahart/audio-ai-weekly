@@ -88,7 +88,7 @@ def test_generate_trend_waits_for_provider_interval_before_retry(monkeypatch):
             "min_request_interval": 60.0,
         },
     })
-    monotonic_values = iter([100.0, 100.0, 160.0])
+    monotonic_values = iter([100.0, 105.0, 160.0])
     monkeypatch.setattr(build_data.time, "monotonic", lambda: next(monotonic_values))
     sleeps = []
     monkeypatch.setattr(build_data.time, "sleep", sleeps.append)
@@ -96,7 +96,7 @@ def test_generate_trend_waits_for_provider_interval_before_retry(monkeypatch):
     result = build_data.generate_trend(client, [{"title": "T", "what": "W"}])
 
     assert result == (["日1", "日2", "日3"], ["E1", "E2", "E3"])
-    assert sleeps == [60.0]
+    assert sleeps == [5.0, 55.0]
 
 
 def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_path):
@@ -169,3 +169,15 @@ class TestGroupByCategory:
         assert "color" in cat
         assert "papers" in cat
         assert "labelEn" in cat
+
+
+def test_trend_backoff_grows_and_does_not_sleep_after_last_attempt(monkeypatch):
+    from types import SimpleNamespace
+    def fail(**kwargs):
+        raise RuntimeError("unavailable")
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=fail)))
+    monkeypatch.setattr(build_data, "SETTINGS", {"ai":{"provider":"test"}, "test":{"model":"test", "max_tokens":100, "retry_max":4, "retry_interval":10, "retry_max_interval":25, "min_request_interval":0}})
+    sleeps = []
+    monkeypatch.setattr(build_data.time, "sleep", sleeps.append)
+    assert build_data.generate_trend(client, []) == ([], [])
+    assert sleeps == [10,20,25]

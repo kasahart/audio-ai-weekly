@@ -49,6 +49,7 @@ class TestProviderConfiguration:
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "model": "gemini-3.5-flash",
+            "request_budget_group": "gemini",
             "request_limit_per_run": 80,
             "feature_max_tokens": 64000,
             "max_tokens": 16000,
@@ -249,3 +250,18 @@ def test_retired_endpoint_rejected_before_client_creation(monkeypatch, endpoint)
     settings = {**SETTINGS, "github_models": {**SETTINGS["github_models"], "endpoint": endpoint}}
     with pytest.raises(RuntimeError, match="retired"):
         create_client(settings, {})
+
+
+def test_gemini_fallback_shares_budget_and_credentials(monkeypatch):
+    from types import SimpleNamespace
+    root = Path(__file__).parent.parent
+    settings = yaml.safe_load((root / "config/settings.yaml").read_text())
+    monkeypatch.setattr(model_utils, "_REQUEST_BUDGETS", {})
+    monkeypatch.setattr(model_utils, "OpenAI", lambda **kwargs: SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: "ok"))))
+    clients = [create_client(settings, {"GEMINI_API_KEY":"test"}, provider=name) for name in ["gemini", "gemini_flash_lite"]]
+    assert clients[0]._budget is clients[1]._budget
+    clients[0]._budget.used = 79
+    clients[1].chat.completions.create()
+    with pytest.raises(RequestLimitExceeded):
+        clients[0].chat.completions.create()
+    assert settings["analysis"]["fallback_providers"] == ["gemini_flash_lite"]
