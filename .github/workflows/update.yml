@@ -1,4 +1,4 @@
-name: Gemini 3.5 Flash Lite connectivity probe
+name: Gemma 4 31B connectivity probe
 on:
   workflow_dispatch:
 permissions:
@@ -21,12 +21,12 @@ jobs:
           from openai import OpenAI, APIStatusError
           client = OpenAI(api_key=os.environ['GEMINI_API_KEY'], base_url='https://generativelanguage.googleapis.com/v1beta/openai/', max_retries=0, timeout=90)
           try:
-              response = client.chat.completions.create(model='gemini-3.5-flash-lite', messages=[{'role':'user','content':'Return a JSON object with status equal to ok.'}], response_format={'type':'json_object'}, reasoning_effort='low', max_tokens=12000)
+              response = client.chat.completions.create(model='gemma-4-31b-it', messages=[{'role':'user','content':'Return a JSON object with status equal to ok.'}], max_tokens=1024)
               valid = json.loads(response.choices[0].message.content).get('status') == 'ok'
-              print(json.dumps({'model':'gemini-3.5-flash-lite','request_succeeded':True,'json_valid':valid,'finish_reason':response.choices[0].finish_reason}))
+              print(json.dumps({'model':'gemma-4-31b-it','request_succeeded':True,'json_valid':valid,'finish_reason':response.choices[0].finish_reason}))
               if not valid: raise SystemExit(1)
           except APIStatusError as exc:
-              print(json.dumps({'model':'gemini-3.5-flash-lite','request_succeeded':False,'http_status':exc.status_code}))
+              print(json.dumps({'model':'gemma-4-31b-it','request_succeeded':False,'http_status':exc.status_code}))
               raise SystemExit(1)
           except Exception as exc:
               print(json.dumps({'request_succeeded':False,'error_type':type(exc).__name__}))
