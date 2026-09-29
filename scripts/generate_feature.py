@@ -1930,6 +1930,35 @@ def generate_english_body(
             return body
         except FeatureValidationError as exc:
             if attempt == retry_max - 1:
+                if isinstance(body, dict) and english_article_word_count(body) < cfg["english_body_target_min_words"]:
+                    # Only length failures may use block expansion. Structural,
+                    # language and citation failures must still stop here.
+                    validate_english_body(
+                        body, sources, article_type,
+                        {**cfg, "english_body_validation_min_words": 0},
+                    )
+                    total_words = max(1, english_article_word_count(body))
+                    issues = [
+                        {
+                            "blockId": block["id"],
+                            "reason": (
+                                f"Expand this {len(ENGLISH_WORD_RE.findall(block['text']))}-word "
+                                f"block toward {math.ceil(target_words * len(ENGLISH_WORD_RE.findall(block['text'])) / total_words)} words. "
+                                "Unpack supported explanations, comparisons and limitations; "
+                                "preserve earlier grounding corrections and do not add facts or repetition."
+                            ),
+                        }
+                        for section in body["sections"] for block in section["blocks"]
+                    ]
+                    print("[feature] Expanding short English draft in bounded block batches")
+                    body = revise_grounding_blocks(
+                        model, body, plan, sources, issues, cfg,
+                        language="en", article_type=article_type, allow_short_english=True,
+                    )
+                    validate_english_body(body, sources, article_type, cfg)
+                    word_count = _validate_generation_word_target(body, cfg)
+                    print(f"[feature] Expanded English draft validated: {word_count} body words")
+                    return body
                 raise
             previous_draft = body
             validation_errors = list(exc.errors)
