@@ -1,0 +1,382 @@
+{
+  "title": "音声自己教師あり学習における表現の基礎と目的の統合",
+  "titleEn": "Integrating Representation Foundations and Objectives in Audio Self-Supervised Learning",
+  "dek": "事前学習の目的とアーキテクチャの帰納的バイアスが、下流の汎化性能やマルチモーダルシステムに向けた音声自己教師あり表現をどのように形成するかを探る。",
+  "dekEn": "An exploration of how pretraining objectives and architectural inductive biases shape audio self-supervised representations for downstream generalization and multimodal systems.",
+  "summaryEn": "This feature examines audio self-supervised learning (SSL) by connecting pretraining paradigms, architectural inductive biases, and downstream application requirements. We review how diverse supervisory signals—ranging from auxiliary tasks and contrastive learning to generative reconstruction, discrete token prediction, and multimodal alignment—dictate the internal structure of learned acoustic features. Special attention is given to recent innovations such as multi-layer feature fusion adapters for audio large language models, noise-aware representation learning frameworks, and probing methodologies that reveal how low-level acoustic properties like reverberation and loudness are encoded in embeddings. Finally, we discuss the practical challenges of deploying general-purpose encoders under noisy real-world constraints and benchmark limitations, incorporating foundational insights from broader audio SSL literature including non-contrastive methods, masking strategies, and specialized domain transfer.",
+  "keyPointsEn": [
+    "Pretraining objectives and architectural inductive biases jointly determine the structural properties of audio self-supervised representations.",
+    "Multi-layer feature fusion and noise-aware training strategies enhance the transferability and robustness of audio foundation models in downstream applications.",
+    "Probing frameworks and advanced non-contrastive or masking techniques reveal how basic perceptual dimensions and robust features are encoded across diverse embedding spaces."
+  ],
+  "perspectives": [
+    {
+      "id": "learning-mechanisms",
+      "label": "学習メカニズム",
+      "description": "事前学習の目的、非対照蒸留、マスク予測戦略、マルチモーダル統合が、階層的特徴の抽象化とセマンティックな接地をどのように推進するかを分析する。",
+      "labelEn": "Learning Mechanisms",
+      "descriptionEn": "Analyzing how pretraining objectives, non-contrastive distillation, masked prediction strategies, and multimodal integration drive the abstraction of hierarchical features and semantic grounding.",
+      "sourceIds": [
+        "S1",
+        "S2",
+        "S5",
+        "S8"
+      ]
+    },
+    {
+      "id": "practitioner-constraints",
+      "label": "実践者の制約と適応",
+      "description": "現実世界のリソース制限やノイズの多い環境下で、汎用エンコーダー、ノイズ適応モデル、ドメイン特化型事前学習を効率的に展開するための設計上の課題を検証する。",
+      "labelEn": "Practitioner Constraints and Adaptation",
+      "descriptionEn": "Examining design challenges for efficiently deploying general-purpose encoders, noise-adapted models, and domain-specific pretraining under real-world resource limits and noisy environments.",
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S7"
+      ]
+    },
+    {
+      "id": "evaluation-and-limits",
+      "label": "評価と限界",
+      "description": "埋め込み空間内における音響属性の符号化特性と、ベンチマークプロトコルおよび発話レベルの抽出信頼性の限界について議論する。",
+      "labelEn": "Evaluation and Limits",
+      "descriptionEn": "Discussing the encoding characteristics of acoustic attributes within embedding spaces, along with the limitations of benchmark protocols and utterance-level extraction reliability.",
+      "sourceIds": [
+        "S1",
+        "S4",
+        "S6"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "why-needed",
+      "heading": "音声SSLにおける基礎の問題",
+      "headingEn": "The Foundation Problem in Audio SSL",
+      "blocks": [
+        {
+          "id": "block-why-needed-1",
+          "text": "従来の音声機械学習パイプラインは、音声処理、環境音分析、音楽情報検索などの異質なドメイン間で汎化することに苦労する、教師あり事前学習やタスク特化型アーキテクチャに大きく依存していました。従来の実践は、統合された表現基盤の欠如によって制約されており、実務者は異なる音響モダリティに対して別個のモデルのトレーニングを余儀なくされていました。自己教師あり学習（SSL）は、ラベルなし音声データを活用して多様な聴覚ドメインにわたる転移可能な特徴表現を学習することで、この断片化を解決するために登場しました。しかし、初期のSSLアプローチでは、教師信号がアーキテクチャのバイアスとどのように相互作用するかを十分に理解しないまま、プレテキストタスクを孤立した選択肢として扱うことが多く、下流タスクに転移した際に最適とは言えない特徴抽象化を招いていました。この断片化は、マルチドメインエンジニアリングにとって深刻なボトルネックを生み出し、音声認識、音楽タギング、音響イベント検出のために別個のアーキテクチャを必要としていました。",
+          "textEn": "Traditional audio machine learning pipelines relied heavily on supervised pretraining or task-specific architectures that struggled to generalize across heterogeneous domains such as speech processing, environmental sound analysis, and music information retrieval. Prior practice was constrained by a lack of unified representation foundations, forcing practitioners to train disjoint models for distinct acoustic modalities. Self-supervised learning (SSL) emerged to resolve this fragmentation by leveraging unlabelled audio data to learn transferable feature representations across diverse auditory domains. However, early SSL approaches often treated pretext tasks as isolated choices without fully understanding how supervisory signals interact with architectural biases, leading to suboptimal feature abstractions when transferred to downstream tasks. This fragmentation created severe bottlenecks for multi-domain engineering, requiring separate architectures for speech recognition, music tagging, and acoustic event detection.",
+          "sourceIds": [
+            "S1"
+          ]
+        },
+        {
+          "id": "block-why-needed-2",
+          "text": "音声大規模言語モデル（ALLM）やマルチモーダルシステムが注目を集めるにつれて、ロバストな基礎表現の必要性がさらに高まっています。教師ありデータのみでトレーニングされたエンコーダーは、複雑な音響環境に求められる幅広い汎化を欠いていることが多く、微妙な言語副次的手がかりや背景の音響コンテキストを捉え損ねます。その結果、教師なし音響特徴抽出と洗練されたマルチモーダル基盤付けの間のギャップを埋めることは、現代の音声インテリジェンスにとって重要な研究課題となっています。研究者は現在、大規模なマルチモーダルコンテキストに効果的にスケールさせながらきめ細かな音響詳細を保持する統合エンコーダーを設計し、下流システムが古い教師ありパラダイムに固有のドメイン特有の盲点に苦しまないようにしなければなりません。",
+          "textEn": "As audio large language models (ALLMs) and multimodal systems gain prominence, the need for robust foundational representations becomes even more acute. Encoders trained purely on supervised data often lack the broad generalization required for complex acoustic environments, failing to capture subtle paralinguistic cues or background acoustic contexts. Consequently, bridging the gap between unsupervised acoustic feature extraction and sophisticated multimodal grounding presents a critical research problem for modern audio intelligence. Researchers must now design unified encoders that retain fine-grained acoustic details while scaling effectively to massive multimodal contexts, ensuring that downstream systems do not suffer from the domain-specific blind spots inherent in older supervised paradigms.",
+          "sourceIds": [
+            "S1",
+            "S2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "heading": "技術的変遷とパラダイム",
+      "headingEn": "Technical Shifts and Paradigms",
+      "blocks": [
+        {
+          "id": "block-history-1",
+          "text": "音声SSLの進化は明確な技術的移行を経て進展し、補助タスクの時系列的な順序から、洗練されたマルチパラダイムフレームワークへと移行してきました。初期の取り組みでは、コンピュータビジョン画期的な成果にインスピレーションを得た対照学習や生成再構成手法へと徐々に取って代わられた、ヒューリスティックな補助タスクが活用されました。初期のマイルストーンでは、負例サンプリングなしで単一セグメントから汎用表現を学習するBootstrap Your Own Latent for Audio（BYOL-A）のような非対照フレームワークや、発話レベルの音声タスクに適応された非対照蒸留（DINO）も探索されました。これらの非対照メカニズムは、トレーニング分布にノイズや偽の陰性を持ち込むことが多い、明示的な負例サンプリングマイニングの必要性を回避しました。",
+          "textEn": "The evolution of audio SSL has progressed through distinct technical shifts, moving away from chronological sequences of auxiliary tasks toward sophisticated multi-paradigm frameworks. Initial efforts utilized heuristic auxiliary tasks, which gradually gave way to contrastive learning and generative reconstruction methods inspired by computer vision breakthroughs. Early milestones also explored non-contrastive frameworks like Bootstrap Your Own Latent for Audio (BYOL-A) to learn general-purpose representations from single segments without negative sampling, as well as adapted non-contrastive distillation (DINO) for utterance-level speech tasks. These non-contrastive mechanisms circumvented the need for explicit negative sample mining, which often introduces noise or false negatives into the training distribution.",
+          "sourceIds": [
+            "S1",
+            "S5",
+            "S6"
+          ]
+        },
+        {
+          "id": "block-history-2",
+          "text": "より最近では、本分野は離散トークン予測、分散重み付きマスキングなどの最適化されたマスキング戦略、およびマルチモーダルアライメントへと進化しており、音声エンコーダーが現代の言語モデルとシームレスに統合できるようになっています。アーキテクチャの観点から見ると、この移行は、初期の畳み込みニューラルネットワーク（CNN）や再帰型モデルから、コンテンツに依存したグローバルルーティングや階層的特徴抽出が可能なTransformerベースおよびハイブリッドアーキテクチャへの移行に対応しています。こうした移行により、事前学習中における音響圧縮、時間的コンテキストモデリング、およびシーケンシャルな状態伝播の管理方法が根本的に変革され、モデルはより長いコンテキストやより複雑な音響混合を、大幅に向上したサンプル効率で処理できるようになりました。",
+          "textEn": "More recently, the field has advanced toward discrete token prediction, optimized masking strategies such as dispersion-weighted masking, and multimodal alignment, enabling audio encoders to integrate seamlessly with modern language models. Architecturally, this shift corresponds to moving from early convolutional neural networks (CNNs) and recurrent models to Transformer-based and hybrid architectures capable of content-dependent global routing and hierarchical feature extraction. These transitions have fundamentally transformed how acoustic compression, temporal context modeling, and sequential state propagation are managed during pretraining, allowing models to process longer contexts and more complex acoustic mixtures with substantially improved sample efficiency.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approaches",
+      "heading": "メカニズムとアーキテクチャのトレードオフ",
+      "headingEn": "Mechanisms and Architectural Trade-Offs",
+      "blocks": [
+        {
+          "id": "block-approaches-1",
+          "text": "音声の自己教師あり学習には、補助タスク、対照学習、生成再構成、離散トークン予測、マルチモーダルアライメントなど、多様なパラダイムが含まれます。それぞれのメカニズムは、基盤となるアーキテクチャに対して異なる要求を課します。CNNは局所的な音響圧縮と構造的感度に優れている一方、Transformerはコンテンツに依存したグローバルルーティングを活用して、拡張された音声シーケンス全体にわたる長距離のコンテキスト依存関係を捉えます。ハイブリッドモデルは局所とグローバルの統合のバランスを取ろうと試みますが、計算オーバーヘッド、メモリのスケーリング、学習の安定性の面でトレードオフをもたらします。こうした機械的なトレードオフを理解することは、リソースに制約のあるエッジデバイスと大規模なクラウドスケール・マルチモーダルシステムのどちらに適したネットワークバックボーンを選択するかを決定する上で不可欠です。",
+          "textEn": "Audio self-supervised learning encompasses diverse paradigms such as auxiliary tasks, contrastive learning, generative reconstruction, discrete token prediction, and multimodal alignment. Each mechanism places distinct demands on the underlying architecture: CNNs excel at local acoustic compression and structural sensitivity, whereas Transformers leverage content-dependent global routing to capture long-range contextual dependencies across extended audio sequences. Hybrid models attempt to balance local-global integration, but introduce trade-offs in computational overhead, memory scaling, and training stability. Understanding these mechanical trade-offs is essential for selecting appropriate network backbones for resource-constrained edge devices versus massive cloud-scale multimodal systems.",
+          "sourceIds": [
+            "S1"
+          ]
+        },
+        {
+          "id": "block-approaches-2",
+          "text": "音声大規模言語モデルにおいてSSLエンコーダーが学習した階層的表現をより有効に活用するために、最近の設計では、言語への射影の前にすべてのエンコーダー層からの情報を集約する多層特徴フュージョン（MLF）アダプターが組み込まれています。さらに、NABEATsのようなノイズ対応フレームワークは、補助的な参照ノイズ入力を用いてクリーンな表現を推定することで環境汚染に対処し、一方、特化型データセット結合戦略は呼吸音のような小規模ドメイン向けの転移を最適化します。周波数ごとの情報を保持し、汎用音声データセットとドメイン固有のコーパスを併用することで、これらの高度な学習レシピは、ノイズの多い現実世界の動作環境全体で転移性能を大幅に向上させます。",
+          "textEn": "To better exploit the hierarchical representations learned by SSL encoders in audio large language models, recent designs incorporate multi-layer feature fusion (MLF) adapters that aggregate information from all encoder layers prior to language projection. Furthermore, noise-aware frameworks like NABEATs address environmental corruption by estimating clean representations using auxiliary reference noise inputs, while specialized dataset combination strategies optimize transfer for smaller domains like respiratory sounds. By preserving frequency-wise information and leveraging general audio datasets alongside domain-specific corpora, these advanced training recipes significantly enhance transfer performance across noisy real-world operating environments.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perspectives",
+      "heading": "補完的な分析視点",
+      "headingEn": "Complementary Analytical Perspectives",
+      "blocks": [
+        {
+          "id": "block-perspectives-1",
+          "text": "音声SSLを理解するには、3つの補完的な視点からシステムを検証する必要があります。まず、学習メカニズムの分析では、事前学習の目的関数、非対照蒸留、およびマルチモーダル統合が、階層的特徴の抽象化と意味的グラウンディングをどのように駆動するかを検証します。この視点では、特定の損失関数が、低レベルの音響構造に対してどのように意味的トークンの出現を支配するのかを評価します。次に、実務者の制約事項は、計算予算やレイテンシの制約がアーキテクチャの選択を左右するような現実世界のリソース制限や騒音のある音響条件下において、汎用エンコーダー、ノイズ適応型モデル、および特化したドメインの事前学習を展開する際の運用の課題に焦点を当てます。",
+          "textEn": "Understanding audio SSL requires examining the system through three complementary lenses. First, learning mechanisms analyze how pretraining objectives, non-contrastive distillation, and multimodal integration drive the abstraction of hierarchical features and semantic grounding. This perspective evaluates how specific loss functions govern the emergence of semantic tokens versus low-level acoustic structures. Second, practitioner constraints focus on the operational challenges of deploying general-purpose encoders, noise-adapted models, and specialized domain pretraining under real-world resource limits and noisy acoustic conditions where computational budgets and latency constraints dictate architectural choices.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S5",
+            "S7"
+          ]
+        },
+        {
+          "id": "block-perspectives-2",
+          "text": "第3に、評価および解釈可能性のフレームワークは、埋め込み空間の内部構造を調査し、基本的な知覚次元がどのようにエンコードされているかをプローブし、現在のベンチマークプロトコルや発話レベルの抽出の限界に対処します。これらの視点を合わせることで、高度な音声アーキテクチャの設計と、多様な現実世界の展開シナリオにおける実用的な信頼性の評価の両方に対する包括的なフレームワークが提供され、理論上の向上が確実堅牢な運用パフォーマンスに確実に翻訳されるようになります。",
+          "textEn": "Third, evaluation and interpretability frameworks investigate the internal structure of embedding spaces, probing how fundamental perceptual dimensions are encoded and addressing the limitations of current benchmark protocols and utterance-level extraction. Together, these perspectives provide a comprehensive framework for both designing advanced audio architectures and evaluating their practical reliability across diverse real-world deployment scenarios, ensuring that theoretical gains translate into robust operational performance.",
+          "sourceIds": [
+            "S1",
+            "S4",
+            "S6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "heading": "評価、解釈可能性、および限界",
+      "headingEn": "Evaluation, Interpretability, and Limitations",
+      "blocks": [
+        {
+          "id": "block-limits-1",
+          "text": "強力な実証的パフォーマンスにもかかわらず、音声埋め込みの内部構造は複雑であり、実務者には十分に理解されていません。対照言語音声事前学習（CLAP）の埋め込みに適用されたプローブフレームワークは、残響時間（RT60）、ラウドネス（LUFS測定）、スペクトル含有量などの基本的な知覚次元が、凍結された特徴空間から復元可能であることを示しています。しかし、そのエンコード方式はさまざまです。RT60とLUFSがほぼ線形にエンコードされる一方で、スペクトル重心には非線形プローブが必要であり、振幅不変アーキテクチャはその設計上、ラウドネスを完全に破棄します。この食い違いは、異なるSSLパラダイムが、結果として生じるベクトル空間に根本的に異なる幾何学的制約を課すことを浮き彫りにしています。",
+          "textEn": "Despite strong empirical performance, the internal structure of audio embeddings remains complex and insufficiently understood by practitioners. Probing frameworks applied to contrastive language-audio pretraining (CLAP) embeddings demonstrate that fundamental perceptual dimensions—such as reverberation in terms of RT60, loudness measured via LUFS, and spectral content—are recoverable from frozen feature spaces. However, their encoding regimes vary: while RT60 and LUFS are approximately linearly encoded, spectral centroid requires non-linear probes, and amplitude-invariant architectures discard loudness entirely by construction. This discrepancy highlights that different SSL paradigms impose radically different geometric constraints on the resulting vector spaces.",
+          "sourceIds": [
+            "S4"
+          ]
+        },
+        {
+          "id": "block-limits-2",
+          "text": "評価プロトコルもまた、トークン化非効率性、ドメインシフト下での汎化限界、およびセキュアなマルチモーダル展開における脆弱性など、深刻なボトルネックに直面しています。ベンチマークの制限は、高い総合スコアが未見のノイズタイプや特殊な生音響ドメインへのロバストな汎化を必ずしも保証しないことを意味しており、厳密な解釈可能性の検討と改良されたプロービング手法の必要性が浮き彫りになっています。標準化された評価では制約のない音響環境における失敗モードを露呈できないことが多いため、実践者はベンチマークのランキングのみに基づいてモデルを展開する際には警戒を怠ってはなりません。",
+          "textEn": "Evaluation protocols also face severe bottlenecks, including tokenization inefficiencies, generalization limits under domain shift, and vulnerabilities in secure multimodal deployment. Benchmark limitations mean that high aggregate scores do not always guarantee robust generalization to unseen noise types or specialized bioacoustic domains, highlighting the need for rigorous interpretability studies and improved probing methodologies. Practitioners must remain cautious when deploying models based solely on benchmark rankings, as standardized evaluations often fail to expose failure modes in unconstrained acoustic environments.",
+          "sourceIds": [
+            "S1",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outlook",
+      "heading": "実用上のインプリケーションと今後の展望",
+      "headingEn": "Practical Implications and Future Outlook",
+      "blocks": [
+        {
+          "id": "block-outlook-1",
+          "text": "研究者や実践者にとって、これらの知見はアーキテクチャの選択とトレーニング設計に関する具体的な指針を提供します。実践者は、計算効率とロバスト性のバランスを取り、ノイズ認識型トレーニング、軽量マスキング戦略、マルチレイヤー特徴量融合などの手法を活用して、汎用エンコーダーを制約された環境に適応させる必要があります。エンコーダーが重大な計算オーバーヘッドを導入することなく必要な低レベル音響特性を確実に保持することは、リアルタイムの音声およびオーディオアプリケーションにとって依然として中心的なエンジニアリング上の課題です。",
+          "textEn": "For researchers and practitioners, these insights offer concrete guidance on architecture selection and training design. Practitioners must balance computational efficiency against robustness, utilizing techniques like noise-aware training, lightweight masking strategies, and multi-layer feature fusion to adapt general-purpose encoders to constrained environments. Ensuring that encoders preserve necessary low-level acoustic properties without introducing severe computational overhead remains a central engineering challenge for real-time speech and audio applications.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S8"
+          ]
+        },
+        {
+          "id": "block-outlook-2",
+          "text": "今後の展望として、コーデックベースのトークン化とオーディオ言語モデリングの進展により、目的・アーキテクチャ・アプリケーションのパイプラインがさらに拡大するでしょう。ターゲットを絞ったトレーニングを通じてマルチモーダルなインコンテキスト学習やコンテキストバイシングが標準化されるにつれて、ベンチマークプロトコルが現在の解釈可能性のギャップやセキュリティの脆弱性に対処するよう進化するという条件の下で、オーディオ基盤モデルは音声、音楽、環境理解の各タスクにわたってこれまでにない汎用性を達成する位置にあります。",
+          "textEn": "Looking forward, advancing codec-based tokenization and audio-language modeling will further expand the objective-architecture-application pipeline. As multimodal in-context learning and contextual biasing become standard through targeted training, audio foundation models are positioned to achieve unprecedented versatility across speech, music, and environmental understanding tasks, provided that benchmark protocols evolve to address current interpretability gaps and security vulnerabilities.",
+          "sourceIds": [
+            "S1",
+            "S2"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-09-29T06:17:16.555584+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-08-11-primer-audio-self-supervised-learning-foundations",
+  "type": "primer",
+  "date": "2026-08-11",
+  "generatedAt": "2026-09-29T06:17:16.555584+00:00",
+  "topicKey": "audio-self-supervised-learning-foundations",
+  "searchTerms": [
+    "audio self-supervised learning",
+    "self-supervised learning",
+    "audio foundation models"
+  ],
+  "sources": [
+    {
+      "arxivId": "2607.00387",
+      "title": "From Objectives to Applications: Aligning Architectural Biases in Audio Self-Supervised Learning",
+      "abstract": "This paper examines audio self-supervised learning (SSL) through the alignment between pretraining objectives, architectural inductive biases, and downstream applications. Rather than treating SSL methods as a chronological sequence of pretext tasks or model families, we ask how different supervisory signals shape the representations that models are expected to learn. The discussion is organized around five paradigms: auxiliary tasks, contrastive learning, generative reconstruction, discrete token prediction, and multimodal alignment. These objectives place different demands on the model, from local structural sensitivity and contrastive invariance to contextual inference, discrete semantic abstraction, and multimodal grounding. We relate these demands to the biases of CNNs, recurrent and State Space Models, Transformers, and hybrid architectures, showing how local acoustic compression, sequential state propagation, content-dependent global routing, and local--global integration support different forms of audio SSL. The same view is then used to interpret downstream applications in speech processing, environmental sound analysis, music information retrieval, medical and bioacoustic analysis, and multimodal audio understanding as practical tests of whether learned representations and architectural choices generalize across domains. We also review benchmark protocols and open challenges, including tokenization bottlenecks, long-context efficiency, robustness, and secure multimodal deployment, and discuss how codec-based tokenization and audio-language modeling extend this objective--architecture--application pipeline. The accompanying repository is released at https://github.com/colaudiolab/Awesome-Self-Supervised-Audio-Learning.",
+      "authors": [
+        "Kele Xu",
+        "Yulu Fang",
+        "Boda Zhou",
+        "Yulin Sun",
+        "Qisheng Xu"
+      ],
+      "publishedAt": "2026-07-03",
+      "url": "https://arxiv.org/abs/2607.00387",
+      "origin": "archive",
+      "archiveDate": "2026-07-03",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/colaudiolab/Awesome-Self-Supervised-Audio-Learning"
+        }
+      ],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2607.17079",
+      "title": "SALMONN-2: Advancing General-Purpose Hearing Abilities with Self-Supervised Representations",
+      "abstract": "Recent audio large language models (ALLMs) are typically built upon audio encoders trained with large amounts of supervised data. Since self-supervised learning (SSL) audio encoder models are known to learn general-purpose and transferable representations, we investigate whether general-purpose SSL audio representations can serve as an effective foundation for ALLMs. We present SALMONN-2, an ALLM built upon a unified SSL encoder. To better exploit the hierarchical representations learned by SSL encoders, we propose a multi-layer feature fusion (MLF) adapter that aggregates information from all encoder layers before projecting them into the language model. Beyond conventional audio understanding tasks, we further explore multimodal in-context learning (MICL) in ALLMs and study how this capability can be acquired through contextual biasing training. Experimental results show that a general-purpose SSL encoder achieves performance comparable to, or better than, specialised supervised audio encoders while providing a more balanced capability across speech, audio, music and paralinguistic tasks. SALMONN-2 further achieves state-of-the-art performance among comparable-scale open-weight models on ALLM understanding benchmarks, obtaining the best results on MMAU-Pro, MMAR and MMSU. We also show that MICL does not emerge naturally in ALLMs, but can be effectively acquired through targeted contextual biasing training.",
+      "authors": [
+        "Xiaoyu Yang",
+        "Xuenan Xu",
+        "Wenyi Yu",
+        "Siyin Wang",
+        "Changli Tang"
+      ],
+      "publishedAt": "2026-07-24",
+      "url": "https://arxiv.org/abs/2607.17079",
+      "origin": "archive",
+      "archiveDate": "2026-07-24",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2607.16688",
+      "title": "NABEATs: Noise-Aware Audio Representation Learning",
+      "abstract": "We propose the concept of noise-aware audio self-supervised learning (SSL), whose goal is to encode audio mixtures while suppressing undesired noise, and present Noise-Aware BEATs (NABEATs) as a BEATs-based realization of this framework. Audio SSL models are designed to handle a wide range of audio signals. Consequently, under noisy conditions, they cannot effectively focus on the target sounds relevant to a downstream task, resulting in degraded performance. To address this issue, NABEATs is trained to estimate clean BEATs representations from a noisy audio signal with an auxiliary reference noise input. This reference noise enables the model to account for specific noise characteristics at inference time, thereby achieving better generalization across operating environments. Our experimental evaluations demonstrate that NABEATs significantly improves performance of various downstream tasks under noisy conditions and also generalizes well to unseen noise types.",
+      "authors": [
+        "Takuya Fujimura",
+        "Yoshiki Masuyama",
+        "Gordon Wichern",
+        "Christoph Boeddeker",
+        "Julius Richter"
+      ],
+      "publishedAt": "2026-07-24",
+      "url": "https://arxiv.org/abs/2607.16688",
+      "origin": "archive",
+      "archiveDate": "2026-07-24",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2607.03806",
+      "title": "Probing Low-Level Acoustic Attribute Encoding in CLAP Audio Embeddings",
+      "abstract": "Audio foundation models are widely adopted as general-purpose feature extractors, yet the internal structure of their learned representations remains insufficiently understood. In this work, we analyze CLAP audio embeddings through a probing framework, studying the encoding of three fundamental perceptual dimensions: reverberation (RT60), loudness (LUFS), and spectral content, measured via spectral centroid (SC) and relative pitch (RP). Probes of increasing complexity are trained to predict each attribute from frozen embeddings across five datasets spanning noise, speech, monophonic musical notes, and music mixtures. Our primary finding is that all of these attributes are reliably recoverable from the CLAP embedding space across the examined datasets. Within this global picture, two encoding regimes emerge: RT60, LUFS, and RP are approximately linearly encoded, while SC requires non-linear probes. Both regimes generalize across eight additional audio foundation models, with the notable exception that amplitude-invariant architectures discard loudness entirely by construction. The identified linear feature directions are geometrically consistent across datasets for RT60 and LUFS, while highly domain-specific for RP. Finally, we provide a qualitative demonstration of cross-modal consistency, showing that text embeddings of acoustic descriptors align geometrically with the identified RT60 feature direction.",
+      "authors": [
+        "Héctor Martel",
+        "Joe Hennessy-Priest",
+        "Taemin Cho"
+      ],
+      "publishedAt": "2026-07-10",
+      "url": "https://arxiv.org/abs/2607.03806",
+      "origin": "archive",
+      "archiveDate": "2026-07-10",
+      "primaryLinks": [],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2103.06695",
+      "title": "BYOL for Audio: Self-Supervised Learning for General-Purpose Audio Representation",
+      "abstract": "Inspired by the recent progress in self-supervised learning for computer vision that generates supervision using data augmentations, we explore a new general-purpose audio representation learning approach. We propose learning general-purpose audio representation from a single audio segment without expecting relationships between different time segments of audio samples. To implement this principle, we introduce Bootstrap Your Own Latent (BYOL) for Audio (BYOL-A, pronounced \"viola\"), an audio self-supervised learning method based on BYOL for learning general-purpose audio representation. Unlike most previous audio self-supervised learning methods that rely on agreement of vicinity audio segments or disagreement of remote ones, BYOL-A creates contrasts in an augmented audio segment pair derived from a single audio segment. With a combination of normalization and augmentation techniques, BYOL-A achieves state-of-the-art results in various downstream tasks. Extensive ablation studies also clarified the contribution of each component and their combinations.",
+      "authors": [
+        "Daisuke Niizumi",
+        "Daiki Takeuchi",
+        "Yasunori Ohishi",
+        "Noboru Harada",
+        "Kunio Kashino"
+      ],
+      "publishedAt": "2021-03-11T14:32:33Z",
+      "url": "https://arxiv.org/abs/2103.06695",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2208.05445",
+      "title": "Non-Contrastive Self-supervised Learning for Utterance-Level Information Extraction from Speech",
+      "abstract": "In recent studies, self-supervised pre-trained models tend to outperform supervised pre-trained models in transfer learning. In particular, self-supervised learning (SSL) of utterance-level speech representation can be used in speech applications that require discriminative representation of consistent attributes within an utterance: speaker, language, emotion, and age. Existing frame-level self-supervised speech representation, e.g., wav2vec, can be used as utterance-level representation with pooling, but the models are usually large. There are also SSL techniques to learn utterance-level representation. One of the most successful is a contrastive method, which requires negative sampling: selecting alternative samples to contrast with the current sample (anchor). However, this does not ensure that all the negative samples belong to classes different from the anchor class without labels. This paper applies a non-contrastive self-supervised method to learn utterance-level embeddings. We adapted DIstillation with NO labels (DINO) from computer vision to speech. Unlike contrastive methods, DINO does not require negative sampling. We compared DINO to x-vector trained in a supervised manner. When transferred to down-stream tasks (speaker verification, speech emotion recognition (SER), and Alzheimer's disease detection), DINO outperformed x-vector. We studied the influence of several aspects during transfer learning such as dividing the fine-tuning process into steps, chunk lengths, or augmentation. During fine-tuning, tuning the last affine layers first and then the whole network surpassed fine-tuning all at once. Using shorter chunk lengths, although they generate more diverse inputs, did not necessarily improve performance, implying speech segments at least with a specific length are required for better performance per application. Augmentation was helpful in SER.",
+      "authors": [
+        "Jaejin Cho",
+        "Jes'us Villalba",
+        "Laureano Moro-Velazquez",
+        "Najim Dehak"
+      ],
+      "publishedAt": "2022-08-10T16:56:39Z",
+      "url": "https://arxiv.org/abs/2208.05445",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2505.15307",
+      "title": "Towards Pre-training an Effective Respiratory Audio Foundation Model",
+      "abstract": "Recent advancements in foundation models have sparked interest in respiratory audio foundation models. However, the effectiveness of applying conventional pre-training schemes to datasets that are small-sized and lack diversity has not been sufficiently verified. This study aims to explore better pre-training practices for respiratory sounds by comparing numerous pre-trained audio models. Our investigation reveals that models pre-trained on AudioSet, a general audio dataset, are more effective than the models specifically pre-trained on respiratory sounds. Moreover, combining AudioSet and respiratory sound datasets for further pre-training enhances performance, and preserving the frequency-wise information when aggregating features is vital. Along with more insights found in the experiments, we establish a new state-of-the-art for the OPERA benchmark, contributing to advancing respiratory audio foundation models. Our code is available online at https://github.com/nttcslab/eval-audio-repr/tree/main/plugin/OPERA.",
+      "authors": [
+        "Daisuke Niizumi",
+        "Daiki Takeuchi",
+        "Masahiro Yasuda",
+        "Binh Thien Nguyen",
+        "Yasunori Ohishi",
+        "Noboru Harada"
+      ],
+      "publishedAt": "2025-05-21T09:36:11Z",
+      "url": "https://arxiv.org/abs/2505.15307",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2603.23810",
+      "title": "Rethinking Masking Strategies for Masked Prediction-based Audio Self-supervised Learning",
+      "abstract": "Since the introduction of Masked Autoencoders, various improvements to masking techniques have been explored. In this paper, we rethink masking strategies for audio representation learning using masked prediction-based self-supervised learning (SSL) on general audio spectrograms. While recent informed masking techniques have attracted attention, we observe that they incur substantial computational overhead. Motivated by this observation, we propose dispersion-weighted masking (DWM), a lightweight masking strategy that leverages the spectral sparsity inherent in the frequency structure of audio content. Our experiments show that inverse block masking, commonly used in recent SSL frameworks, improves audio event understanding performance while introducing a trade-off in generalization. The proposed DWM alleviates these limitations and computational complexity, leading to consistent performance improvements. This work provides practical guidance on masking strategy design for masked prediction-based audio representation learning.",
+      "authors": [
+        "Daisuke Niizumi",
+        "Daiki Takeuchi",
+        "Masahiro Yasuda",
+        "Binh Thien Nguyen",
+        "Noboru Harada",
+        "Nobutaka Ono"
+      ],
+      "publishedAt": "2026-03-25T00:40:02Z",
+      "url": "https://arxiv.org/abs/2603.23810",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 9,
+  "readTimeMinutesEn": 5,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-09-29T06:17:16.555584+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 0
+  }
+}

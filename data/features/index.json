@@ -1,6 +1,36 @@
 {
   "features": [
     {
+      "slug": "2026-08-11-primer-audio-self-supervised-learning-foundations",
+      "type": "primer",
+      "date": "2026-08-11",
+      "readTimeMinutes": 9,
+      "readTimeMinutesEn": 5,
+      "sourceCount": 8,
+      "title": "音声自己教師あり学習における表現の基礎と目的の統合",
+      "titleEn": "Integrating Representation Foundations and Objectives in Audio Self-Supervised Learning",
+      "dek": "事前学習の目的とアーキテクチャの帰納的バイアスが、下流の汎化性能やマルチモーダルシステムに向けた音声自己教師あり表現をどのように形成するかを探る。",
+      "dekEn": "An exploration of how pretraining objectives and architectural inductive biases shape audio self-supervised representations for downstream generalization and multimodal systems.",
+      "file": "2026-08-11-primer-audio-self-supervised-learning-foundations.json",
+      "topicKey": "audio-self-supervised-learning-foundations",
+      "searchTerms": [
+        "audio self-supervised learning",
+        "self-supervised learning",
+        "audio foundation models"
+      ],
+      "sourcePaperIds": [
+        "2607.00387",
+        "2607.17079",
+        "2607.16688",
+        "2607.03806",
+        "2103.06695",
+        "2208.05445",
+        "2505.15307",
+        "2603.23810"
+      ],
+      "generatedAt": "2026-09-29T06:17:16.555584+00:00"
+    },
+    {
       "slug": "2026-07-28-debate-multi-stage-audio-processing-vs-fusion",
       "type": "debate",
       "date": "2026-07-28",
@@ -62,5 +92,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-07-28T04:03:41.879171+00:00"
+  "generatedAt": "2026-09-29T06:17:16.555584+00:00"
 }
