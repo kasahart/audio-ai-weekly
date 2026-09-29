@@ -2038,3 +2038,32 @@ def test_preceding_url_preserves_sentence_boundary(boundary):
 def test_case_insensitive_url_scheme():
     text = "Code: HTTPS://github.com/authors/project"
     assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "HTTPS://github.com/authors/project"
+
+
+@pytest.mark.parametrize("declaration", [
+    "Our code, including baseline implementations, is available at",
+    "Our code (e.g., training scripts) is available at",
+    "Our code, models, and dataset resources will be released upon acceptance at",
+    "Code and checkpoints are available at",
+    "To reproduce the reported results, we publicly release our code at",
+])
+def test_explicit_code_availability_variants(declaration):
+    text = declaration + " https://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("declaration", [
+    "The code is no longer available at",
+    "Our code is not available at",
+    "Code is available upon request, while the dataset is at",
+    "Code is available at the project website, while the baseline is at",
+    "For the baseline, code is available at",
+])
+def test_non_code_or_negated_availability_is_rejected(declaration):
+    text = declaration + " https://github.com/vendor/project"
+    assert not generate_feature.recover_metadata_code_link({"abstract": text}).get("githubRepo")
+
+
+def test_code_url_wrapped_in_backticks():
+    text = "Code: `https://github.com/authors/project`"
+    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project"

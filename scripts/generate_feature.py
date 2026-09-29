@@ -239,35 +239,45 @@ def recover_metadata_code_link(paper: dict) -> dict:
         text = paper.get(field)
         if not isinstance(text, str):
             continue
-        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}]+", text, re.IGNORECASE):
+        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}`]+", text, re.IGNORECASE):
             url = match.group(0).rstrip(".,;:!?) ]")
             prefix = text[:match.start()]
-            # Keep sentence punctuation but hide dots inside preceding URLs.
+            # Hide URL dots while retaining punctuation that separates clauses.
             prefix = re.sub(
-                r"https?://[^\s<>\"'‘’“”{}]+",
-                lambda m: "URL" + (re.search(r"[.!?;]+[)\]]*$", m.group(0)).group(0)
-                                    if re.search(r"[.!?;]+[)\]]*$", m.group(0)) else ""),
+                r"https?://[^\s<>\"'‘’“”{}`]+",
+                lambda m: "URL" + m.group(0)[len(m.group(0).rstrip(".!?;)]")):],
                 prefix,
                 flags=re.IGNORECASE,
             )
+            # Parenthetical examples must not turn abbreviation dots into
+            # sentence boundaries. They do not establish link ownership.
+            prefix = re.sub(r"\([^()]*\)", "", prefix)
             context = re.split(r"[.!?;\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
-            context = context.rstrip(" \"'‘’“”(")
-            # Anchor declarations to the subject; availability of dependencies
-            # and baselines must not count as this paper's repository.
+            context = context.rstrip(" \"'‘’“”(`")
+            # Accept only explicit declarations, with the URL introduced by
+            # that declaration. Unsupported prose is deliberately left unlinked.
+            subject = (
+                r"(?:(?:our|the|the accompanying)\s+)?(?:source\s+)?"
+                r"(?:code(?: repository)?|repository)"
+            )
+            companions = (
+                r"(?:,\s*including\s+[^,]+,)?"
+                r"(?:\s*,?\s*(?:and\s+)?(?:models?|checkpoints?|dataset resources))*"
+            )
             availability = re.search(
-                r"(?:^|,\s*)(?:(?:(?:our|the|source|our source|the source)\s+)?"
-                r"(?:code(?: repository)?|repository)\s*:|"
-                r"(?:(?:our|the|the accompanying)\s+)?"
-                r"(?:(?:source\s+)?code|repository)\b[^.!?;]{0,100}"
-                r"\b(?:available|released|open[- ]sourced)\b[^.!?;]{0,100})[^.!?;]*$|"
-                r"\bwe\s+(?:publicly\s+)?release\s+(?:our\s+)?"
-                r"(?:source\s+)?code\b[^.!?;]{0,100}$",
+                r"(?:^|,\s*)(?:" + subject + r"\s*:|"
+                + subject + companions
+                + r"\s+(?:is|are|will be|has been|have been)\s+"
+                r"(?:publicly\s+)?(?:available|released|open[- ]sourced)"
+                r"(?:\s+upon acceptance)?\s+(?:at|on)\s*|"
+                r"we\s+(?:publicly\s+)?release\s+(?:our\s+)?"
+                r"(?:source\s+)?code\s+(?:at|on)\s*)"
+                r"(?:\s*URL\s*(?:and|,)\s*)*$",
                 context, re.IGNORECASE,
             )
-            if availability and re.search(
-                r"\b(?:baselines?|dependencies|dependency|third[- ]party)\b",
-                availability.group(0), re.IGNORECASE,
+            if availability and availability.start() > 0 and not re.match(
+                r",\s*(?:our|we)\b", availability.group(0), re.IGNORECASE
             ):
                 continue
             if availability and is_valid_primary_link("Code", url):
