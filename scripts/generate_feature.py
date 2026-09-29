@@ -1856,6 +1856,17 @@ def generate_body(
     )
 
 
+def _validate_generation_word_target(body: dict, cfg: Mapping[str, Any]) -> int:
+    word_count = english_article_word_count(body)
+    if word_count < cfg["english_body_target_min_words"]:
+        raise FeatureValidationError([
+            f"English draft has {word_count} body words; expand toward the "
+            f"generation target of {cfg['english_body_target_min_words']}-"
+            f"{cfg['english_body_target_max_words']} before translation"
+        ])
+    return word_count
+
+
 def generate_english_body(
     model: Any,
     plan: dict,
@@ -1907,6 +1918,8 @@ def generate_english_body(
         )
         try:
             validate_english_body(body, sources, article_type, cfg)
+            word_count = _validate_generation_word_target(body, cfg)
+            print(f"[feature] English draft validated: {word_count} body words")
             return body
         except FeatureValidationError as exc:
             if attempt == retry_max - 1:
@@ -2269,6 +2282,10 @@ def translate_english_body(
                 english_body, metadata, block_texts, attempt
             )
             japanese_chars = article_character_count(bilingual_body)
+            print(
+                f"[feature] Japanese translation attempt {attempt + 1}/{retry_max}: "
+                f"{japanese_chars} body characters"
+            )
             if not (
                 cfg["validation_min_chars"]
                 <= japanese_chars
@@ -2663,7 +2680,7 @@ def _revise_grounding_block_batch(
             PROMPTS["grounding_patch_en"],
             patch_block_max=str(block_max),
             english_body_validation_min_words=str(
-                cfg["english_body_validation_min_words"]
+                max(cfg["english_body_validation_min_words"], cfg["english_body_target_min_words"])
             ),
             english_body_validation_max_words=str(
                 cfg["english_body_validation_max_words"]
@@ -3156,6 +3173,7 @@ def run_feature_pipeline(
             ]
         )
 
+    _validate_generation_word_target(english_body, cfg)
     body, translation_revision_count = translate_english_body(
         model, english_body, cfg
     )

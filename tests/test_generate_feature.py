@@ -935,14 +935,15 @@ def test_generation_keeps_source_instructions_out_of_system_prompt():
     assert "primaryLinks" not in payload["primarySources"][0]
 
 
-def test_english_generation_retries_local_validation_with_feedback():
+@pytest.mark.parametrize("initial_words_per_section", [20, 130])
+def test_english_generation_retries_local_validation_with_feedback(initial_words_per_section):
     calls = []
 
     class GenerationModel:
         def complete(self, _instructions, payload, _max_tokens, _purpose):
             calls.append(payload)
             if len(calls) == 1:
-                return make_english_body(words_per_section=20)
+                return make_english_body(words_per_section=initial_words_per_section)
             return make_english_body()
 
     body = generate_feature.generate_english_body(
@@ -953,10 +954,10 @@ def test_english_generation_retries_local_validation_with_feedback():
     assert "validationFeedback" not in calls[0]
     assert "previousDraft" not in calls[0]
     assert calls[0]["bodyWordBudget"]["countedFields"] == "sections[].blocks[].text only"
-    assert calls[1]["previousDraft"] == make_english_body(words_per_section=20)
+    assert calls[1]["previousDraft"] == make_english_body(words_per_section=initial_words_per_section)
     assert calls[1]["validationFeedback"]["remainingAttempts"] == 2
     assert any(
-        "English body has" in error
+        "body words" in error or "English body has" in error
         for error in calls[1]["validationFeedback"]["errors"]
     )
 
@@ -1839,8 +1840,9 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
     assert calls == ["patch", "patch", "patch", "patch"]
 
 
+@pytest.mark.parametrize("short_after_revision", [False, True])
 def test_pipeline_allows_verifier_revision_after_local_correction(
-    monkeypatch, tmp_path
+    monkeypatch, tmp_path, short_after_revision
 ):
     plan = make_plan()
     sources = make_sources()
@@ -1889,7 +1891,7 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
 
     def patch(*_args, **_kwargs):
         calls.append("patch")
-        return valid_body
+        return make_english_body(words_per_section=130) if short_after_revision else valid_body
 
     monkeypatch.setattr(generate_feature, "revise_grounding_blocks", patch)
     monkeypatch.setattr(
@@ -1900,6 +1902,14 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         "translate_english_body",
         lambda *_args: (make_body(), 0),
     )
+
+    if short_after_revision:
+        with pytest.raises(generate_feature.FeatureValidationError, match="generation target"):
+            generate_feature.run_feature_pipeline(
+                as_of=date(2026, 7, 14), article_type="primer", dry_run=True,
+                data_root=tmp_path, output_dir=tmp_path / "features", model=object(),
+            )
+        return
 
     feature = generate_feature.run_feature_pipeline(
         as_of=date(2026, 7, 14),
