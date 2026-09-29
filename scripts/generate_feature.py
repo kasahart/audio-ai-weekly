@@ -1930,6 +1930,40 @@ def generate_english_body(
             return body
         except FeatureValidationError as exc:
             if attempt == retry_max - 1:
+                if isinstance(body, dict) and english_article_word_count(body) < cfg["english_body_target_min_words"]:
+                    # Only length failures may use block expansion. Structural,
+                    # language and citation failures must still stop here.
+                    validate_english_body(
+                        body, sources, article_type,
+                        {**cfg, "english_body_validation_min_words": 0},
+                    )
+                    total_words = max(1, english_article_word_count(body))
+                    block_targets = {
+                        block["id"]: math.ceil(target_words * len(ENGLISH_WORD_RE.findall(block["text"])) / total_words)
+                        for section in body["sections"] for block in section["blocks"]
+                    }
+                    issues = [
+                        {
+                            "blockId": block["id"],
+                            "reason": (
+                                f"Expand this {len(ENGLISH_WORD_RE.findall(block['text']))}-word "
+                                f"block toward {block_targets[block['id']]} words. "
+                                "Unpack supported explanations, comparisons and limitations; "
+                                "preserve earlier grounding corrections and do not add facts or repetition."
+                            ),
+                        }
+                        for section in body["sections"] for block in section["blocks"]
+                    ]
+                    print("[feature] Expanding short English draft in bounded block batches")
+                    body = revise_grounding_blocks(
+                        model, body, plan, sources, issues, cfg,
+                        language="en", article_type=article_type, allow_short_english=True,
+                        minimum_block_words=block_targets,
+                    )
+                    validate_english_body(body, sources, article_type, cfg)
+                    word_count = _validate_generation_word_target(body, cfg)
+                    print(f"[feature] Expanded English draft validated: {word_count} body words")
+                    return body
                 raise
             previous_draft = body
             validation_errors = list(exc.errors)
@@ -2619,6 +2653,7 @@ def _revise_grounding_block_batch(
     language: str = "ja",
     article_type: str | None = None,
     allow_short_english: bool = False,
+    minimum_block_words: Mapping[str, int] | None = None,
 ) -> dict:
     """Apply compact, verifier-directed block replacements to a complete draft."""
     if language not in ("ja", "en"):
@@ -2688,7 +2723,7 @@ def _revise_grounding_block_batch(
             PROMPTS["grounding_patch_en"],
             patch_block_max=str(block_max),
             english_body_validation_min_words=str(
-                max(cfg["english_body_validation_min_words"], cfg["english_body_target_min_words"])
+                0 if allow_short_english else max(cfg["english_body_validation_min_words"], cfg["english_body_target_min_words"])
             ),
             english_body_validation_max_words=str(
                 cfg["english_body_validation_max_words"]
@@ -2704,6 +2739,11 @@ def _revise_grounding_block_batch(
             "issues": issues,
             "requiredBlockIds": required_block_order,
         }
+        if minimum_block_words:
+            payload["minimumBlockWords"] = {
+                block["id"]: minimum_block_words[block["id"]]
+                for block in requested_blocks if block["id"] in minimum_block_words
+            }
         if validation_feedback is not None:
             payload["validationFeedback"] = {
                 "errors": validation_feedback,
@@ -2749,6 +2789,13 @@ def _revise_grounding_block_batch(
                 errors.append("Grounding patch returned an invalid block replacement")
                 continue
             current = block_by_id[block_id]
+            minimum_words = (minimum_block_words or {}).get(block_id, 0)
+            if language == "en" and len(ENGLISH_WORD_RE.findall(text)) < minimum_words:
+                errors.append(
+                    f"English block {block_id} has {len(ENGLISH_WORD_RE.findall(text))} words; "
+                    f"requires at least {minimum_words} words"
+                )
+                continue
             if text.strip() == current["text"].strip() and source_ids == current["sourceIds"]:
                 errors.append("Grounding patch must change every replacement block")
                 continue
@@ -2830,6 +2877,7 @@ def revise_grounding_blocks(
     language: str = "ja",
     article_type: str | None = None,
     allow_short_english: bool = False,
+    minimum_block_words: Mapping[str, int] | None = None,
 ) -> dict:
     """Apply all verifier issues in output-bounded batches of block patches."""
     block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
@@ -2876,6 +2924,7 @@ def revise_grounding_blocks(
             language=language,
             article_type=article_type,
             allow_short_english=allow_short_english,
+            minimum_block_words=minimum_block_words,
         )
         patched_feature.update(body)
         if language == "ja":

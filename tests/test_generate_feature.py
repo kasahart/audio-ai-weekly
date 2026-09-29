@@ -2146,3 +2146,38 @@ def test_real_grounding_patch_returns_short_english_only_for_repair(allow_short)
         assert generate_feature.english_article_word_count(result) == 630
         with pytest.raises(generate_feature.FeatureValidationError, match="English body has"):
             generate_feature.validate_english_body(result, make_sources(), "primer")
+
+
+@pytest.mark.parametrize("invalid_citation,first_patch_short", [(False, False), (True, False), (False, True)])
+def test_short_english_uses_bounded_block_expansion_only_after_valid_structure(invalid_citation, first_patch_short):
+    calls = []
+    short = make_english_body(words_per_section=100)
+    if invalid_citation:
+        short["sections"][0]["blocks"][0]["sourceIds"] = ["unknown"]
+
+    class Model:
+        def complete(self, _instructions, payload, _max_tokens, purpose):
+            calls.append(purpose)
+            if purpose == "feature generation":
+                return short
+            assert purpose == "grounding patch"
+            assert "within 0-" in _instructions
+            assert set(payload["minimumBlockWords"]) == set(payload["requiredBlockIds"])
+            short_patch = first_patch_short and calls.count("grounding patch") == 1
+            if first_patch_short and calls.count("grounding patch") == 2:
+                assert any("requires at least" in error for error in payload["validationFeedback"]["errors"])
+            return {"blockReplacements": [
+                {"id": block["id"], "text": "expanded evidence " * (50 if short_patch else 100),
+                 "sourceIds": block["sourceIds"]}
+                for block in payload["blocks"]
+            ]}
+
+    if invalid_citation:
+        with pytest.raises(generate_feature.FeatureValidationError, match="sourceIds"):
+            generate_feature.generate_english_body(Model(), make_plan(), make_sources(), "primer")
+        assert calls == ["feature generation"] * 3
+    else:
+        result = generate_feature.generate_english_body(Model(), make_plan(), make_sources(), "primer")
+        generate_feature.validate_english_body(result, make_sources(), "primer")
+        assert generate_feature.english_article_word_count(result) == 1200
+        assert calls == ["feature generation"] * 3 + ["grounding patch"] * (3 if first_patch_short else 2)
