@@ -178,7 +178,7 @@ def load_recent_weekly_papers(
                 paper = dict(raw_paper)
                 paper["archiveDate"] = week_date.isoformat()
                 paper.setdefault("category", category.get("id", "other"))
-                papers.append(paper)
+                papers.append(recover_metadata_code_link(paper))
     return dedupe_weekly_papers(papers)
 
 
@@ -227,6 +227,72 @@ def load_existing_feature_for_slot(
             raise FeatureError("Indexed feature does not match its scheduled slot")
         return feature
     return None
+
+
+def recover_metadata_code_link(paper: dict) -> dict:
+    """Recover an explicit repository URL from archived arXiv metadata only."""
+    result = dict(paper)
+    if isinstance(result.get("githubRepo"), str) and is_valid_primary_link("Code", result["githubRepo"]):
+        return result
+    result.pop("githubRepo", None)
+    for field in ("abstract", "comment"):
+        text = paper.get(field)
+        if not isinstance(text, str):
+            continue
+        text = re.sub(
+            r"(?P<mark>_{1,2})(?P<url>https://[^\s<>]+?)(?P=mark)(?=$|[\s.,;:!?。！？；，])",
+            r"\g<url>", text, flags=re.IGNORECASE,
+        )
+        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}`*]+", text, re.IGNORECASE):
+            url = match.group(0).rstrip(".,;:!?) ]。！？；，：、）］")
+            prefix = text[:match.start()]
+            # Hide URL dots while retaining punctuation that separates clauses.
+            prefix = re.sub(
+                r"https?://[^\s<>\"'‘’“”{}`*]+",
+                lambda m: "URL" + m.group(0)[len(m.group(0).rstrip(".!?;)]。！？；）］")):],
+                prefix,
+                flags=re.IGNORECASE,
+            )
+            # Parenthetical examples must not turn abbreviation dots into
+            # sentence boundaries. They do not establish link ownership.
+            prefix = re.sub(
+                r"\((?:e\.g\.,?\s*)?(?:training|evaluation|inference)\s+(?:scripts|code)\)",
+                "", prefix, flags=re.IGNORECASE,
+            )
+            context = re.split(r"[.!?;。！？；\n]", prefix)[-1].strip()
+            context = re.sub(r"\\(?:url|href)\{$", "", context)
+            context = re.sub(r"\[(?:repository|code|github)\]\($", "", context, flags=re.IGNORECASE)
+            context = context.rstrip(" \"'‘’“”(`*")
+            # Accept only explicit declarations, with the URL introduced by
+            # that declaration. Unsupported prose is deliberately left unlinked.
+            subject = (
+                r"(?:(?:our|the|the accompanying)\s+)?(?:source\s+)?"
+                r"(?:code(?: repository)?|repository)"
+            )
+            companions = (
+                r"(?:,\s*including\s+[^,]+,)?"
+                r"(?:\s*,?\s*(?:and\s+)?(?:models?|checkpoints?|dataset resources))*"
+            )
+            availability = re.search(
+                r"(?:^|,\s*)(?:(?:and|while)\s+)?(?:"
+                r"(?:GitHub(?: repository)?|" + subject + r")\s*:|"
+                + subject + companions
+                + r"\s+(?:is|are|will be|has been|have been)\s+"
+                r"(?:publicly\s+)?(?:available|released|open[- ]sourced)"
+                r"(?:\s+upon acceptance)?\s+(?:at|on)\s*:?\s*|"
+                r"we\s+(?:publicly\s+)?release\s+(?:our\s+)?"
+                r"(?:source\s+)?code\s+(?:at|on)\s*:?\s*)"
+                r"(?:\s*URL\s*(?:and|,)\s*)*$",
+                context, re.IGNORECASE,
+            )
+            if availability and availability.start() > 0 and not re.match(
+                r",\s*(?:(?:and|while)\s+)?(?:our|we)\b", availability.group(0), re.IGNORECASE
+            ):
+                continue
+            if availability and is_valid_primary_link("Code", url):
+                result["githubRepo"] = url
+                return result
+    return result
 
 
 def _has_valid_primary_link(paper: Mapping[str, Any]) -> bool:

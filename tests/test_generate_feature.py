@@ -1960,3 +1960,117 @@ def test_pipeline_translates_only_after_canonical_english_verification(
         "canonicalLanguage": "en",
         "translationRevisionCount": 0,
     }
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Code: https://github.com/team/project.", "https://github.com/team/project"),
+    (r"Code: \url{https://github.com/team/project}.", "https://github.com/team/project"),
+    ("https://github.com.evil.example/team/project", None),
+    ("https://token@github.com/team/project", None),
+    ("http://github.com/team/project", None),
+    ("https://github.com/team", None),
+])
+def test_recover_metadata_code_link(text, expected):
+    original = {"abstract": text, "githubRepo": None}
+    recovered = generate_feature.recover_metadata_code_link(original)
+    assert recovered.get("githubRepo") == expected
+    assert original["githubRepo"] is None
+
+
+def test_recovered_code_link_is_used_in_source_packet():
+    candidates = make_candidates()
+    for paper in candidates:
+        paper["githubRepo"] = None
+        paper["projectPage"] = None
+    candidates[0]["abstract"] += " Code: https://github.com/team/research."
+    candidates = [generate_feature.recover_metadata_code_link(p) for p in candidates]
+    assert generate_feature._candidate_payload(candidates, 40, 1)[0]["hasPrimaryLink"]
+    sources = generate_feature.build_source_packet(make_plan(), candidates, make_sources()[4:])
+    assert sources[0]["primaryLinks"] == [{"label":"Code", "url":"https://github.com/team/research"}]
+
+
+def test_preserve_existing_metadata_code_link():
+    paper = {"githubRepo":"https://github.com/team/original", "abstract":"https://github.com/team/other"}
+    assert generate_feature.recover_metadata_code_link(paper) == paper
+
+
+@pytest.mark.parametrize("quote", ["'", "’", "“", "”"])
+def test_recovered_link_excludes_quotes(quote):
+    paper = {"abstract": "Code: " + quote + "https://github.com/team/project" + quote}
+    assert generate_feature.recover_metadata_code_link(paper)["githubRepo"] == "https://github.com/team/project"
+
+
+def test_dependency_does_not_override_authors_repository():
+    paper = {"abstract":"Built on https://github.com/vendor/tool. Our code is available at https://github.com/authors/project."}
+    assert generate_feature.recover_metadata_code_link(paper)["githubRepo"] == "https://github.com/authors/project"
+    assert "githubRepo" not in generate_feature.recover_metadata_code_link({"abstract":"Built on https://github.com/vendor/tool"})
+
+
+@pytest.mark.parametrize("current_link", [None, "https://token@github.com/vendor/tool"])
+def test_old_abstract_code_link_survives_archive_deduplication(tmp_path, current_link):
+    (tmp_path / "index.json").write_text(json.dumps({"weeks":[{"date":"2026-0807", "file":"new.json"},{"date":"2026-0731", "file":"old.json"}]}))
+    for name, abstract in [("new", "Updated abstract."), ("old", "Code: https://github.com/authors/project")]:
+        (tmp_path / (name + ".json")).write_text(json.dumps({"categories":[{"papers":[{"id":"2607.12345v1", "title":"Title", "abstract":abstract, "githubRepo":current_link if name == "new" else None}]}]}))
+    papers = generate_feature.load_recent_weekly_papers(tmp_path, date(2026,8,11),56)
+    assert len(papers) == 1
+    assert papers[0]["abstract"] == "Updated abstract."
+    assert papers[0]["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("prefix", ["Built on the code available at", "The baseline model is available at", "The code for the baseline is available at", "Code for our dependencies is available at"])
+def test_available_dependency_is_not_paper_code(prefix):
+    text = prefix + " https://github.com/vendor/tool. Our code is available at https://github.com/authors/project."
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("prefix", ["Repository:", "Code repository:", "Code is available at https://project.example.org/demo and", "Our source code is available at", "For comparisons with baselines, our code is available at"])
+def test_repository_labels_and_preceding_urls(prefix):
+    text = prefix + " https://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("boundary", [".", ";", "!", "?"])
+def test_preceding_url_preserves_sentence_boundary(boundary):
+    text = "Code is available at https://project.example.org/demo" + boundary + " documentation is at https://github.com/vendor/tool"
+    assert not generate_feature.recover_metadata_code_link({"abstract":text}).get("githubRepo")
+
+
+def test_case_insensitive_url_scheme():
+    text = "Code: HTTPS://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "HTTPS://github.com/authors/project"
+
+
+@pytest.mark.parametrize("declaration", [
+    "Our code, including baseline implementations, is available at",
+    "Our code (e.g., training scripts) is available at",
+    "Our code, models, and dataset resources will be released upon acceptance at",
+    "Code and checkpoints are available at",
+    "To reproduce the reported results, we publicly release our code at",
+    "The method improves quality, and our code is available at",
+    "GitHub:",
+    "GitHub repository:",
+    "Code is available at:",
+])
+def test_explicit_code_availability_variants(declaration):
+    text = declaration + " https://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("declaration", [
+    "The code is no longer available at",
+    "Our code is not available at",
+    "Code is available upon request, while the dataset is at",
+    "Code is available at the project website, while the baseline is at",
+    "For the baseline, code is available at",
+    "The code (for the baseline) is available at",
+    "Our code is (no longer) available at",
+])
+def test_non_code_or_negated_availability_is_rejected(declaration):
+    text = declaration + " https://github.com/vendor/project"
+    assert not generate_feature.recover_metadata_code_link({"abstract": text}).get("githubRepo")
+
+
+@pytest.mark.parametrize("wrapper", ["`{}`", "**{}**", "[repository]({})", "_{}_", "__{}__", "{}。", "{}！", "{}；"])
+def test_code_url_wrapped_in_markdown(wrapper):
+    text = "Code: " + wrapper.format("https://github.com/authors/project_name_")
+    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project_name_"
