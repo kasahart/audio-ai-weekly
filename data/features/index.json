@@ -1,6 +1,36 @@
 {
   "features": [
     {
+      "slug": "2026-09-08-primer-audio-language-model-reasoning-and-alignment",
+      "type": "primer",
+      "date": "2026-09-08",
+      "readTimeMinutes": 11,
+      "readTimeMinutesEn": 6,
+      "sourceCount": 8,
+      "title": "音声大規模言語モデルにおける推論メカニズムと事後学習のフロンティア",
+      "titleEn": "Frontiers of Reasoning Mechanisms and Post-Training in Audio Large Language Models",
+      "dek": "内部表現、強化学習、思考の連鎖（CoT）推論が、音声大規模言語モデルを単なる文字起こしツールからメディア編集やフォレンジック分析のための高度なエンジンへとどのように変貌させているのかを探る。",
+      "dekEn": "An exploration of how internal representations, reinforcement learning, and chain-of-thought reasoning are transforming audio large language models from basic transcribers into advanced engines for media editing and forensic analysis.",
+      "file": "2026-09-08-primer-audio-language-model-reasoning-and-alignment.json",
+      "topicKey": "audio-language-model-reasoning-and-alignment",
+      "searchTerms": [
+        "audio language model",
+        "large audio language models",
+        "audio understanding"
+      ],
+      "sourcePaperIds": [
+        "2608.24168",
+        "2608.16539",
+        "2608.24958",
+        "2607.26553",
+        "2606.18273",
+        "2406.11768",
+        "2511.20973",
+        "2511.06606"
+      ],
+      "generatedAt": "2026-09-29T06:56:30.356742+00:00"
+    },
+    {
       "slug": "2026-08-11-primer-audio-self-supervised-learning-foundations",
       "type": "primer",
       "date": "2026-08-11",
@@ -92,5 +122,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-09-29T06:17:16.555584+00:00"
+  "generatedAt": "2026-09-29T06:56:30.356742+00:00"
 }
