@@ -1,0 +1,318 @@
+{
+  "date": "2026-0918",
+  "generated_at": "2026-09-18T00:00:00+00:00",
+  "total": 6,
+  "categories": [
+    {
+      "id": "foundation",
+      "label": "音の基盤モデル",
+      "labelEn": "Audio Foundation Models",
+      "color": "#38bdf8",
+      "papers": [
+        {
+          "id": "2609.16582v1",
+          "date": "Sep 15",
+          "title": "CLASH: Counterfactual Auditing of Lexical and Prosodic Reliance in Spoken Sarcasm Detection",
+          "titleJa": "CLASH: 音声皮肉検出における語彙的・韻律的依存の反事実的監査",
+          "authors": [
+            "Qiyang Sun",
+            "Xudong Li",
+            "Yupei Li",
+            "Jiabin Xue",
+            "Yuhang Dai"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Spoken sarcasm detectors may exploit lexical content, prosody, or their interaction, yet conventional evaluation cannot reveal which cues drive their predictions. We introduce CLASH (Controlled Lexical-Acoustic Separation Harness), a bilingual counterfactual diagnostic framework that evaluates each utterance under original, lexical-preserving, prosody-preserving, and approximately neutralised conditions. We evaluate handcrafted acoustic-feature systems, self-supervised learning (SSL) probes, and large audio language models (LALMs) on CMMA and MUStARD. For target-only Qwen3-Omni, lexical-preserving speech retains a 0.135--0.148 AUROC advantage over prosody-preserving speech after duration balancing, with cluster-bootstrap intervals above zero; alternative lexical resynthesis preserves this advantage. Acoustic interventions shift scores without consistently improving discrimination or changing binary predictions under the evaluated conditions. Context and interaction estimates vary across corpora. These findings distinguish acoustic sensitivity from sarcasm discrimination while exposing duration, identity, and transformation effects.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.CL"
+          ],
+          "url": "https://arxiv.org/abs/2609.16582v1",
+          "category": "foundation",
+          "task": "皮肉検出",
+          "taskEn": "Sarcasm Detection",
+          "proposedMethod": "CLASH",
+          "datasets": [
+            "CMMA",
+            "MUStARD"
+          ],
+          "what": "音声皮肉検出モデルが予測を行う際に、語彙内容、韻律、またはそれらの相互作用のどの手がかりに依存しているかを評価するためのバイリンガル反事実診断フレームワークCLASHを提案している。",
+          "whatEn": "We introduce CLASH, a bilingual counterfactual diagnostic framework to evaluate which cues—lexical content, prosody, or their interaction—drive predictions in spoken sarcasm detectors.",
+          "novel": "従来の評価では判別できなかったモデルの語彙的・韻律的手がかりへの依存度を、オリジナルの音声、語彙のみ保持、韻律のみ保持、ほぼ中立化した条件の4つの条件下で反事実的に監査できる点である。",
+          "novelEn": "The novelty lies in the ability to counterfactually audit model reliance on lexical and prosodic cues by evaluating utterances under original, lexical-preserving, prosody-preserving, and neutralized conditions.",
+          "method": "ハンドクラフト音響特徴量システム、自己教師あり学習（SSL）プローブ、および大規模音声言語モデル（LALM）を対象に、音声の継続時間を調整したり代替語彙再合成を用いたりする反事実的な音響介入手法を適用して評価した。",
+          "methodEn": "We evaluated handcrafted acoustic systems, SSL probes, and large audio language models (LALMs) by applying counterfactual acoustic interventions, including duration balancing and alternative lexical resynthesis.",
+          "validation": "CMMAおよびMUStARDデータセットを用いて評価し、Qwen3-Omniモデルにおいて語彙保持音声が韻律保持音声に対して0.135〜0.148のAUROCの優位性を保つことや、音響的介入が判別能を安定して向上させないことなどを明らかにした。",
+          "validationEn": "Evaluations on CMMA and MUStARD datasets showed that lexical-preserving speech maintains a 0.135–0.148 AUROC advantage over prosody-preserving speech for Qwen3-Omni, and acoustic interventions shift scores without consistently improving discrimination.",
+          "discussion": "コーパス間でのコンテキストや相互作用の推定値のばらつき、モデルの音響感受性と実際の皮肉判別能力の乖離、および発話の継続時間や話者識別情報、変換処理そのものが与える影響の存在が挙げられる。",
+          "discussionEn": "Limitations include varying context and interaction estimates across corpora, the gap between acoustic sensitivity and actual sarcasm discrimination, and the confounding effects of duration, identity, and speech transformation.",
+          "abstractJa": "音声の皮肉検出器は、語彙内容、韻律、またはそれらの相互作用を利用している可能性があるが、従来の評価方法では、どの手がかりが予測を駆動しているかを明らかにすることはできない。我々は、オリジナルの状態、語彙を保持した状態、韻律を保持した状態、およびほぼ中立化された状態の下で各発話を評価する、バイリンガルな反事実診断フレームワークであるCLASH（Controlled Lexical-Acoustic Separation Harness）を導入する。我々は、CMMAおよびMUStARDにおいて、手作りの音響特徴量システム、自己教師あり学習（SSL）プローブ、および大規模音声言語モデル（LALM）を評価する。ターゲットのみを対象としたQwen3-Omniでは、継続時間のバランスを調整した後、語彙を保持した音声が韻律を保持した音声に対して0.135〜0.148のAUROCの優位性を維持し、クラスターブートストラップの区間はゼロを上回った。代替の語彙再合成でもこの優位性は維持される。音響的な介入はスコアを変化させるものの、評価された条件下において、判別能を一貫して向上させたり、二値予測を変更したりすることはなかった。コンテキストと相互作用の推定値はコーパス間で異なる。これらの発見は、音響的な感受性と皮肉の判別能力を区別すると同時に、継続時間、話者アイデンティティ、および変換処理による影響を明らかにしている。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.15666v1",
+          "date": "Sep 14",
+          "title": "OpenEnded: An Open-Response Speech Corpus for Speaking Proficiency Assessment with Human Annotations and ALM Supervision",
+          "titleJa": "OpenEnded: 人手アノテーションとALM監視を備えた発話流暢性評価のための自由回答音声コーパス",
+          "authors": [
+            "Yu-Wen Chen",
+            "Eric Zhou",
+            "Evelyn Ding",
+            "Tianyi Shen",
+            "Zhou Yu"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "The development of automated speaking assessment (ASA) is limited by the scarcity of public datasets, with most existing work relying on read-aloud speech, which limits applicability to real-world communication scenarios. In this work, we introduce OpenEnded, a corpus of English practice speech from Mandarin speakers in open-response tasks. Unlike prior open-response datasets that provide only holistic proficiency scores, OpenEnded offers utterance-level assessments of accuracy, fluency, and prosody. Approximately 10,000 utterances are collected and annotated using a hybrid framework: 1,000 are manually labeled via multi-rater scoring with discrepancy resolution to form a high-quality test set, while the remaining are pseudo-labeled by an audio language model (ALM) for training and development sets. We evaluate ALMs and existing ASA models on the OpenEnded test set and introduce VoxPA as an additional baseline. Results show that ALM-generated pseudo-labels improve training over original ALM scoring, while VoxPA achieves the best performance among all baselines.",
+          "comment": "IEEE SLT 2026",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.15666v1",
+          "category": "foundation",
+          "task": "発話評価",
+          "taskEn": "Speaking Assessment",
+          "proposedMethod": "OpenEnded / VoxPA",
+          "datasets": [
+            "OpenEnded"
+          ],
+          "what": "自由回答タスクにおける中国人（マンダリン）話者の英語練習音声を収録し、発話レベルで正確さ、流暢さ、韻律の評価を付与したオープンソースの音声コーパスOpenEndedを提案している。",
+          "whatEn": "We introduce OpenEnded, a public corpus of English practice speech from Mandarin speakers in open-response tasks, which provides utterance-level assessments of accuracy, fluency, and prosody.",
+          "novel": "全体的な能力スコアのみを提供する従来のデータセットとは異なり、発話レベルの詳細なスコア（正確さ、流暢さ、韻律）を提供し、大規模音声言語モデル（ALM）を用いた擬似ラベル生成と人手アノテーションを組み合わせたハイブリッド手法を確立した点である。",
+          "novelEn": "Unlike prior datasets with only holistic scores, OpenEnded offers utterance-level evaluations of accuracy, fluency, and prosody, established through a hybrid framework combining human multi-rater annotation and ALM pseudo-labeling.",
+          "method": "約10,000発話を収集し、1,000発話に対しては複数評価者による不一致解消プロセスを含む高品質な手動ラベルを付与してテストセットとし、残りの発話にはALMによる擬似ラベルを付与した。さらにベースラインとしてVoxPAモデルを導入した。",
+          "methodEn": "Around 10,000 utterances were collected, where 1,000 were manually labeled with multi-rater scoring to create a test set, and the rest were pseudo-labeled by an ALM. We also evaluated ALMs and ASA models, introducing VoxPA as a baseline.",
+          "validation": "OpenEndedテストセットを用いてALMや既存の自動発話評価（ASA）モデルを評価し、ALM生成の擬似ラベルを用いた学習の有効性を示すとともに、ベースラインモデルVoxPAが最良の性能を達成することを確認した。",
+          "validationEn": "Evaluations on the OpenEnded test set showed that training with ALM-generated pseudo-labels improves performance over original ALM scoring, and our baseline VoxPA achieved the best performance.",
+          "discussion": "収集されたデータが英語を学習するマンダリン話者に特化しているため、他の言語背景を持つ話者への一般化性能や、人手アノテーションにおける評価基準の多様性に対する頑健性の検証が必要である。",
+          "discussionEn": "The dataset is limited to English speech by Mandarin speakers, requiring further evaluation of generalization to other native languages and the robustness of grading standards across different human raters.",
+          "abstractJa": "自動発話評価（ASA）の開発は、公開データセットの不足によって制限されており、既存の取り組みのほとんどは朗読音声に依存しているため、現実世界のコミュニケーションシナリオへの適用が制限されている。本研究では、自由回答タスクにおけるマンダリン話者による英語練習音声のコーパスである「OpenEnded」を紹介する。全体的な習熟度スコアのみを提供する従来自由回答データセットとは異なり、OpenEndedは、発話レベルでの正確さ、流暢さ、および韻律の評価を提供する。約10,000件の発話が収集され、ハイブリッドフレームワークを使用してアノテーションが作成された。1,000件は不一致の解決を伴う複数評価者スコアリングによって手動でラベル付けされ、高品質のテストセットが形成され、残りの発話は、トレーニングおよび開発セットのために音声言語モデル（ALM）によって疑似ラベル付けされた。我々は、OpenEndedテストセットにおいてALMと既存のASAモデルを評価し、追加のベースラインとしてVoxPAを導入する。結果は、ALMが生成した疑似ラベルが、元のALMスコアリングよりも学習を改善することを示し、一方でVoxPAはすべてのベースラインの中で最高のパフォーマンスを達成した。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.15067v1",
+          "date": "Sep 14",
+          "title": "Rethinking Procedural Audio Pre-training: Source Scaling and Objective Adaptation",
+          "titleJa": "手続き型オーディオ事前学習の再考：ソーススケーリングと目的タスクの適応",
+          "authors": [
+            "Jiajun Peng",
+            "Fengrui Liu",
+            "Xinyu Liu",
+            "Feng Liu"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Procedural audio has emerged as a viable source for transferable audio representation learning, but its design principles remain unclear.We revisit two questions: how a procedural source should be scaled, and whether training choices developed on natural audio should transfer unchanged to procedural data.Using a controlled source, we separate scale into formula-class coverage C and within-class rendering diversity I.Experiments with FDSL and AudioMAE show that these two forms of scale provide different benefits and depend on the learning formulation and downstream task. A matched AudioMAE study further shows that procedural audio favors low mask ratios (10%--25%), whereas AudioSet-28K favors 50%--75%. Shared-codebook analysis reveals lower patch diversity and stronger temporal predictability in procedural audio. These results motivate source-aware procedural pre-training, where source scaling and learning configuration are considered jointly.Code is available at https://github.com/Cross-Innovation-Lab/Formula-Bank.",
+          "comment": "Submitted to ICASSP2027",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2609.15067v1",
+          "category": "foundation",
+          "task": "事前学習",
+          "taskEn": "Pre-training",
+          "proposedMethod": null,
+          "datasets": [
+            "AudioSet"
+          ],
+          "what": "手続き型オーディオ（数式やコードによって合成された音響信号）を用いた表現学習において、音源データのスケーリング方法（カテゴリ数とレンダリング多様性）および事前学習のハイパーパラメータ（マスク比率など）が下流タスクの性能に与える影響を体系的に調査している。",
+          "whatEn": "We systematically investigate how to scale procedural audio sources (formula class coverage vs. rendering diversity) and whether training configurations developed on natural audio need to be adapted for procedural data.",
+          "novel": "手続き型音源の「スケール」を数式クラス数とクラス内レンダリング多様性に分解し、自然音で最適化された学習設定（AudioMAEのマスク比など）を手続き型音源にそのまま適用すべきではなく、低いマスク比（10%〜25%）が適していることを明らかにした点である。",
+          "novelEn": "The authors define source scaling along two dimensions—formula-class coverage and rendering diversity—and reveal that procedural audio pre-training favors much lower mask ratios (10%–25%) than natural audio, challenging direct transfer of natural-audio settings.",
+          "method": "FDSL（Feature Denoising/Supervised Learning）およびAudioMAEを用いて、制御された手続き型音源の規模（クラス数Cと多様性I）を変更しながら実験を行った。また、コードブック分析を用いて手続き型パッチの多様性と時間的予測可能性を分析した。",
+          "methodEn": "Using FDSL and AudioMAE on controlled procedural sources, we experimented with varying class coverage C and rendering diversity I, and performed shared-codebook analysis to measure patch diversity and temporal predictability.",
+          "validation": "下流タスクでの評価、およびAudioSet-28Kとの比較を通じて、手続き型オーディオは低いマスク比（10%〜25%）でパッチの多様性が低く、時間的予測可能性が高い特徴を持つことを示し、ソースに応じた事前学習設計の重要性を検証した。",
+          "validationEn": "Evaluations on downstream tasks and comparisons with AudioSet-28K validated that procedural audio, which has lower patch diversity and higher temporal predictability, performs best with low mask ratios (10%–25%), supporting source-aware pre-training.",
+          "discussion": "数式に基づいて合成された手続き型オーディオの性質（高い時間的規則性など）に依存しているため、より複雑な環境音や非定常な音響イベントに対する普遍的な適用性についてはさらなる検証が必要である。",
+          "discussionEn": "The conclusions rely on the properties of formula-synthesized procedural audio (e.g., high temporal predictability), and further study is needed to generalize these findings to highly complex or non-stationary acoustic events.",
+          "abstractJa": "手続き型オーディオは、転移可能な音響表現学習のための実行可能なソースとして浮上しているが、その設計原則は不明なままである。我々は2つの問いを再考する。すなわち、手続き型ソースをどのようにスケーリングすべきか、そして自然音で開発された学習の選択肢を変更せずに手続き型データに移植すべきか、である。制御されたソースを使用して、スケールを数式クラスのカバー率Cと、クラス内のレンダリング多様性Iに分離する。FDSLおよびAudioMAEを用いた実験により、これら2つのスケールの形態は異なる利点をもたらし、学習の設定や下流タスクに依存することが示された。整合されたAudioMAEの調査では、手続き型オーディオが低いマスク比率（10%〜25%）を好むのに対し、AudioSet-28Kは50%〜75%を好むことがさらに示された。共有コードブック分析により、手続き型オーディオではパッチの多様性が低く、時間的な予測可能性が高いことが明らかになった。これらの結果は、ソースのスケーリングと学習構成を共同で考慮する、ソースを意識した手続き型事前学習を動機付けるものである。コードは https://github.com/Cross-Innovation-Lab/Formula-Bank で入手可能である。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.14174v1",
+          "date": "Sep 12",
+          "title": "Inherited Heads: Audio language models track speakers with their text backbone's attention, and an attention-mass ranking retrieves a different set",
+          "titleJa": "継承されたヘッド：音響言語モデルはテキストバックボーンのアテンションで話者を追跡し、アテンション質量ランキングは異なるセットを回収する",
+          "authors": [
+            "Bojro Das"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Asked to describe what one of six speakers in a recording talks about, audio language models describe the right one on 6 to 16% of trials, below the 16.7% a guess would give. Adding a fixed bias to the attention logits of a hundred heads, under a tenth of the model's and with no training, redirects the description to whichever speaker we choose, on 90.7% to 99.0% of trials. Those heads are largely not specific to audio. Rank the text-only language model an audio model was built from, or a released model of the same family, on a written version of the task, take its top hundred heads, and carry them over unchanged: they redirect the audio model on 80.8% to 95.0% of trials, with nothing about audio entering the selection. The audio and text head sets share 66 to 74 of 100 where chance would give about 20, and the shared part alone reproduces almost all of the steering. What that does not show is that sharing is what makes the heads work: an equal-sized draw from the same discovered hundred does nearly as well, and none of our three models separates the two explanations. A second finding concerns how such heads are found. Ranking heads by how much attention they place on the segment asked about, as an established score does, or by how much of their attention moves with the question, as a per-head normalised variant does, gives top hundreds that share 69, 37 and 4 heads across our three models. In Ultravox, where they share 4, the established score's heads leave output the judge cannot place on any segment on 69.7% of trials, against 40.0% with no intervention and 1.0% for the normalised variant. That is one arm of six; on the other five the established score steers above a random draw.",
+          "comment": "20 pages, 6 figures",
+          "journalRef": null,
+          "categories": [
+            "cs.LG",
+            "cs.CL",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.14174v1",
+          "category": "foundation",
+          "task": "音響言語モデル解析",
+          "taskEn": "Audio Language Model Analysis",
+          "proposedMethod": null,
+          "datasets": [],
+          "what": "音響言語モデルが複数話者を含む録音から特定の話者の発言内容を記述する際、特定のアテンションヘッド群（テキストのみの言語モデルから引き継がれたものを含む）にバイアスを加えることで、記述対象の話者を意図通りに制御できることを示している。",
+          "whatEn": "This paper shows that when audio language models are asked to describe the speech of a specific speaker among multiple speakers, adding a bias to specific attention heads (including those inherited from text-only models) can steer the description to the target speaker.",
+          "novel": "音響言語モデルにおける話者選択の制御が、音響特有ではないテキスト言語モデルから継承されたアテンションヘッド群に固定バイアスを課すだけで高確率で達成できること、およびヘッドの選択基準としてアテンション質量の正規化バリアントが有効であることを明らかにした点。",
+          "novelEn": "The authors show that controlling speaker selection in audio language models can be achieved with high probability by applying fixed biases to attention heads inherited from text-only models, and demonstrate that a normalized variant of attention-mass ranking is highly effective for identifying these heads.",
+          "method": "100個のアテンションヘッドのロジットに固定バイアスを追加する。これらのヘッドは、テキストのみの言語モデルを同じタスクのテキスト版でランク付けして抽出したトップ100ヘッド、またはアテンション質量やその正規化バリアントを用いたアプローチから選択される。",
+          "methodEn": "A fixed bias is added to the attention logits of 100 heads. These heads are selected either by ranking the source text-only language model on a written version of the task, or by ranking heads using attention mass or its normalized variant.",
+          "validation": "Ultravoxを含む3つのモデルを用いて検証を行い、バイアス追加なしでは16.7%以下の精度であった話者選択記述が、提案手法（アテンション操作および正規化バリアントによる選択）により、多くの試行で最大90.7%〜99.0%の割合で選択を制御できることを実証した。",
+          "validationEn": "Validation was performed using three models, including Ultravox. While accuracy was below 16.7% without intervention, the proposed attention steering (especially using the normalized variant) successfully redirected descriptions in up to 90.7% to 99.0% of trials.",
+          "discussion": "共有ヘッドが機能する理由が「共有自体」にあるのか、単に発見された優れた100個のヘッド群から同サイズを抽出したためなのかを区別することが難しく、評価した3つのモデルのいずれもこの2つの説明を分離できていない。",
+          "discussionEn": "It is difficult to determine whether sharing is what makes the heads work, as an equal-sized draw from the same discovered hundred heads performs nearly as well, and none of the three models separates these two explanations.",
+          "abstractJa": "6人の話者のうち1人が録音で何を話しているかを説明するよう求められた際、音響言語モデルが正しい話者を説明する割合は試行の6〜16%にとどまり、当てずっぽうの16.7%を下回る。モデル全体の1割未満にあたる100個のヘッドのアテンションロジットに、訓練なしで固定のバイアスを加えるだけで、記述を我々が選択した任意の話者へとリダイレクトさせることができ、その割合は試行の90.7%から99.0%に達する。これらのヘッドの大部分は、音響に特化したものではない。音響モデルのベースとなったテキスト専用言語モデル、または同系統の公開モデルをテキスト版のタスクでランク付けし、その上位100ヘッドをそのまま引き継ぐと、選択に音響に関する情報が一切入っていないにもかかわらず、試行の80.8%から95.0%で音響モデルをリダイレクトさせることができる。音響ヘッドセットとテキストヘッドセットは、偶然であれば約20個が一致するのに対し、100個中66〜74個を共有しており、その共有部分だけでステアリングのほぼすべてを再現できる。ただし、これが示していないのは、共有こそがヘッドを機能させている原因であるということである。検出された同じ100個のヘッドから同等のサイズを抽出してもほぼ同等の性能が得られ、我々の3つのモデルはいずれもこれら2つの説明を区別できない。第二の発見は、このようなヘッドがどのように発見されるかに関するものである。確立されたスコアのように、質問されたセグメントに置かれるアテンションの量でヘッドをランク付けするか、あるいは、ヘッドごとに正規化したバリアントのように、質問に応じて移動するアテンションの量でランク付けすると、3つのモデル間でそれぞれ69個、37個、4個のヘッドを共有する上位100個が得られる。共有数が4個であるUltravoxにおいて、確立されたスコアによるヘッドを用いると、介入なしの40.0%、正規化バリアントの1.0%に対し、試行の69.7%で判定器がどのセグメントにも割り当てられない出力を残す結果となった。これは6つのアーム（話者選択肢）のうちの1つであり、他の5つでは確立されたスコアはランダム抽出を上回るステアリング効果を示す。",
+          "nextReads": [
+            {
+              "label": "Attention Is All You Need (2017)",
+              "arxivId": "1706.03762",
+              "url": "https://arxiv.org/abs/1706.03762",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "separation",
+      "label": "音源分離",
+      "labelEn": "Source Separation",
+      "color": "#4ade80",
+      "papers": [
+        {
+          "id": "2609.12774v1",
+          "date": "Sep 11",
+          "title": "DiffSynth-Music: Audio-Conditioned KV-Cache Adapters for Controllable Music Generation",
+          "titleJa": "DiffSynth-Music：制御可能な音楽生成のための音響条件付きKVキャッシュアダプター",
+          "authors": [
+            "Zhongjie Duan",
+            "Shengchuan Gao",
+            "Hong Zhang",
+            "Yingda Chen"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Text and lyrics specify broad musical characteristics and sung content but offer limited control over musical timing, melody, and reference-based style. We introduce DiffSynth-Music (https://modelscope.cn/models/DiffSynth-Studio/DiffSynth-Music), a framework that adds composable audio conditioning to a music synthesis backbone through layer-wise key-value injection. The three template models, Control, Prosody, and Reference, are initialized from the backbone diffusion transformer and trained with conditional flow matching. They support five control types: beats, vocals, accompaniment, prosody, and reference audio. A shared variational autoencoder maps conditioning waveforms into a common latent space, enabling their attention memories to be combined. With the template timestep fixed at the clean-data endpoint and other inputs held constant, each control cache is computed once and reused throughout sampling. Training pairs are derived from music recordings using beat extraction, source separation, vocal resynthesis, and reference-excerpt selection. Single-control evaluations on Mandarin and English songs demonstrate improved adherence across all five control types and better lyric fidelity under vocal conditioning relative to the backbone. Automatic music-quality and instruction-following scores remain broadly comparable to those of the evaluated base models, with metric-specific trade-offs. We release the three template models to support research and creative applications in controllable music generation.",
+          "comment": "10 pages, 1 figure",
+          "journalRef": null,
+          "categories": [
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.12774v1",
+          "category": "separation",
+          "task": "音楽生成",
+          "taskEn": "Music Generation",
+          "proposedMethod": "DiffSynth-Music",
+          "datasets": [],
+          "what": "歌詞やテキストだけでは困難な、音楽のタイミング、メロディ、参照ベースのスタイルを精密に制御するため、音響条件を統合するキー・バリュー（KV）注入フレームワークを提案している。",
+          "whatEn": "This paper proposes DiffSynth-Music, a framework that integrates audio conditioning using key-value injection to provide precise control over musical timing, melody, and reference style which are difficult to specify using lyrics and text alone.",
+          "novel": "拡散トランスフォーマーバックボーンから初期化されるControl、Prosody、Referenceの3つのテンプレートモデルを用いて、KVキャッシュを一度だけ計算して再利用する効率的な条件付け機構を開発し、5種類の制御（拍、ボーカル、伴奏、韻律、参照）を組み合わせ可能にした点。",
+          "novelEn": "The novelty lies in developing an efficient conditioning mechanism using three template models (Control, Prosody, Reference) initialized from the diffusion transformer backbone, which allows computing and reusing KV caches once and combining five control types (beats, vocals, accompaniment, prosody, reference).",
+          "method": "共有された変分オートエンコーダ（VAE）を用いて条件入力波形を共通の潜在空間に写像し、それらのアテンションメモリを結合する。フローマッチングを用いてテンプレートモデルを訓練し、サンプリング時には時間ステップを固定してKVキャッシュを一度だけ計算して再利用する。",
+          "methodEn": "A shared variational autoencoder (VAE) maps conditioning waveforms into a common latent space to combine their attention memories. The template models are trained with conditional flow matching, and the control caches are computed once and reused by fixing the template timestep during sampling.",
+          "validation": "中国語および英語の楽曲を用いた単一制御評価により、5つの制御タイプすべてにおいて高い制御追従性を示し、ボーカル条件付けにおいてはベースモデルよりも高い歌詞忠実度を達成しつつ、音質や指示追従スコアを同等水準に維持できることを示した。",
+          "validationEn": "Single-control evaluations on Mandarin and English songs demonstrated improved adherence across all five control types and better lyric fidelity under vocal conditioning, while maintaining comparable music-quality and instruction-following scores relative to the base models.",
+          "discussion": "客観的な評価指標（音質や指示追従性など）においては、評価したベースモデルと比較してトレードオフが存在することが示唆されている。",
+          "discussionEn": "The evaluation indicates that there are metric-specific trade-offs in music-quality and instruction-following scores compared to the evaluated base models.",
+          "abstractJa": "テキストや歌詞は広範な音楽的特徴や歌唱内容を指定するものの、音楽のタイミング、メロディ、参照ベースのスタイルに対する制御は限られている。我々は、レイヤーごとのキー・バリュー（KV）注入を介して、音楽合成バックボーンに組み合わせ可能な音響条件付けを追加するフレームワークであるDiffSynth-Music（https://modelscope.cn/models/DiffSynth-Studio/DiffSynth-Music）を導入する。Control、Prosody、Referenceの3つのテンプレートモデルは、バックボーンの拡散トランスフォーマーから初期化され、条件付きフローマッチングによって訓練される。これらは、拍、ボーカル、伴奏、韻律、参照オーディオの5つの制御タイプをサポートする。共有された変分オートエンコーダが条件入力波形を共通の潜在空間に写像し、それらのアテンションメモリの結合を可能にする。テンプレートの時間ステップをクリーンデータのエンドポイントに固定し、他の入力を一定に保つことで、各制御キャッシュは1回だけ計算され、サンプリング全体で再利用される。訓練ペアは、拍抽出、音源分離、ボーカル再合成、参照抜粋選択を用いて音楽録音から作成される。中国語と英語の楽曲を用いた単一制御の評価では、バックボーンと比較して、5つの制御タイプすべてにおいて追従性が向上し、ボーカル条件付けにおける歌詞の忠実度が向上することが実証された。自動音楽品質スコアおよび指示追従スコアは、評価したベースモデルとおおむね同等であり、指標固有のトレードオフが存在する。我々は、制御可能な音楽生成における研究とクリエイティブな応用をサポートするため、これら3つのテンプレートモデルを公開する。",
+          "nextReads": [
+            {
+              "label": "Flow Matching for Generative Modeling (2022)",
+              "arxivId": "2210.02747",
+              "url": "https://arxiv.org/abs/2210.02747",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "Adding Conditional Control to Text-to-Image Diffusion Models (2023)",
+              "arxivId": "2302.05543",
+              "url": "https://arxiv.org/abs/2302.05543",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        },
+        {
+          "id": "2609.12629v1",
+          "date": "Sep 11",
+          "title": "Location-based Training with Complementary Folded Linear Orderings for Multichannel Speech Separation",
+          "titleJa": "マルチチャネル音声分離のための相補的折り畳み線形順序付けを用いた位置ベースの訓練",
+          "authors": [
+            "Kaixuan Yang",
+            "Stijn Kindt",
+            "Nilesh Madhu"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Location-based training (LBT) effectively resolves the output permutation problem in multichannel speech separation by imposing deterministic spatial orderings. For planar microphone arrays, LBT typically adopts circular azimuth ordering to cover the full spatial range. However, the resulting cyclic topology introduces a discontinuity at the wrap-around point, increasing learning complexity and limiting the effective use of spatial cues. This work investigates this limitation by introducing location-based training with folded linear orderings (LBT-FLOs), which collapse circular azimuths into controlled linear orderings. While individual LBT-FLOs exhibit front-back ambiguity, each provides enhanced spatial discriminability over specific azimuth regions. Exploiting their complementarity, we propose an ensemble-style framework that selects among multiple LBT-FLOs using azimuth-guided scoring. Experiments across planar array geometries and reverberant conditions show modest but consistent improvements over circular-ordering LBT, with robustness to azimuth estimation errors.",
+          "comment": "Accepted by IWAENC 2026",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.12629v1",
+          "category": "separation",
+          "task": "音源分離",
+          "taskEn": "Audio Source Separation",
+          "proposedMethod": "LBT-FLOs",
+          "datasets": [],
+          "what": "マルチチャネル音声分離における位置ベースの訓練（LBT）において、従来の円形方位角順序付けが引き起こす不連続性の問題を解決するため、円形方位角を線形順序に折り畳んでマッピングする訓練手法を提案している。",
+          "whatEn": "This paper proposes a location-based training method with folded linear orderings (LBT-FLOs) for multichannel speech separation to resolve the discontinuity issue caused by conventional circular azimuth ordering in LBT.",
+          "novel": "円形方位角を制御された線形順序に折りたたむことで、特定の方位角領域における空間的識別能を高め、さらに複数の相補的なLBT-FLOを方位角誘導スコアリングにより動的に選択するアンサンブル型フレームワークを提案した点。",
+          "novelEn": "The novelty lies in collapsing circular azimuths into controlled linear orderings to enhance spatial discriminability over specific regions, and proposing an ensemble-style framework that dynamically selects among multiple complementary LBT-FLOs using azimuth-guided scoring.",
+          "method": "円形の方位角の配置をいくつかの折り畳まれた線形順序（LBT-FLO）にマッピングする。各FLOは前後方向の曖昧性を持つものの、特定地域で高い識別力を持つ。これら複数モデルの出力を、方位角予測スコアに基づいて動的に選択・統合する。",
+          "methodEn": "The method maps circular azimuths into multiple folded linear orderings (LBT-FLOs). Although each individual LBT-FLO has front-back ambiguity, it provides enhanced discriminability in specific regions. Multiple models are integrated using an ensemble-style framework that selects among them based on azimuth-guided scoring.",
+          "validation": "平面マイクアレイの幾何学的形状および残響条件下での実験により、従来の円形順序を用いたLBTと比較して、緩やかではあるが一貫した性能向上を達成し、かつ方位角推定エラーに対しても堅牢であることを示した。",
+          "validationEn": "Experiments across planar array geometries and reverberant conditions demonstrated modest but consistent improvements over circular-ordering LBT, along with robustness to azimuth estimation errors.",
+          "discussion": "各LBT-FLOは単体では前後方向の曖昧性（front-back ambiguity）を持つため、位置推定およびスコアリングによるモデル選択の精度に依存する可能性がある。",
+          "discussionEn": "Since individual LBT-FLOs exhibit front-back ambiguity, the performance relies on the accuracy of the azimuth-guided scoring for model selection.",
+          "abstractJa": "位置ベースの訓練（LBT）は、決定論的な空間的順序付けを課すことにより、マルチチャネル音声分離における出力順列問題を効果的に解決する。平面マイクアレイの場合、LBTは通常、全空間範囲をカバーするために円形方位角順序を採用する。しかし、結果として生じる循環的なトポロジーは、折り返し地点での不連続性を導入し、学習の複雑さを増大させ、空間情報の効果的な利用を制限する。本研究では、円形方位角を制御された線形順序へと折りたたむ、相補的折り畳み線形順序付けを用いた位置ベースの訓練（LBT-FLOs）を導入することで、この制限を調査する。個々のLBT-FLOは前後方向の曖昧性を示すものの、それぞれ特定の方位角領域に対して強化された空間的識別能を提供する。それらの相補性を利用して、方位角誘導スコアリングを用いて複数のLBT-FLOの中から選択を行うアンサンブル型のフレームワークを提案する。平面アレイの幾何学的形状および残響条件下での実験により、円形順序LBTに対して緩やかではあるが一貫した向上が見られ、方位角推定誤差に対する堅牢性も示された。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    }
+  ],
+  "trend": [
+    "Attention制御による話者追跡を可能にするInherited Headsや、KVキャッシュ制御で旋律やスタイルを精密に生成するDiffSynth-Musicなど、音声・音楽言語モデルの高度な制御技術が発展しています。",
+    "皮肉検出における語彙と韻律の依存関係を診断するCLASHや、英語スピーキング能力評価用のOpenEndedコーパスなど、音声評価のための診断フレームワークとデータセットの構築が進んでいます。",
+    "多チャネル音源分離の不連続性を解決するLBT-FLOsの提案や、手続き型オーディオを用いた事前学習のスケーリング検証など、音響信号処理と学習プロセスの最適化が模索されています。"
+  ],
+  "trendEn": [
+    "Advanced control techniques for speech and music language models are progressing, highlighted by Inherited Heads which biases attention heads for speaker tracking, and DiffSynth-Music which utilizes KV-cache adapters for precise melody and style control.",
+    "Evaluation and diagnostic frameworks are advancing through CLASH, which audits lexical and prosodic reliance in sarcasm detection, and the OpenEnded corpus, designed for open-response speaking proficiency assessment.",
+    "Optimization of signal processing and pre-training is being explored, with LBT-FLOs resolving discontinuity in multichannel speech separation and new systematic investigations refining procedural audio pre-training."
+  ]
+}
