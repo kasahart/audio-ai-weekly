@@ -38,7 +38,7 @@ features each month:
   assumptions, and implications for researchers and practitioners.
 
 Each feature publishes matched full-length English and Japanese editions. The
-generator first writes an 800–1,100 word canonical English article, verifies its
+generator first writes a 1,000–1,200 word canonical English article, verifies its
 grounding, and only then translates the fixed section, block, and citation structure
 into a Japanese 8–12 minute read. A separate bilingual review rejects material
 omissions, additions, or changed qualifications. Topic selection starts from the
