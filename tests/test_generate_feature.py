@@ -1960,3 +1960,35 @@ def test_pipeline_translates_only_after_canonical_english_verification(
         "canonicalLanguage": "en",
         "translationRevisionCount": 0,
     }
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Code: https://github.com/team/project.", "https://github.com/team/project"),
+    (r"Code: \url{https://github.com/team/project}.", "https://github.com/team/project"),
+    ("https://github.com.evil.example/team/project", None),
+    ("https://token@github.com/team/project", None),
+    ("http://github.com/team/project", None),
+    ("https://github.com/team", None),
+])
+def test_recover_metadata_code_link(text, expected):
+    original = {"abstract": text, "githubRepo": None}
+    recovered = generate_feature.recover_metadata_code_link(original)
+    assert recovered.get("githubRepo") == expected
+    assert original["githubRepo"] is None
+
+
+def test_recovered_code_link_is_used_in_source_packet():
+    candidates = make_candidates()
+    for paper in candidates:
+        paper["githubRepo"] = None
+        paper["projectPage"] = None
+    candidates[0]["abstract"] += " Code: https://github.com/team/research."
+    candidates = [generate_feature.recover_metadata_code_link(p) for p in candidates]
+    assert generate_feature._candidate_payload(candidates, 40, 1)[0]["hasPrimaryLink"]
+    sources = generate_feature.build_source_packet(make_plan(), candidates, make_sources()[4:])
+    assert sources[0]["primaryLinks"] == [{"label":"Code", "url":"https://github.com/team/research"}]
+
+
+def test_preserve_existing_metadata_code_link():
+    paper = {"githubRepo":"https://github.com/team/original", "abstract":"https://github.com/team/other"}
+    assert generate_feature.recover_metadata_code_link(paper) == paper

@@ -179,7 +179,7 @@ def load_recent_weekly_papers(
                 paper["archiveDate"] = week_date.isoformat()
                 paper.setdefault("category", category.get("id", "other"))
                 papers.append(paper)
-    return dedupe_weekly_papers(papers)
+    return [recover_metadata_code_link(paper) for paper in dedupe_weekly_papers(papers)]
 
 
 def load_feature_index(output_dir: Path) -> dict:
@@ -227,6 +227,23 @@ def load_existing_feature_for_slot(
             raise FeatureError("Indexed feature does not match its scheduled slot")
         return feature
     return None
+
+
+def recover_metadata_code_link(paper: dict) -> dict:
+    """Recover an explicit repository URL from archived arXiv metadata only."""
+    result = dict(paper)
+    if isinstance(result.get("githubRepo"), str) and is_valid_primary_link("Code", result["githubRepo"]):
+        return result
+    for field in ("abstract", "comment"):
+        text = paper.get(field)
+        if not isinstance(text, str):
+            continue
+        for match in re.finditer(r"https://[^\s<>\"{}]+", text):
+            url = match.group(0).rstrip(".,;:!?) ]")
+            if is_valid_primary_link("Code", url):
+                result["githubRepo"] = url
+                return result
+    return result
 
 
 def _has_valid_primary_link(paper: Mapping[str, Any]) -> bool:
