@@ -31,6 +31,36 @@
       "generatedAt": "2026-09-29T06:56:30.356742+00:00"
     },
     {
+      "slug": "2026-08-25-debate-source-separation-and-stem-manipulation",
+      "type": "debate",
+      "date": "2026-08-25",
+      "readTimeMinutes": 10,
+      "readTimeMinutesEn": 5,
+      "sourceCount": 8,
+      "title": "音楽音源分離とステムベースのオーディオ操作におけるパラダイム",
+      "titleEn": "Paradigms in Music Source Separation and Stem-Based Audio Manipulation",
+      "dek": "音源分離および逐次ミキシングモデルの最近の進展を通じ、静的な音楽分離から動的かつ条件付けられた構造的オーディオ操作へのパラダイムシフトを探る。",
+      "dekEn": "Exploring the paradigm shift from static music demixing to dynamic, conditioned structural audio manipulation through recent advancements in source separation and sequential mixing models.",
+      "file": "2026-08-25-debate-source-separation-and-stem-manipulation.json",
+      "topicKey": "source-separation-and-stem-manipulation",
+      "searchTerms": [
+        "source separation",
+        "stem blending",
+        "audio mixing"
+      ],
+      "sourcePaperIds": [
+        "2608.14516",
+        "2608.05506",
+        "2607.23395",
+        "2607.15634",
+        "1810.12187",
+        "2305.11727",
+        "2008.07645",
+        "2004.03873"
+      ],
+      "generatedAt": "2026-09-29T07:11:34.706305+00:00"
+    },
+    {
       "slug": "2026-08-11-primer-audio-self-supervised-learning-foundations",
       "type": "primer",
       "date": "2026-08-11",
@@ -122,5 +152,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-09-29T06:56:30.356742+00:00"
+  "generatedAt": "2026-09-29T07:11:34.706305+00:00"
 }

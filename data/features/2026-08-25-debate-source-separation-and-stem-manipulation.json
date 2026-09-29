@@ -1,0 +1,329 @@
+{
+  "title": "音楽音源分離とステムベースのオーディオ操作におけるパラダイム",
+  "titleEn": "Paradigms in Music Source Separation and Stem-Based Audio Manipulation",
+  "dek": "音源分離および逐次ミキシングモデルの最近の進展を通じ、静的な音楽分離から動的かつ条件付けられた構造的オーディオ操作へのパラダイムシフトを探る。",
+  "dekEn": "Exploring the paradigm shift from static music demixing to dynamic, conditioned structural audio manipulation through recent advancements in source separation and sequential mixing models.",
+  "summaryEn": "Recent research in audio and speech AI marks a major shift from static, universal music source separation toward conditional, dynamic, and structured stem-based manipulation. Conventional demixing models often struggle when isolating specific targets within complex polyphonic mixtures, such as separating individual voices in multi-singer tracks, choral ensembles, or highly correlated instrumental parts. To address these limitations, recent frameworks introduce side information—such as target singer embeddings via feature-wise linear modulation, fundamental frequency contours, or spatial guidance across waveform and spectrogram domains—to drastically improve target extraction and perceptual quality. Concurrently, automatic music mixing and style transfer have evolved beyond single-pass parallel architectures. New approaches conceptualize mixing as a sequential stem-blending task using latent flow matching models, or employ autoregressive Transformers to predict variable-length audio effect chains. Supported by unified training frameworks like MSST and large-scale pseudo-stem generation strategies paired with extensive audio effect toolkits, these methods enable precise control over mixing styles and structural audio arrangements. However, significant evaluation challenges remain, including the gap between traditional mathematical metrics like signal-to-distortion ratios and human perceptual judgment, alongside practical constraints regarding computational efficiency, data scarcity, and downstream implications for content creation.",
+  "keyPointsEn": [
+    "Singer-informed conditioning techniques significantly enhance vocal source separation in multi-singer and choral environments.",
+    "Sequential stem blending and autoregressive effect chain prediction replace traditional single-pass parallel mixing architectures.",
+    "Unified training frameworks and pseudo-stem data augmentation strategies bridge the gap in large-scale multitrack audio research."
+  ],
+  "perspectives": [
+    {
+      "id": "research-mechanism",
+      "label": "研究メカニズム",
+      "description": "ターゲット話者・歌手の埋め込みガイダンス、逐次ステムブレンディングのための潜在フローマッチング、エンドツーエンドの波形処理、自己回帰的エフェクトチェーン予測などのコアアルゴリズムを分析する。",
+      "labelEn": "Research Mechanisms",
+      "descriptionEn": "Analyzes core algorithms such as target speaker/singer embedding guidance, latent flow matching for sequential stem blending, end-to-end waveform processing, and autoregressive effect chain prediction.",
+      "sourceIds": [
+        "S1",
+        "S2",
+        "S4",
+        "S5",
+        "S7",
+        "S8"
+      ]
+    },
+    {
+      "id": "practitioner-constraints",
+      "label": "実践者の制約",
+      "description": "大規模なマルチトラックデータの不足、疑似ステム生成およびデータ拡張の必要性、実世界でのデプロイにおける計算効率と推論速度のトレードオフを検証する。",
+      "labelEn": "Practitioner Constraints",
+      "descriptionEn": "Examines the scarcity of large-scale multitrack data, the necessity of pseudo-stem generation and data augmentation, and the trade-offs between computational efficiency and inference speed in real-world deployments.",
+      "sourceIds": [
+        "S2",
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "id": "evaluation-limits",
+      "label": "評価の限界と社会的影響",
+      "description": "従来の分離精度指標と人間の知覚的品質との乖離、空間オーディオおよびバイノーラル環境における課題、AI生成ステムが著作権やコンテンツ配信に与える影響を考察する。",
+      "labelEn": "Evaluation Limits and Societal Impact",
+      "descriptionEn": "Considers the divergence between traditional separation accuracy metrics and human perceptual quality, challenges in spatial audio and binaural environments, and the impact of AI-generated stems on copyright and content distribution.",
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S6"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "current-signal",
+      "heading": "現在のシグナルと技術的背景",
+      "headingEn": "Current Signal and Technical Context",
+      "blocks": [
+        {
+          "id": "block-current-signal-1",
+          "text": "音楽音源分離（MSS）は従来、カラオケ、リミックス、音声修復などの用途に向けて、多重録音されたオーディオミックスから個々の音響成分（ステム）を復元することに主眼を置いてきた。標準的なモデルは通常、同一カテゴリ内の個別の演奏者を区別することなく、ボーカル、ベース、パーカッションといった大まかな音源カテゴリを抽出する。初期の研究では、位相情報を含む生オーディオ信号を直接処理する波形ドメインモデルの有効性が確立され、スペクトログラムベースのディープラーニング手法に匹敵するかそれを超える性能が示された。しかし、近年の研究では、複雑な聴覚的シーンに対応するための補助的なガイダンスを取り入れることで、より詳細なシナリオに対処している。例えば、マルチシンガーの混合音や合唱団のアンサンブルは、従来のモデルでは同時発声するボーカルや、スペクトルおよび基本周波数の範囲が重なり合う相関性の高い調波音源を容易に区別できないため、大きな課題となっている。ターゲット歌手の短い登録音声の導入や、基本周波数輪郭、楽器の存在インジケータ、映像ストリームといった二次的なモダリティを活用することで、現代のアーキテクチャは学習済み埋め込みを利用して分離プロセスを誘導し、二次的な音声や相関する楽器からの干渉を効果的に抑えつつ、主要なターゲットの音色特性を維持する。こうした基礎的な進展は、無条件の分離から、条件付けが高度になされた文脈認識型オーディオ処理パイプラインへの移行に必要な技術的土台を築くものである。\n\nこうした複雑なパイプラインを効率化するため、MSSTのような統合オープンソースフレームワークは、高度な学習戦略、モデルのアンサンブル、LoRA（低ランク適応）によるファインチューニングをサポートする設定駆動型インターフェースを提供する[S3]。",
+          "textEn": "Music source separation (MSS) has traditionally focused on recovering individual sound components, or stems, from a polyphonic audio mixture to serve applications like karaoke, remixing, and audio restoration. Standard models typically extract broad source categories such as vocals, bass, and percussion without distinguishing between individual contributors within the same category. Early explorations established the viability of waveform-domain models operating directly on raw audio signals, including phase information, to match or exceed spectrogram-based deep learning methods. Recent research, however, addresses more granular scenarios by incorporating auxiliary guidance to handle complex auditory scenes. For instance, multi-singer mixtures and choral ensembles present significant challenges because conventional models cannot easily differentiate between concurrent vocalists or highly correlated harmonic sources that share overlapping spectral and fundamental frequency ranges. By introducing short enrollment recordings of target singers or leveraging fundamental frequency contours and secondary modalities like instrument presence indicators and video streams, modern architectures utilize learned embeddings to steer the separation process, ensuring that interference from secondary voices or correlated instruments is effectively suppressed while preserving the primary target's timbral characteristics. These foundational developments establish the necessary technical groundwork for transitioning from unconditioned separation toward deeply conditioned, context-aware audio processing pipelines.\n\nTo streamline these complex pipelines, unified open-source frameworks like MSST provide configuration-driven interfaces supporting advanced training strategies, model ensembling, and fine-tuning via Low-Rank Adaptation [S3].",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S5",
+            "S7",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "positions",
+      "heading": "中核となるアーキテクチャの立場",
+      "headingEn": "Core Architectural Positions",
+      "blocks": [
+        {
+          "id": "block-positions-1",
+          "text": "この分野は現在、複雑なオーディオ操作パイプラインをどのようにモデル化すべきかをめぐって意見が分かれており、並列型1パスアーキテクチャと、逐次的な条件付きワークフローが対比されている。有力な主張の一つは、歌手情報に基づく空間的な条件付けを支持するものであり、登録ベクトル、基本周波数輪郭、空間座標などの補助的入力によってディープニューラルネットワークを誘導し、Ambisonicsやマルチシンガー環境を含む複雑な音響シーンからターゲット音源を切り出す。これに対立する、あるいは補完的な見解としては、自動音楽ミキシングなどの下流タスクを逐次的なプロセスとして扱うことが挙げられる。すべてのトラックを同時に処理するのではなく、この逐次的パラダイムでは、人間ミキシングエンジニアが段階的に要素のバランスを取るワークフローを模倣し、潜在フローマッチングを用いてステムを拡大するサブミックスへと反復的にブレンドしていく。こうした高度な条件付き・逐次的手法の支持者は、静的で条件付けのない1パスモデルは重なり合う音響構造に直面した際に本質的に破綻すると強調する。一方で批判派は、複雑な条件付けモダリティの導入によってアーキテクチャの脆弱性が高まり、多様な音楽ジャンルや録音品質にわたって安定した学習ダイナミクスを維持するためには、厳密なデータ準備、慎重なハイパーパラメータ調整、そして特殊な損失関数の定式化が求められると指摘している。\n\nこれらの手法を補完するものとして、フレームワークベースのアプローチは、抽出されたステムに対して可変長のオーディオエフェクトチェーンを自己回帰的に予測することで、音源分離とスタイル変換の橋渡しを行う[S4]。",
+          "textEn": "The field is currently divided over how to model complex audio manipulation pipelines, contrasting parallel single-pass architectures with sequential, conditioned workflows. One prominent position argues for singer-informed and spatial conditioning, where auxiliary inputs like enrollment vectors, fundamental frequency contours, or spatial coordinates guide deep neural networks to isolate target sources from complex sound scenes, including Ambisonics or multi-singer settings. An opposing or complementary viewpoint advocates for treating downstream tasks like automatic music mixing as sequential processes. Instead of processing all tracks simultaneously, this sequential paradigm employs latent flow matching to blend stems iteratively into a growing submix, mimicking the workflow of human mixing engineers who balance elements step by step. Proponents of these advanced conditioned and sequential methods emphasize that static, unconditioned single-pass models inherently fail when confronted with highly overlapping acoustic structures, whereas critics note that introducing complex conditioning modalities increases architectural fragility and demands rigorous data preparation, careful hyperparameter tuning, and specialized loss formulations to maintain stable training dynamics across diverse musical genres and recording qualities.\n\nComplementing these methods, framework-based approaches bridge source separation and style transfer by autoregressively predicting variable-length audio effect chains on extracted stems [S4].",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S6",
+            "S7",
+            "S8",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "heading": "実証的証拠と方法論的転換",
+      "headingEn": "Empirical Evidence and Methodological Shifts",
+      "blocks": [
+        {
+          "id": "block-evidence-1",
+          "text": "近年の文献における実証評価は、条件付けおよび逐次的なメカニズムを採用した際の明確な性能向上を示している。マルチシンガーのボーカル分離において、特徴量の連結や特徴量ベースド線形変調（FiLM）を介してターゲット歌手の埋め込みを組み込むと、条件付けなしのベースラインと比較して、ターゲット歌手のスケール不変ソース歪み比（SI-SDR）が大幅に向上する。同様に、逐次的ステムブレンドに関する実証テストでも、サブミックスの文脈を反復的にモデル化することで、より優れたオーディオのまとまりが得られることが確認されている。さらに、音源分離されたステムに対する自己回帰的なオーディオエフェクト（FX）チェーンの予測を通じてミキシングスタイルの表現を学習させることで、モデルは複雑なミキシングの決定を正確に再現できるようになり、スペクトルの忠実度と推論速度の両面で従来の反復最適化手法を凌駕する。合唱団アンサンブルに対する基本周波数輪郭でのU-Netアーキテクチャの条件付けや、Ambisonicsシーンでの球面調和関数ビームフォーミングと空間情報の統合など、ドメイン固有の適応を追加することで、補助的な条件付けがドメイン非依存のベースラインを超えて分離性能を引き上げるという仮説が一貫して裏付けられている。これらの定量的改善は、プロのオーディオ制作環境に見られる固有の構造的階層にモデルアーキテクチャを適合させることの重要性を強調している。\n\nSI-SDRのような客観的指標に加え、Fréchet Audio Distance（FAD）により、補助的埋め込みが知覚品質とターゲットオーディオの分布整合性を大幅に高めることが確認されている[S1]。",
+          "textEn": "Empirical evaluations across recent literature demonstrate clear performance gains when adopting conditioned and sequential mechanisms. In multi-singer vocal separation, incorporating target singer embeddings via feature concatenation or feature-wise linear modulation (FiLM) raises the target-singer scale-invariant source-to-distortion ratio (SI-SDR) significantly compared to unconditioned baselines. Similarly, empirical tests on sequential stem blending confirm that modeling submix contexts iteratively yields superior audio cohesion. Furthermore, learning mixing style representations through autoregressive audio effect (FX) chain prediction on source-separated stems enables models to accurately replicate complex mixing decisions, outperforming traditional iterative optimization methods in both spectral fidelity and inference speed. Additional domain-specific adaptations, such as conditioning U-Net architectures with fundamental frequency contours for choir ensembles or integrating spatial information with spherical harmonics beamforming in Ambisonics scenes, consistently validate the hypothesis that auxiliary conditioning lifts separation performance beyond domain-agnostic baselines. These quantitative improvements underscore the importance of aligning model architectures with the inherent structural hierarchies found in professional audio production environments.\n\nIn addition to objective metrics like SI-SDR, Fréchet Audio Distance (FAD) confirms that auxiliary embeddings significantly enhance perceptual quality and target audio distribution alignment [S1].",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S4",
+            "S6",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "heading": "評価の課題と指標",
+      "headingEn": "Evaluation Challenges and Metrics",
+      "blocks": [
+        {
+          "id": "block-evaluation-1",
+          "text": "標準的な客観指標の限界により、音声分離およびミキシングシステムの評価は依然として複雑な課題となっています。SI-SDRなどの数学的指標は信号の忠実度を測定するものの、マルチシンガーの楽曲やAmbisonicsなどのシーンベースの空間オーディオフォーマットといった複雑な音響環境においては、人間の知覚的品質や聴取の好みと完全に相関しないことが頻繁にあります。このギャップを埋めるため、研究者は目標とする音声分布との一致度やリスナーの好みのスコアを測定する、Fréchet Audio Distance（FAD）などの知覚的指標にますます依存するようになっています。さらに、MSSTなどの標準化されたオープンソースフレームワーク内で評価プロトコルを統合することは、異なる損失関数、データ拡張、およびクロスフェードを伴うスライディングウィンドウ推論、テスト時拡張、モデルアンサンブル、Low-Rank Adaptation（LORA）ファインチューニングといった後処理技術の間での不一致を軽減し、多様な分離モデルファミリー全体でより再現性の高いアブレーションスタディを可能にするのに役立ちます。こうした標準化された検証手法は、信頼性の高いベンチマークを確立し、報告されたパフォーマンスの向上が現実世界の聴取シナリオに効果的に反映されるようにする上で極めて重要です。\n\n例えば、マルチシンガーの音源混合において、短い登録録音と学習済みの歌手埋め込みを組み込むことで、目標とするSI-SDRを0.33 dBから5.58 dBへと向上させると同時に、FADの知覚的アライメントを改善できることが実証されています。",
+          "textEn": "Evaluating audio separation and mixing systems remains complex due to the limitations of standard objective metrics. While mathematical metrics such as SI-SDR measure signal fidelity, they frequently fail to correlate perfectly with human perceptual quality and listening preferences, particularly in complex acoustic environments such as multi-singer tracks or scene-based spatial audio formats like Ambisonics. To bridge this gap, researchers increasingly rely on perceptual metrics like Fréchet Audio Distance (FAD) to measure alignment with target audio distributions and listener preference scores. Moreover, unifying evaluation protocols within standardized open-source frameworks like MSST helps mitigate discrepancies across different loss functions, data augmentations, and post-processing techniques such as sliding-window inference with cross-fading, test-time augmentation, model ensembling, and Low-Rank Adaptation (LORA) fine-tuning, enabling more reproducible ablation studies across diverse demixing model families. These standardized validation practices are crucial for establishing reliable benchmarks and ensuring that reported performance gains translate effectively to real-world listening scenarios.\n\nFor instance, incorporating short enrollment recordings and learned singer embeddings in multi-singer mixtures has been demonstrated to boost target SI-SDR from 0.33 dB to 5.58 dB while improving FAD perceptual alignment.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S4",
+            "S6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implications",
+      "heading": "実践者にとっての実用的影響",
+      "headingEn": "Practical Implications for Practitioners",
+      "blocks": [
+        {
+          "id": "block-implications-1",
+          "text": "実務者やソフトウェアエンジニアにとって、これらの技術的移行は強力なツールを提供する一方で、顕著なリソース制約をもたらします。高度な分離・ミキシングモデルの訓練には、商業用カタログでは依然として不足している多大なマルチトラックデータが必要です。その結果、開発者は、大規模な音楽コーパスから抽出された分離ステムを使用して訓練パイプラインを拡張するために、疑似ステムデータ合成戦略や、複数のライブラリにわたる数十のエフェクトを統合するMultiAFxのような包括的なツールキットを活用する必要があります。さらに、自己回帰型のエフェクトチェイン予測器や潜在フローマッチングモデルを導入するには、計算効率と推論レイテンシのバランスをとることが伴います。実務者は、リアルタイムのステム操作機能、スライディングウィンドウ推論の構成、およびファインチューニングパイプラインをデジタルオーディオワークステーション（DAW）や制作環境に統合する際、これらのトレードオフを慎重に比較検討しなければなりません。こうした実務上のボトルネックに対処するには、制限されたハードウェア予算のもとでシームレスな動作を確保するための、最適化された推論戦略と堅牢なキャッシュメカニズムが必要です。\n反復的な最適化技術と比較して、MultiAFxのような統合されたエフェクトツールキットを活用することで、自己回帰モデルは桁違いに速く様式的ミキシング変換を実行できるようになります。",
+          "textEn": "For practitioners and software engineers, these technical shifts offer powerful tools but introduce notable resource constraints. Training advanced demixing and mixing models requires substantial multitrack data, which remains scarce in commercial catalogs. Consequently, developers must leverage pseudo-stem data synthesis strategies and comprehensive toolkits like MultiAFx—which unifies dozens of audio effects across multiple libraries—to augment training pipelines using separated stems extracted from large music corpora. Additionally, deploying autoregressive effect chain predictors or latent flow matching models involves balancing computational efficiency with inference latency. Practitioners must carefully weigh these trade-offs when integrating real-time stem manipulation features, sliding-window inference configurations, and fine-tuning pipelines into digital audio workstations and production environments. Addressing these practical bottlenecks requires optimized inference strategies and robust caching mechanisms to ensure seamless operation under constrained hardware budgets.\n\nSpecifically, leveraging unified effect toolkits like MultiAFx allows autoregressive models to execute stylistic mixing transformations orders of magnitude faster than conventional iterative optimization techniques.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "watch",
+      "heading": "将来の展望とより広範な影響",
+      "headingEn": "Future Outlook and Broader Impacts",
+      "blocks": [
+        {
+          "id": "block-watch-1",
+          "text": "音楽ソース分離および生成的ステム操作技術が成熟するにつれて、研究者はそのより広範な社会的および法的影響を注意深く監視しなければなりません。市販の録音物から個別のステムをきれいに分離、修正、リミックスする能力は、著作権の遵守、帰属、および許可されていないコンテンツの再配布に関して重大な疑問を投げかけます。さらに、将来の発展はおそらく、標準的なステレオフォーマットを超えて、個別のソース信号が直接的なオブジェクトベースのメタデータなしで抽出されなければならない、高次のAmbisonicsや没入型バイノーラルプラットフォームなどの複雑な空間オーディオ環境へと拡大するでしょう。プロフェッショナルおよびコンシューマーのメディアエコシステムにおいてAI生成・操作された音声コンテンツがますます普及するにつれ、透明性の高いガバナンス、堅牢な検証ツール、および標準化されたオープンソースの評価パイプラインを確保することが不可欠となります。業界全体利害関係者は、アーティストの権利を保護しつつ音響工学のイノベーションを促進する、明確な倫理的ガイドラインと技術的安全策を確立するために協力しなければなりません。\nさらに、方向特異的な空間オーディオシナリオへの移行には、手動のオブジェクトメタデータに依存せずに複雑なAmbisonicsシーンを解析するために、ニューラルアーキテクチャと球面調和関数ビームフォーミングを組み合わせることが含まれます。",
+          "textEn": "As music source separation and generative stem manipulation technologies mature, researchers must closely monitor their broader societal and legal implications. The ability to cleanly separate, modify, and remix individual stems from commercial recordings raises critical questions regarding copyright compliance, attribution, and unauthorized content redistribution. Furthermore, future developments will likely expand beyond standard stereo formats into complex spatial audio environments, including higher-order Ambisonics and immersive binaural platforms where individual source signals must be extracted without direct object-based metadata. Ensuring transparent governance, robust verification tools, and standardized open-source evaluation pipelines will be essential as AI-generated and manipulated audio content becomes increasingly prevalent in professional and consumer media ecosystems. Stakeholders across the industry must collaborate to establish clear ethical guidelines and technical safeguards that protect artists' rights while fostering innovation in audio engineering.\n\nFurthermore, transitioning toward direction-specific spatial audio scenarios involves combining neural architectures with spherical harmonics beamforming to parse complex Ambisonics scenes without relying on manual object metadata.",
+          "sourceIds": [
+            "S3",
+            "S6"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-09-29T07:11:34.706305+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-08-25-debate-source-separation-and-stem-manipulation",
+  "type": "debate",
+  "date": "2026-08-25",
+  "generatedAt": "2026-09-29T07:11:34.706305+00:00",
+  "topicKey": "source-separation-and-stem-manipulation",
+  "searchTerms": [
+    "source separation",
+    "stem blending",
+    "audio mixing"
+  ],
+  "sources": [
+    {
+      "arxivId": "2608.14516",
+      "title": "Singer-Informed Vocal Source Separation for Multi-Singer Music Mixtures",
+      "abstract": "Music source separation systems typically extract a single vocal track and do not distinguish between multiple singers. We study singer-informed vocal source separation for multi-singer mixtures. Our framework introduces a short enrollment recording of a target singer to guide separation through a learned embedding. The singer embedding is incorporated using feature concatenation or feature-wise linear modulation (FiLM), enabling the model to focus on the target singer while suppressing interference. We construct a duet dataset based on DAMP-VSEP with quality filtering and non-overlapping enrollment segments. Experiments on solo and duet settings show that while baseline models perform well for single-singer mixtures, the proposed method improves target-singer extraction in multi-singer cases, increasing target-singer SI-SDR from 0.33 dB to 5.58 dB. Fréchet Audio Distance (FAD) further shows improved perceptual quality and better alignment with target audio distributions. Code and checkpoints are available at https://github.com/jocelynxu01/singer-separation-paper.",
+      "authors": [
+        "Jocelyn Xu",
+        "Minje Kim"
+      ],
+      "publishedAt": "2026-08-21",
+      "url": "https://arxiv.org/abs/2608.14516",
+      "origin": "archive",
+      "archiveDate": "2026-08-21",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/jocelynxu01/singer-separation-paper"
+        }
+      ],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2608.05506",
+      "title": "Rethinking Automatic Music Mixing as Sequential Stem Blending",
+      "abstract": "Automatic music mixing, the task of automatically combining individual audio tracks into a cohesive mixture, is typically addressed by parallelized architectures that process all input tracks in a single pass. In this work, inspired by how human mix engineers process stems one at a time, we propose a paradigm shift and ask whether automatic music mixing can be reformulated as a sequential stem blending task, where each stem is blended into a growing submix. Specifically, we train a latent flow matching model conditioned on the submix context, enabling sequential processing of an arbitrary number of input tracks. To train the model, we introduce a degradation-based data synthesis strategy that simulates realistic stem blending scenarios from existing multitrack and source separation datasets. Experimental results on both stem blending and automatic music mixing benchmarks demonstrate the effectiveness of the proposed approach. We provide audio examples on the accompanying demo page\\footnote{https://sequential-mixing-demo.vercel.app/}.",
+      "authors": [
+        "Yen-Tung Yeh",
+        "Chung-Jui Chan",
+        " Yun-Ning",
+        " Hung",
+        "Yi-Hsuan Yang"
+      ],
+      "publishedAt": "2026-08-07",
+      "url": "https://arxiv.org/abs/2608.05506",
+      "origin": "archive",
+      "archiveDate": "2026-08-07",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2607.23395",
+      "title": "Music-Source-Separation-Training (MSST): A Unified Framework for Training and Evaluating Music Demixing Models",
+      "abstract": "Music Source Separation (MSS), the task of recovering individual sound components (stems) from a polyphonic mixture, is central to applications ranging from karaoke and remixing to audio restoration and content production. The separation quality depends on engineering decisions across the entire pipeline: model choice, training data preparation and augmentation, loss function and metrics choice, training configuration, validation, and post-processing. This paper presents MSST (Music-Source-Separation-Training) - a universal open-source framework for MSS tasks, which unifies training, validation, and inference for a broad range of modern demixing model families under a single, configuration-driven interface. The framework supports various model architectures, data preprocessing and augmentations, multiple loss functions and evaluation metrics, which helps with fast iterations and ablation studies. Additionally, the framework supports a range of practical techniques that improve separation quality, such as sliding-window inference with cross-fading, test-time augmentation, model ensembling, and fine-tuning via Low-Rank Adaptation (LORA). Our ablation studies demonstrate improvements of MSS using the above techniques. By consolidating these components into a reproducible, YAML-configurable framework, MSST lowers the barrier to systematic experimentation and enables rapid iteration from idea to verifiable result.",
+      "authors": [
+        "Roman Solovyev",
+        "Ilya Kiselev",
+        "Alexander Stempkovskiy",
+        "Tatiana Gabruseva"
+      ],
+      "publishedAt": "2026-07-31",
+      "url": "https://arxiv.org/abs/2607.23395",
+      "origin": "archive",
+      "archiveDate": "2026-07-31",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2607.15634",
+      "title": "StemFX: Learning Mixing Style Representations via Autoregressive FX Chain Prediction on Source-Separated Stems",
+      "abstract": "Audio mixing style encompasses the artistic and technical decisions a mix engineer makes, including level balancing, spatialization, and the choice, ordering, and parameterization of audio effects (FX) on each stem. FX chains are a key determinant of this style, yet existing approaches to modeling them remain limited. Some operate on stereo mixtures without explicit per-stem FX chain modeling, others fix the number or type of effects per track, and many require differentiable effect implementations or scarce multitrack datasets. We present StemFX, a framework that learns mixing style representations by autoregressively predicting variable-length FX chains on source-separated stems. A Transformer decoder predicts tokenized FX chains autoregressively, while a band-split multi-band CNN encoder with FiLM conditioning captures per-stem spectral structure. To enable large-scale paired training, we extract pseudo-stems from about 105K songs via source separation and augment them using MultiAFx, a toolkit unifying 85 audio effects from 7 Python libraries. Evaluated on mixing style retrieval, StemFX outperforms all baseline models across all tested chain lengths. On paired mixing style transfer, StemFX achieves the best spectral fidelity and the highest listener preference, over 4000 times faster than iterative optimization.",
+      "authors": [
+        "Yuan-Chiao Cheng",
+        "Jui-Te Wu",
+        "Brian Chen",
+        "Yen-Tung Yeh",
+        "Yu-Hua Chen"
+      ],
+      "publishedAt": "2026-07-24",
+      "url": "https://arxiv.org/abs/2607.15634",
+      "origin": "archive",
+      "archiveDate": "2026-07-24",
+      "primaryLinks": [],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "1810.12187",
+      "title": "End-to-end music source separation: is it possible in the waveform domain?",
+      "abstract": "Most of the currently successful source separation techniques use the magnitude spectrogram as input, and are therefore by default omitting part of the signal: the phase. To avoid omitting potentially useful information, we study the viability of using end-to-end models for music source separation --- which take into account all the information available in the raw audio signal, including the phase. Although during the last decades end-to-end music source separation has been considered almost unattainable, our results confirm that waveform-based models can perform similarly (if not better) than a spectrogram-based deep learning model. Namely: a Wavenet-based model we propose and Wave-U-Net can outperform DeepConvSep, a recent spectrogram-based deep learning model.",
+      "authors": [
+        "Francesc Lluís",
+        "Jordi Pons",
+        "Xavier Serra"
+      ],
+      "publishedAt": "2018-10-29T15:24:34Z",
+      "url": "https://arxiv.org/abs/1810.12187",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2305.11727",
+      "title": "Direction Specific Ambisonics Source Separation with End-To-End Deep Learning",
+      "abstract": "Ambisonics is a scene-based spatial audio format that has several useful features compared to object-based formats, such as efficient whole scene rotation and versatility. However, it does not provide direct access to the individual source signals, so that these have to be separated from the mixture when required. Typically, this is done with linear spherical harmonics (SH) beamforming. In this paper, we explore deep-learning-based source separation on static Ambisonics mixtures. In contrast to most source separation approaches, which separate a fixed number of sources of specific sound types, we focus on separating arbitrary sound from specific directions. Specifically, we propose three operating modes that combine a source separation neural network with SH beamforming: refinement, implicit, and mixed mode. We show that a neural network can implicitly associate conditioning directions with the spatial information contained in the Ambisonics scene to extract specific sources. We evaluate the performance of the three proposed approaches and compare them to SH beamforming on musical mixtures generated with the musdb18 dataset, as well as with mixtures generated with the FUSS dataset for universal source separation, under both anechoic and room conditions. Results show that the proposed approaches offer improved separation performance and spatial selectivity compared to conventional SH beamforming.",
+      "authors": [
+        "Francesc Lluís",
+        "Nils Meyer-Kahlen",
+        "Vasileios Chatziioannou",
+        "Alex Hofmann"
+      ],
+      "publishedAt": "2023-05-19T15:03:52Z",
+      "url": "https://arxiv.org/abs/2305.11727",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2008.07645",
+      "title": "Deep Learning Based Source Separation Applied To Choir Ensembles",
+      "abstract": "Choral singing is a widely practiced form of ensemble singing wherein a group of people sing simultaneously in polyphonic harmony. The most commonly practiced setting for choir ensembles consists of four parts; Soprano, Alto, Tenor and Bass (SATB), each with its own range of fundamental frequencies (F$0$s). The task of source separation for this choral setting entails separating the SATB mixture into the constituent parts. Source separation for musical mixtures is well studied and many deep learning based methodologies have been proposed for the same. However, most of the research has been focused on a typical case which consists in separating vocal, percussion and bass sources from a mixture, each of which has a distinct spectral structure. In contrast, the simultaneous and harmonic nature of ensemble singing leads to high structural similarity and overlap between the spectral components of the sources in a choral mixture, making source separation for choirs a harder task than the typical case. This, along with the lack of an appropriate consolidated dataset has led to a dearth of research in the field so far. In this paper we first assess how well some of the recently developed methodologies for musical source separation perform for the case of SATB choirs. We then propose a novel domain-specific adaptation for conditioning the recently proposed U-Net architecture for musical source separation using the fundamental frequency contour of each of the singing groups and demonstrate that our proposed approach surpasses results from domain-agnostic architectures.",
+      "authors": [
+        "Darius Petermann",
+        "Pritish Chandna",
+        "Helena Cuesta",
+        "Jordi Bonada",
+        "Emilia Gomez"
+      ],
+      "publishedAt": "2020-08-17T22:07:44Z",
+      "url": "https://arxiv.org/abs/2008.07645",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2004.03873",
+      "title": "Conditioned Source Separation for Music Instrument Performances",
+      "abstract": "In music source separation, the number of sources may vary for each piece and some of the sources may belong to the same family of instruments, thus sharing timbral characteristics and making the sources more correlated. This leads to additional challenges in the source separation problem. This paper proposes a source separation method for multiple musical instruments sounding simultaneously and explores how much additional information apart from the audio stream can lift the quality of source separation. We explore conditioning techniques at different levels of a primary source separation network and utilize two extra modalities of data, namely presence or absence of instruments in the mixture, and the corresponding video stream data.",
+      "authors": [
+        "Olga Slizovskaia",
+        "Gloria Haro",
+        "Emilia Gómez"
+      ],
+      "publishedAt": "2020-04-08T08:24:15Z",
+      "url": "https://arxiv.org/abs/2004.03873",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 10,
+  "readTimeMinutesEn": 5,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-09-29T07:11:34.706305+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 0
+  }
+}
