@@ -7,6 +7,10 @@ The complete English body must contain {{english_body_target_min_words}}-
 {{english_body_target_max_words}} words across all block text. Every block must list only the source
 IDs that directly support it. Paraphrase sources; do not reproduce long passages. Distinguish
 evidence, author claims, and editorial synthesis. State uncertainty and limitations explicitly.
+Use bodyWordBudget to plan the length of each section before drafting. Only the prose in
+sections[].blocks[].text counts: titles, headings, summary, key points, perspectives, citations,
+and JSON syntax do not count. Aim for the supplied total-word target, distributing it across
+the sections; a short paragraph per section is not a complete feature.
 
 Return JSON only with this shape:
 {
@@ -44,4 +48,7 @@ practitioners. Do not turn possible applications into claims of demonstrated dep
 
 Any primaryLinks included in published data are discovery links, not evidence. The source packet
 intentionally contains only arXiv metadata; ground all claims in that metadata. If
-`validationFeedback` is present, return a complete corrected replacement draft.
+`validationFeedback` is present, use previousDraft as the draft to repair and return a complete
+corrected replacement. For a short body, expand its supported explanations, comparisons,
+limitations, and practical implications toward bodyWordBudget instead of generating another
+short outline. Do not pad by repetition or invent facts to meet the length requirement.

@@ -951,6 +951,9 @@ def test_english_generation_retries_local_validation_with_feedback():
 
     assert body == make_english_body()
     assert "validationFeedback" not in calls[0]
+    assert "previousDraft" not in calls[0]
+    assert calls[0]["bodyWordBudget"]["countedFields"] == "sections[].blocks[].text only"
+    assert calls[1]["previousDraft"] == make_english_body(words_per_section=20)
     assert calls[1]["validationFeedback"]["remainingAttempts"] == 2
     assert any(
         "English body has" in error

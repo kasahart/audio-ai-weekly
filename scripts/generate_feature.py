@@ -1877,13 +1877,24 @@ def generate_english_body(
     retry_max = max(
         1, int(cfg.get("english_generation_validation_retry_max", 1))
     )
+    target_words = (
+        cfg["english_body_target_min_words"] + cfg["english_body_target_max_words"]
+    ) // 2
+    section_count = max(cfg["section_min"], len(cfg[f"{article_type}_sections"]))
     validation_errors: list[str] | None = None
+    previous_draft: Any = None
     for attempt in range(retry_max):
         payload: dict[str, Any] = {
             "featurePlan": {**plan, "articleType": article_type},
             "primarySources": grounding_source_payload(sources),
+            "bodyWordBudget": {
+                "targetTotalWords": target_words,
+                "suggestedWordsPerSection": (target_words + section_count - 1) // section_count,
+                "countedFields": "sections[].blocks[].text only",
+            },
         }
         if validation_errors is not None:
+            payload["previousDraft"] = previous_draft
             payload["validationFeedback"] = {
                 "errors": validation_errors,
                 "remainingAttempts": retry_max - attempt,
@@ -1900,6 +1911,7 @@ def generate_english_body(
         except FeatureValidationError as exc:
             if attempt == retry_max - 1:
                 raise
+            previous_draft = body
             validation_errors = list(exc.errors)
             print(
                 "  [warn] AI English feature generation failed local validation "
