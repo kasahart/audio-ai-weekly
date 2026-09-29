@@ -1873,6 +1873,8 @@ def generate_english_body(
     sources: list[dict],
     article_type: str,
     cfg: Mapping[str, Any] = FEATURE_SETTINGS,
+    *,
+    previous_draft: dict | None = None,
 ) -> dict:
     """Generate and locally validate the canonical English edition."""
     instructions = render_prompt(
@@ -1893,7 +1895,12 @@ def generate_english_body(
     ) // 2
     section_count = max(cfg["section_min"], len(cfg[f"{article_type}_sections"]))
     validation_errors: list[str] | None = None
-    previous_draft: Any = None
+    if previous_draft is not None:
+        validation_errors = [
+            "Grounding corrections shortened this canonical draft. Preserve those "
+            "corrections and expand supported explanations to the bodyWordBudget; "
+            "do not reintroduce removed claims."
+        ]
     for attempt in range(retry_max):
         payload: dict[str, Any] = {
             "featurePlan": {**plan, "articleType": article_type},
@@ -2611,6 +2618,7 @@ def _revise_grounding_block_batch(
     *,
     language: str = "ja",
     article_type: str | None = None,
+    allow_short_english: bool = False,
 ) -> dict:
     """Apply compact, verifier-directed block replacements to a complete draft."""
     if language not in ("ja", "en"):
@@ -2790,7 +2798,8 @@ def _revise_grounding_block_batch(
                         patched_feature,
                         sources,
                         article_type or str(plan.get("articleType", "")),
-                        cfg,
+                        {**cfg, "english_body_validation_min_words": 0}
+                        if allow_short_english else cfg,
                     )
             except FeatureValidationError as exc:
                 errors.extend(
@@ -2820,6 +2829,7 @@ def revise_grounding_blocks(
     *,
     language: str = "ja",
     article_type: str | None = None,
+    allow_short_english: bool = False,
 ) -> dict:
     """Apply all verifier issues in output-bounded batches of block patches."""
     block_max = max(1, int(cfg.get("grounding_patch_block_max", 3)))
@@ -2865,6 +2875,7 @@ def revise_grounding_blocks(
             cfg,
             language=language,
             article_type=article_type,
+            allow_short_english=allow_short_english,
         )
         patched_feature.update(body)
         if language == "ja":
@@ -3160,9 +3171,21 @@ def run_feature_pipeline(
             cfg,
             language="en",
             article_type=resolved_type,
+            allow_short_english=True,
         )
         verifier_revision_count += 1
-        validate_english_body(english_body, sources, resolved_type, cfg)
+        try:
+            validate_english_body(english_body, sources, resolved_type, cfg)
+        except FeatureValidationError as exc:
+            if not (
+                english_article_word_count(english_body) < cfg["english_body_target_min_words"]
+                and all(error.startswith("English body has ") for error in exc.errors)
+            ):
+                raise
+        if english_article_word_count(english_body) < cfg["english_body_target_min_words"]:
+            english_body = generate_english_body(
+                model, plan, sources, resolved_type, cfg, previous_draft=english_body
+            )
         verdict = verify_english_body(model, english_body, plan, sources, cfg)
     if verdict["status"] != "pass":
         raise FeatureValidationError(

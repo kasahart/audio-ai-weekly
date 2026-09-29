@@ -1840,10 +1840,11 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
     assert calls == ["patch", "patch", "patch", "patch"]
 
 
-@pytest.mark.parametrize("short_after_revision", [False, True])
+@pytest.mark.parametrize("patched_words", [200, 130, 100])
 def test_pipeline_allows_verifier_revision_after_local_correction(
-    monkeypatch, tmp_path, short_after_revision
+    monkeypatch, tmp_path, patched_words
 ):
+    short_after_revision = patched_words < 200
     plan = make_plan()
     sources = make_sources()
     valid_body = make_english_body()
@@ -1885,31 +1886,31 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         generate_feature, "fetch_additional_arxiv_sources", lambda *_args, **_kwargs: []
     )
     monkeypatch.setattr(generate_feature, "build_source_packet", lambda *_args: sources)
-    monkeypatch.setattr(
-        generate_feature, "generate_english_body", lambda *_args: valid_body
-    )
+    repaired_drafts = []
+
+    def generate(*_args, previous_draft=None):
+        if previous_draft is not None:
+            repaired_drafts.append(previous_draft)
+            calls.append("expand")
+        return valid_body
+
+    monkeypatch.setattr(generate_feature, "generate_english_body", generate)
 
     def patch(*_args, **_kwargs):
         calls.append("patch")
-        return make_english_body(words_per_section=130) if short_after_revision else valid_body
+        return make_english_body(words_per_section=patched_words)
 
     monkeypatch.setattr(generate_feature, "revise_grounding_blocks", patch)
     monkeypatch.setattr(
-        generate_feature, "verify_english_body", lambda *_args: next(verdicts)
+        generate_feature, "verify_english_body", lambda _model, body, *_args: (
+            valid_body == body and next(verdicts)
+        )
     )
     monkeypatch.setattr(
         generate_feature,
         "translate_english_body",
         lambda *_args: (make_body(), 0),
     )
-
-    if short_after_revision:
-        with pytest.raises(generate_feature.FeatureValidationError, match="generation target"):
-            generate_feature.run_feature_pipeline(
-                as_of=date(2026, 7, 14), article_type="primer", dry_run=True,
-                data_root=tmp_path, output_dir=tmp_path / "features", model=object(),
-            )
-        return
 
     feature = generate_feature.run_feature_pipeline(
         as_of=date(2026, 7, 14),
@@ -1921,7 +1922,8 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         now=datetime(2026, 7, 14, tzinfo=timezone.utc),
     )
 
-    assert calls == ["patch", "patch", "patch", "patch"]
+    assert calls == (["patch", "expand"] * 4 if short_after_revision else ["patch"] * 4)
+    assert len(repaired_drafts) == (4 if short_after_revision else 0)
     assert feature["verification"] == {
         "status": "passed",
         "revisionCount": 4,
@@ -2096,3 +2098,51 @@ def test_non_code_or_negated_availability_is_rejected(declaration):
 def test_code_url_wrapped_in_markdown(wrapper):
     text = "Code: " + wrapper.format("https://github.com/authors/project_name_")
     assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project_name_"
+
+
+def test_generation_repairs_shortened_canonical_draft_with_original_context():
+    previous = make_english_body(words_per_section=130)
+    calls = []
+
+    class Model:
+        def complete(self, _instructions, payload, _max_tokens, _purpose):
+            calls.append(payload)
+            return make_english_body()
+
+    result = generate_feature.generate_english_body(
+        Model(), make_plan(), make_sources(), "primer", previous_draft=previous
+    )
+    assert result == make_english_body()
+    assert calls[0]["previousDraft"] == previous
+    assert "Grounding corrections" in calls[0]["validationFeedback"]["errors"][0]
+
+
+@pytest.mark.parametrize("allow_short", [False, True])
+def test_real_grounding_patch_returns_short_english_only_for_repair(allow_short):
+    body = make_english_body()
+    replacements = [
+        {"id": section["blocks"][0]["id"], "text": "revised evidence " * 5,
+         "sourceIds": section["blocks"][0]["sourceIds"]}
+        for section in body["sections"][:3]
+    ]
+
+    class Model:
+        def complete(self, *_args):
+            return {"blockReplacements": replacements}
+
+    def patch():
+        return generate_feature.revise_grounding_blocks(
+            Model(), body, make_plan(), make_sources(),
+            [{"blockId": item["id"], "reason": "Remove unsupported precision"} for item in replacements],
+            {**generate_feature.FEATURE_SETTINGS, "grounding_patch_retry_max": 1},
+            language="en", article_type="primer", allow_short_english=allow_short,
+        )
+
+    if not allow_short:
+        with pytest.raises(generate_feature.FeatureValidationError, match="English body has"):
+            patch()
+    else:
+        result = patch()
+        assert generate_feature.english_article_word_count(result) == 630
+        with pytest.raises(generate_feature.FeatureValidationError, match="English body has"):
+            generate_feature.validate_english_body(result, make_sources(), "primer")
