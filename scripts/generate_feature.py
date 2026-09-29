@@ -178,8 +178,8 @@ def load_recent_weekly_papers(
                 paper = dict(raw_paper)
                 paper["archiveDate"] = week_date.isoformat()
                 paper.setdefault("category", category.get("id", "other"))
-                papers.append(paper)
-    return [recover_metadata_code_link(paper) for paper in dedupe_weekly_papers(papers)]
+                papers.append(recover_metadata_code_link(paper))
+    return dedupe_weekly_papers(papers)
 
 
 def load_feature_index(output_dir: Path) -> dict:
@@ -238,9 +238,21 @@ def recover_metadata_code_link(paper: dict) -> dict:
         text = paper.get(field)
         if not isinstance(text, str):
             continue
-        for match in re.finditer(r"https://[^\s<>\"{}]+", text):
+        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}]+", text):
             url = match.group(0).rstrip(".,;:!?) ]")
-            if is_valid_primary_link("Code", url):
+            context = re.split(r"[.!?;\n]", text[max(0, match.start() - 250):match.start()])[-1]
+            context = re.sub(r"\\(?:url|href)\{$", "", context)
+            context = context.rstrip(" \"'‘’“”(")
+            # Only explicit availability statements, never a bare dependency citation.
+            availability = re.search(
+                r"(?:\b(?:source\s+)?code\s*:\s*|"
+                r"\b(?:code|repository|model|benchmark)\b[^.!?;]{0,100}"
+                r"\b(?:available|released|open[- ]sourced)\b[^.!?;]{0,60}|"
+                r"\b(?:we|our)\b[^.!?;]{0,35}\brelease\b[^.!?;]{0,50}"
+                r"\b(?:code|repository)\b[^.!?;]{0,30})$",
+                context, re.IGNORECASE,
+            )
+            if availability and is_valid_primary_link("Code", url):
                 result["githubRepo"] = url
                 return result
     return result

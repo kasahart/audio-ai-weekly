@@ -1992,3 +1992,25 @@ def test_recovered_code_link_is_used_in_source_packet():
 def test_preserve_existing_metadata_code_link():
     paper = {"githubRepo":"https://github.com/team/original", "abstract":"https://github.com/team/other"}
     assert generate_feature.recover_metadata_code_link(paper) == paper
+
+
+@pytest.mark.parametrize("quote", ["'", "’", "“", "”"])
+def test_recovered_link_excludes_quotes(quote):
+    paper = {"abstract": "Code: " + quote + "https://github.com/team/project" + quote}
+    assert generate_feature.recover_metadata_code_link(paper)["githubRepo"] == "https://github.com/team/project"
+
+
+def test_dependency_does_not_override_authors_repository():
+    paper = {"abstract":"Built on https://github.com/vendor/tool. Our code is available at https://github.com/authors/project."}
+    assert generate_feature.recover_metadata_code_link(paper)["githubRepo"] == "https://github.com/authors/project"
+    assert "githubRepo" not in generate_feature.recover_metadata_code_link({"abstract":"Built on https://github.com/vendor/tool"})
+
+
+def test_old_abstract_code_link_survives_archive_deduplication(tmp_path):
+    (tmp_path / "index.json").write_text(json.dumps({"weeks":[{"date":"2026-0807", "file":"new.json"},{"date":"2026-0731", "file":"old.json"}]}))
+    for name, abstract in [("new", "Updated abstract."), ("old", "Code: https://github.com/authors/project")]:
+        (tmp_path / (name + ".json")).write_text(json.dumps({"categories":[{"papers":[{"id":"2607.12345v1", "title":"Title", "abstract":abstract}]}]}))
+    papers = generate_feature.load_recent_weekly_papers(tmp_path, date(2026,8,11),56)
+    assert len(papers) == 1
+    assert papers[0]["abstract"] == "Updated abstract."
+    assert papers[0]["githubRepo"] == "https://github.com/authors/project"
