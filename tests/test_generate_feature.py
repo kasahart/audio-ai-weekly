@@ -2148,8 +2148,8 @@ def test_real_grounding_patch_returns_short_english_only_for_repair(allow_short)
             generate_feature.validate_english_body(result, make_sources(), "primer")
 
 
-@pytest.mark.parametrize("invalid_citation,first_patch_short", [(False, False), (True, False), (False, True)])
-def test_short_english_uses_bounded_block_expansion_only_after_valid_structure(invalid_citation, first_patch_short):
+@pytest.mark.parametrize("invalid_citation,small_additions", [(False, False), (True, False), (False, True)])
+def test_short_english_uses_additions_only_after_valid_structure(invalid_citation, small_additions):
     calls = []
     short = make_english_body(words_per_section=100)
     if invalid_citation:
@@ -2160,14 +2160,9 @@ def test_short_english_uses_bounded_block_expansion_only_after_valid_structure(i
             calls.append(purpose)
             if purpose == "feature generation":
                 return short
-            assert purpose == "grounding patch"
-            assert "within 0-" in _instructions
-            assert set(payload["minimumBlockWords"]) == set(payload["requiredBlockIds"])
-            short_patch = first_patch_short and calls.count("grounding patch") == 1
-            if first_patch_short and calls.count("grounding patch") == 2:
-                assert any("requires at least" in error for error in payload["validationFeedback"]["errors"])
-            return {"blockReplacements": [
-                {"id": block["id"], "text": "expanded evidence " * (50 if short_patch else 100),
+            assert purpose == "English feature expansion"
+            return {"blockAdditions": [
+                {"id": block["id"], "text": "additional explanation " * (20 if small_additions else 50),
                  "sourceIds": block["sourceIds"]}
                 for block in payload["blocks"]
             ]}
@@ -2179,5 +2174,31 @@ def test_short_english_uses_bounded_block_expansion_only_after_valid_structure(i
     else:
         result = generate_feature.generate_english_body(Model(), make_plan(), make_sources(), "primer")
         generate_feature.validate_english_body(result, make_sources(), "primer")
-        assert generate_feature.english_article_word_count(result) == 1200
-        assert calls == ["feature generation"] * 3 + ["grounding patch"] * (3 if first_patch_short else 2)
+        assert generate_feature.english_article_word_count(result) >= 1000
+        assert calls == ["feature generation"] * 3 + ["English feature expansion"] * (4 if small_additions else 2)
+        assert generate_feature.english_article_word_count(short) == 600
+        for original, expanded in zip(short["sections"], result["sections"]):
+            assert expanded["blocks"][0]["text"].startswith(original["blocks"][0]["text"])
+
+
+@pytest.mark.parametrize("invalid", ["ids", "citations", "overflow"])
+def test_additive_expansion_rejects_invalid_batches_with_bounded_calls(invalid):
+    calls = []
+    body = make_english_body(words_per_section=100)
+
+    class Model:
+        def complete(self, _instructions, payload, *_args):
+            calls.append(payload)
+            return {"blockAdditions": [
+                {"id": "wrong" if invalid == "ids" else block["id"],
+                 "text": "extra evidence " * (500 if invalid == "overflow" else 30),
+                 "sourceIds": ["unknown"] if invalid == "citations" else block["sourceIds"]}
+                for block in payload["blocks"]
+            ]}
+
+    cfg = {**generate_feature.FEATURE_SETTINGS, "short_body_expansion_retry_max": 2}
+    with pytest.raises(generate_feature.FeatureValidationError):
+        generate_feature.expand_short_english_body(Model(), body, make_plan(), make_sources(), "primer", cfg)
+    assert len(calls) == 4
+    assert "validationFeedback" in calls[2]
+    assert generate_feature.english_article_word_count(body) == 600
