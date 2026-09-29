@@ -1840,8 +1840,9 @@ def test_pipeline_bounds_verifier_revisions_after_local_correction(
     assert calls == ["patch", "patch", "patch", "patch"]
 
 
+@pytest.mark.parametrize("short_after_revision", [False, True])
 def test_pipeline_allows_verifier_revision_after_local_correction(
-    monkeypatch, tmp_path
+    monkeypatch, tmp_path, short_after_revision
 ):
     plan = make_plan()
     sources = make_sources()
@@ -1890,7 +1891,7 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
 
     def patch(*_args, **_kwargs):
         calls.append("patch")
-        return valid_body
+        return make_english_body(words_per_section=130) if short_after_revision else valid_body
 
     monkeypatch.setattr(generate_feature, "revise_grounding_blocks", patch)
     monkeypatch.setattr(
@@ -1901,6 +1902,14 @@ def test_pipeline_allows_verifier_revision_after_local_correction(
         "translate_english_body",
         lambda *_args: (make_body(), 0),
     )
+
+    if short_after_revision:
+        with pytest.raises(generate_feature.FeatureValidationError, match="generation target"):
+            generate_feature.run_feature_pipeline(
+                as_of=date(2026, 7, 14), article_type="primer", dry_run=True,
+                data_root=tmp_path, output_dir=tmp_path / "features", model=object(),
+            )
+        return
 
     feature = generate_feature.run_feature_pipeline(
         as_of=date(2026, 7, 14),
