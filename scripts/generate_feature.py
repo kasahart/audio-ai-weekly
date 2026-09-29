@@ -239,22 +239,26 @@ def recover_metadata_code_link(paper: dict) -> dict:
         text = paper.get(field)
         if not isinstance(text, str):
             continue
-        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}`]+", text, re.IGNORECASE):
+        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}`*]+", text, re.IGNORECASE):
             url = match.group(0).rstrip(".,;:!?) ]")
             prefix = text[:match.start()]
             # Hide URL dots while retaining punctuation that separates clauses.
             prefix = re.sub(
-                r"https?://[^\s<>\"'‘’“”{}`]+",
+                r"https?://[^\s<>\"'‘’“”{}`*]+",
                 lambda m: "URL" + m.group(0)[len(m.group(0).rstrip(".!?;)]")):],
                 prefix,
                 flags=re.IGNORECASE,
             )
             # Parenthetical examples must not turn abbreviation dots into
             # sentence boundaries. They do not establish link ownership.
-            prefix = re.sub(r"\([^()]*\)", "", prefix)
+            prefix = re.sub(
+                r"\((?:e\.g\.,?\s*)?(?:training|evaluation|inference)\s+(?:scripts|code)\)",
+                "", prefix, flags=re.IGNORECASE,
+            )
             context = re.split(r"[.!?;\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
-            context = context.rstrip(" \"'‘’“”(`")
+            context = re.sub(r"\[(?:repository|code|github)\]\($", "", context, flags=re.IGNORECASE)
+            context = context.rstrip(" \"'‘’“”(`*")
             # Accept only explicit declarations, with the URL introduced by
             # that declaration. Unsupported prose is deliberately left unlinked.
             subject = (
@@ -266,7 +270,8 @@ def recover_metadata_code_link(paper: dict) -> dict:
                 r"(?:\s*,?\s*(?:and\s+)?(?:models?|checkpoints?|dataset resources))*"
             )
             availability = re.search(
-                r"(?:^|,\s*)(?:" + subject + r"\s*:|"
+                r"(?:^|,\s*)(?:(?:and|while)\s+)?(?:"
+                r"(?:GitHub(?: repository)?|" + subject + r")\s*:|"
                 + subject + companions
                 + r"\s+(?:is|are|will be|has been|have been)\s+"
                 r"(?:publicly\s+)?(?:available|released|open[- ]sourced)"
@@ -277,7 +282,7 @@ def recover_metadata_code_link(paper: dict) -> dict:
                 context, re.IGNORECASE,
             )
             if availability and availability.start() > 0 and not re.match(
-                r",\s*(?:our|we)\b", availability.group(0), re.IGNORECASE
+                r",\s*(?:(?:and|while)\s+)?(?:our|we)\b", availability.group(0), re.IGNORECASE
             ):
                 continue
             if availability and is_valid_primary_link("Code", url):
