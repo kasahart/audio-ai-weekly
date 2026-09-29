@@ -2115,3 +2115,34 @@ def test_generation_repairs_shortened_canonical_draft_with_original_context():
     assert result == make_english_body()
     assert calls[0]["previousDraft"] == previous
     assert "Grounding corrections" in calls[0]["validationFeedback"]["errors"][0]
+
+
+@pytest.mark.parametrize("allow_short", [False, True])
+def test_real_grounding_patch_returns_short_english_only_for_repair(allow_short):
+    body = make_english_body()
+    replacements = [
+        {"id": section["blocks"][0]["id"], "text": "revised evidence " * 5,
+         "sourceIds": section["blocks"][0]["sourceIds"]}
+        for section in body["sections"][:3]
+    ]
+
+    class Model:
+        def complete(self, *_args):
+            return {"blockReplacements": replacements}
+
+    def patch():
+        return generate_feature.revise_grounding_blocks(
+            Model(), body, make_plan(), make_sources(),
+            [{"blockId": item["id"], "reason": "Remove unsupported precision"} for item in replacements],
+            {**generate_feature.FEATURE_SETTINGS, "grounding_patch_retry_max": 1},
+            language="en", article_type="primer", allow_short_english=allow_short,
+        )
+
+    if not allow_short:
+        with pytest.raises(generate_feature.FeatureValidationError, match="English body has"):
+            patch()
+    else:
+        result = patch()
+        assert generate_feature.english_article_word_count(result) == 630
+        with pytest.raises(generate_feature.FeatureValidationError, match="English body has"):
+            generate_feature.validate_english_body(result, make_sources(), "primer")
