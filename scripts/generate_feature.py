@@ -1877,13 +1877,24 @@ def generate_english_body(
     retry_max = max(
         1, int(cfg.get("english_generation_validation_retry_max", 1))
     )
+    target_words = (
+        cfg["english_body_target_min_words"] + cfg["english_body_target_max_words"]
+    ) // 2
+    section_count = max(cfg["section_min"], len(cfg[f"{article_type}_sections"]))
     validation_errors: list[str] | None = None
+    previous_draft: Any = None
     for attempt in range(retry_max):
         payload: dict[str, Any] = {
             "featurePlan": {**plan, "articleType": article_type},
             "primarySources": grounding_source_payload(sources),
+            "bodyWordBudget": {
+                "targetTotalWords": target_words,
+                "suggestedWordsPerSection": (target_words + section_count - 1) // section_count,
+                "countedFields": "sections[].blocks[].text only",
+            },
         }
         if validation_errors is not None:
+            payload["previousDraft"] = previous_draft
             payload["validationFeedback"] = {
                 "errors": validation_errors,
                 "remainingAttempts": retry_max - attempt,
@@ -1900,6 +1911,7 @@ def generate_english_body(
         except FeatureValidationError as exc:
             if attempt == retry_max - 1:
                 raise
+            previous_draft = body
             validation_errors = list(exc.errors)
             print(
                 "  [warn] AI English feature generation failed local validation "
@@ -2040,6 +2052,7 @@ def _translate_japanese_blocks(
     english_body: dict,
     cfg: Mapping[str, Any],
     validation_feedback: list[str] | None,
+    previous_translations: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
     instructions = render_prompt(
         PROMPTS["translate_ja_blocks"],
@@ -2063,6 +2076,16 @@ def _translate_japanese_blocks(
     for start in range(0, len(blocks), batch_max):
         batch = blocks[start : start + batch_max]
         payload: dict[str, Any] = {"blocks": batch}
+        if previous_translations:
+            payload["previousBlockTranslations"] = [
+                {
+                    "id": block["id"],
+                    "text": previous_translations[block["id"]],
+                    "actualCharacters": len(re.sub(r"\s+", "", previous_translations[block["id"]])),
+                    "targetCharacters": block["targetCharacters"],
+                }
+                for block in batch if block["id"] in previous_translations
+            ]
         if validation_feedback is not None:
             payload["validationFeedback"] = validation_feedback
         raw = model.complete(
@@ -2209,6 +2232,7 @@ def translate_english_body(
     verification_instructions = render_prompt(PROMPTS["verify_translation"])
     retry_max = max(1, int(cfg.get("translation_retry_max", 1)))
     feedback: list[str] | None = None
+    block_texts: dict[str, str] = {}
     for attempt in range(retry_max):
         metadata_payload: dict[str, Any] = {
             "title": english_body["title"],
@@ -2239,7 +2263,7 @@ def translate_english_body(
                 raw_metadata, english_body, cfg
             )
             block_texts = _translate_japanese_blocks(
-                model, english_body, cfg, feedback
+                model, english_body, cfg, feedback, block_texts
             )
             bilingual_body = _merge_bilingual_body(
                 english_body, metadata, block_texts, attempt

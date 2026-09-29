@@ -951,6 +951,9 @@ def test_english_generation_retries_local_validation_with_feedback():
 
     assert body == make_english_body()
     assert "validationFeedback" not in calls[0]
+    assert "previousDraft" not in calls[0]
+    assert calls[0]["bodyWordBudget"]["countedFields"] == "sections[].blocks[].text only"
+    assert calls[1]["previousDraft"] == make_english_body(words_per_section=20)
     assert calls[1]["validationFeedback"]["remainingAttempts"] == 2
     assert any(
         "English body has" in error
@@ -958,7 +961,8 @@ def test_english_generation_retries_local_validation_with_feedback():
     )
 
 
-def test_translation_preserves_english_structure_sources_and_retries_fidelity():
+@pytest.mark.parametrize("first_draft_short", [False, True])
+def test_translation_preserves_english_structure_sources_and_retries_fidelity(first_draft_short):
     english_body = make_english_body()
 
     class TranslationModel:
@@ -1000,14 +1004,14 @@ def test_translation_preserves_english_structure_sources_and_retries_fidelity():
                     "blockTranslations": [
                         {
                             "id": block["id"],
-                            "text": marker * block["targetCharacters"],
+                            "text": marker * (100 if first_draft_short and len(self.metadata_calls) == 1 else block["targetCharacters"]),
                         }
                         for block in payload["blocks"]
                     ]
                 }
             assert purpose == "translation verification"
             self.verification_calls.append(payload)
-            if len(self.verification_calls) == 1:
+            if len(self.verification_calls) == 1 and not first_draft_short:
                 return {
                     "status": "revise",
                     "issues": [
@@ -1032,11 +1036,19 @@ def test_translation_preserves_english_structure_sources_and_retries_fidelity():
     }
     assert len(model.metadata_calls) == 2
     assert len(model.block_calls) == 4
-    assert len(model.verification_calls) == 2
+    assert len(model.verification_calls) == (1 if first_draft_short else 2)
     assert "validationFeedback" not in model.metadata_calls[0]
-    assert model.metadata_calls[1]["validationFeedback"] == [
-        "block-2: A qualification was omitted."
-    ]
+    if first_draft_short:
+        assert "Japanese translation has 600 characters" in model.metadata_calls[1]["validationFeedback"][0]
+    else:
+        assert model.metadata_calls[1]["validationFeedback"] == [
+            "block-2: A qualification was omitted."
+        ]
+    assert "previousBlockTranslations" not in model.block_calls[0]
+    previous = model.block_calls[2]["previousBlockTranslations"][0]
+    assert previous["text"].startswith("訳")
+    assert previous["actualCharacters"] == len(previous["text"])
+    assert previous["targetCharacters"] == model.block_calls[2]["blocks"][0]["targetCharacters"]
     assert [section["id"] for section in body["sections"]] == [
         section["id"] for section in english_body["sections"]
     ]
