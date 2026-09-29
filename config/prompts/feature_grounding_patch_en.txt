@@ -14,6 +14,10 @@ supported by its returned sourceIds. Use only source IDs from `primarySources`. 
 English body within {{english_body_validation_min_words}}-
 {{english_body_validation_max_words}} words and preserve all blocks that are not returned. Do not
 add facts from memory or claim deployment beyond the evidence.
+If the complete-body minimum is 0, this is an intermediate batch: the final full-article length
+is checked separately after all batches. When minimumBlockWords is supplied, every replacement
+for a listed block must contain at least that many English words; rephrasing without the required
+growth is not sufficient. Preserve all supported corrections while meeting these local targets.
 
 Return JSON only with this shape:
 {
