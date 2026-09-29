@@ -2049,6 +2049,7 @@ def test_case_insensitive_url_scheme():
     "The method improves quality, and our code is available at",
     "GitHub:",
     "GitHub repository:",
+    "Code is available at:",
 ])
 def test_explicit_code_availability_variants(declaration):
     text = declaration + " https://github.com/authors/project"
@@ -2069,7 +2070,7 @@ def test_non_code_or_negated_availability_is_rejected(declaration):
     assert not generate_feature.recover_metadata_code_link({"abstract": text}).get("githubRepo")
 
 
-@pytest.mark.parametrize("wrapper", ["`{}`", "**{}**", "[repository]({})"])
+@pytest.mark.parametrize("wrapper", ["`{}`", "**{}**", "[repository]({})", "_{}_", "__{}__", "{}。", "{}！", "{}；"])
 def test_code_url_wrapped_in_markdown(wrapper):
-    text = "Code: " + wrapper.format("https://github.com/authors/project")
-    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project"
+    text = "Code: " + wrapper.format("https://github.com/authors/project_name_")
+    assert generate_feature.recover_metadata_code_link({"abstract": text})["githubRepo"] == "https://github.com/authors/project_name_"

@@ -239,13 +239,17 @@ def recover_metadata_code_link(paper: dict) -> dict:
         text = paper.get(field)
         if not isinstance(text, str):
             continue
+        text = re.sub(
+            r"(?P<mark>_{1,2})(?P<url>https://[^\s<>]+?)(?P=mark)(?=$|[\s.,;:!?。！？；，])",
+            r"\g<url>", text, flags=re.IGNORECASE,
+        )
         for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}`*]+", text, re.IGNORECASE):
-            url = match.group(0).rstrip(".,;:!?) ]")
+            url = match.group(0).rstrip(".,;:!?) ]。！？；，：、）］")
             prefix = text[:match.start()]
             # Hide URL dots while retaining punctuation that separates clauses.
             prefix = re.sub(
                 r"https?://[^\s<>\"'‘’“”{}`*]+",
-                lambda m: "URL" + m.group(0)[len(m.group(0).rstrip(".!?;)]")):],
+                lambda m: "URL" + m.group(0)[len(m.group(0).rstrip(".!?;)]。！？；）］")):],
                 prefix,
                 flags=re.IGNORECASE,
             )
@@ -255,7 +259,7 @@ def recover_metadata_code_link(paper: dict) -> dict:
                 r"\((?:e\.g\.,?\s*)?(?:training|evaluation|inference)\s+(?:scripts|code)\)",
                 "", prefix, flags=re.IGNORECASE,
             )
-            context = re.split(r"[.!?;\n]", prefix)[-1].strip()
+            context = re.split(r"[.!?;。！？；\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
             context = re.sub(r"\[(?:repository|code|github)\]\($", "", context, flags=re.IGNORECASE)
             context = context.rstrip(" \"'‘’“”(`*")
@@ -275,9 +279,9 @@ def recover_metadata_code_link(paper: dict) -> dict:
                 + subject + companions
                 + r"\s+(?:is|are|will be|has been|have been)\s+"
                 r"(?:publicly\s+)?(?:available|released|open[- ]sourced)"
-                r"(?:\s+upon acceptance)?\s+(?:at|on)\s*|"
+                r"(?:\s+upon acceptance)?\s+(?:at|on)\s*:?\s*|"
                 r"we\s+(?:publicly\s+)?release\s+(?:our\s+)?"
-                r"(?:source\s+)?code\s+(?:at|on)\s*)"
+                r"(?:source\s+)?code\s+(?:at|on)\s*:?\s*)"
                 r"(?:\s*URL\s*(?:and|,)\s*)*$",
                 context, re.IGNORECASE,
             )
