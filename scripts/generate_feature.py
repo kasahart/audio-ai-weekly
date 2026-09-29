@@ -234,6 +234,7 @@ def recover_metadata_code_link(paper: dict) -> dict:
     result = dict(paper)
     if isinstance(result.get("githubRepo"), str) and is_valid_primary_link("Code", result["githubRepo"]):
         return result
+    result.pop("githubRepo", None)
     for field in ("abstract", "comment"):
         text = paper.get(field)
         if not isinstance(text, str):
@@ -244,12 +245,15 @@ def recover_metadata_code_link(paper: dict) -> dict:
             # Keep sentence punctuation but hide dots inside preceding URLs.
             prefix = re.sub(
                 r"https?://[^\s<>\"'‘’“”{}]+",
-                lambda m: "URL" + ("." if m.group(0).endswith(".") else ""),
+                lambda m: "URL" + (re.search(r"[.!?;]+[)\]]*$", m.group(0)).group(0)
+                                    if re.search(r"[.!?;]+[)\]]*$", m.group(0)) else ""),
                 prefix,
             )
             context = re.split(r"[.!?;\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
             context = context.rstrip(" \"'‘’“”(")
+            if re.search(r"\b(?:baselines?|dependencies|dependency|third[- ]party)\b", context, re.IGNORECASE):
+                continue
             # Anchor declarations to the subject; availability of dependencies
             # and baselines must not count as this paper's repository.
             availability = re.search(

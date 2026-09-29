@@ -2006,17 +2006,18 @@ def test_dependency_does_not_override_authors_repository():
     assert "githubRepo" not in generate_feature.recover_metadata_code_link({"abstract":"Built on https://github.com/vendor/tool"})
 
 
-def test_old_abstract_code_link_survives_archive_deduplication(tmp_path):
+@pytest.mark.parametrize("current_link", [None, "https://token@github.com/vendor/tool"])
+def test_old_abstract_code_link_survives_archive_deduplication(tmp_path, current_link):
     (tmp_path / "index.json").write_text(json.dumps({"weeks":[{"date":"2026-0807", "file":"new.json"},{"date":"2026-0731", "file":"old.json"}]}))
     for name, abstract in [("new", "Updated abstract."), ("old", "Code: https://github.com/authors/project")]:
-        (tmp_path / (name + ".json")).write_text(json.dumps({"categories":[{"papers":[{"id":"2607.12345v1", "title":"Title", "abstract":abstract}]}]}))
+        (tmp_path / (name + ".json")).write_text(json.dumps({"categories":[{"papers":[{"id":"2607.12345v1", "title":"Title", "abstract":abstract, "githubRepo":current_link if name == "new" else None}]}]}))
     papers = generate_feature.load_recent_weekly_papers(tmp_path, date(2026,8,11),56)
     assert len(papers) == 1
     assert papers[0]["abstract"] == "Updated abstract."
     assert papers[0]["githubRepo"] == "https://github.com/authors/project"
 
 
-@pytest.mark.parametrize("prefix", ["Built on the code available at", "The baseline model is available at"])
+@pytest.mark.parametrize("prefix", ["Built on the code available at", "The baseline model is available at", "The code for the baseline is available at", "Code for our dependencies is available at"])
 def test_available_dependency_is_not_paper_code(prefix):
     text = prefix + " https://github.com/vendor/tool. Our code is available at https://github.com/authors/project."
     assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
@@ -2026,3 +2027,9 @@ def test_available_dependency_is_not_paper_code(prefix):
 def test_repository_labels_and_preceding_urls(prefix):
     text = prefix + " https://github.com/authors/project"
     assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("boundary", [".", ";", "!", "?"])
+def test_preceding_url_preserves_sentence_boundary(boundary):
+    text = "Code is available at https://project.example.org/demo" + boundary + " documentation is at https://github.com/vendor/tool"
+    assert not generate_feature.recover_metadata_code_link({"abstract":text}).get("githubRepo")
