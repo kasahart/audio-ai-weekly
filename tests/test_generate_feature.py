@@ -2014,3 +2014,15 @@ def test_old_abstract_code_link_survives_archive_deduplication(tmp_path):
     assert len(papers) == 1
     assert papers[0]["abstract"] == "Updated abstract."
     assert papers[0]["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("prefix", ["Built on the code available at", "The baseline model is available at"])
+def test_available_dependency_is_not_paper_code(prefix):
+    text = prefix + " https://github.com/vendor/tool. Our code is available at https://github.com/authors/project."
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
+
+
+@pytest.mark.parametrize("prefix", ["Repository:", "Code repository:", "Code is available at https://project.example.org/demo and"])
+def test_repository_labels_and_preceding_urls(prefix):
+    text = prefix + " https://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"

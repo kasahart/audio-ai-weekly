@@ -240,16 +240,26 @@ def recover_metadata_code_link(paper: dict) -> dict:
             continue
         for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}]+", text):
             url = match.group(0).rstrip(".,;:!?) ]")
-            context = re.split(r"[.!?;\n]", text[max(0, match.start() - 250):match.start()])[-1]
+            prefix = text[:match.start()]
+            # Keep sentence punctuation but hide dots inside preceding URLs.
+            prefix = re.sub(
+                r"https?://[^\s<>\"'‘’“”{}]+",
+                lambda m: "URL" + ("." if m.group(0).endswith(".") else ""),
+                prefix,
+            )
+            context = re.split(r"[.!?;\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
             context = context.rstrip(" \"'‘’“”(")
-            # Only explicit availability statements, never a bare dependency citation.
+            # Anchor declarations to the subject; availability of dependencies
+            # and baselines must not count as this paper's repository.
             availability = re.search(
-                r"(?:\b(?:source\s+)?code\s*:\s*|"
-                r"\b(?:code|repository|model|benchmark)\b[^.!?;]{0,100}"
-                r"\b(?:available|released|open[- ]sourced)\b[^.!?;]{0,60}|"
-                r"\b(?:we|our)\b[^.!?;]{0,35}\brelease\b[^.!?;]{0,50}"
-                r"\b(?:code|repository)\b[^.!?;]{0,30})$",
+                r"^(?:(?:(?:our|the|source|our source|the source)\s+)?"
+                r"(?:code(?: repository)?|repository)\s*:|"
+                r"(?:(?:our|the|the accompanying)\s+)?"
+                r"(?:code|repository)\b[^.!?;]{0,100}"
+                r"\b(?:available|released|open[- ]sourced)\b[^.!?;]{0,100})[^.!?;]*$|"
+                r"\bwe\s+(?:publicly\s+)?release\s+(?:our\s+)?"
+                r"(?:source\s+)?code\b[^.!?;]{0,100}$",
                 context, re.IGNORECASE,
             )
             if availability and is_valid_primary_link("Code", url):
