@@ -1873,6 +1873,8 @@ def generate_english_body(
     sources: list[dict],
     article_type: str,
     cfg: Mapping[str, Any] = FEATURE_SETTINGS,
+    *,
+    previous_draft: dict | None = None,
 ) -> dict:
     """Generate and locally validate the canonical English edition."""
     instructions = render_prompt(
@@ -1893,7 +1895,12 @@ def generate_english_body(
     ) // 2
     section_count = max(cfg["section_min"], len(cfg[f"{article_type}_sections"]))
     validation_errors: list[str] | None = None
-    previous_draft: Any = None
+    if previous_draft is not None:
+        validation_errors = [
+            "Grounding corrections shortened this canonical draft. Preserve those "
+            "corrections and expand supported explanations to the bodyWordBudget; "
+            "do not reintroduce removed claims."
+        ]
     for attempt in range(retry_max):
         payload: dict[str, Any] = {
             "featurePlan": {**plan, "articleType": article_type},
@@ -3162,7 +3169,18 @@ def run_feature_pipeline(
             article_type=resolved_type,
         )
         verifier_revision_count += 1
-        validate_english_body(english_body, sources, resolved_type, cfg)
+        try:
+            validate_english_body(english_body, sources, resolved_type, cfg)
+        except FeatureValidationError as exc:
+            if not (
+                english_article_word_count(english_body) < cfg["english_body_target_min_words"]
+                and all(error.startswith("English body has ") for error in exc.errors)
+            ):
+                raise
+        if english_article_word_count(english_body) < cfg["english_body_target_min_words"]:
+            english_body = generate_english_body(
+                model, plan, sources, resolved_type, cfg, previous_draft=english_body
+            )
         verdict = verify_english_body(model, english_body, plan, sources, cfg)
     if verdict["status"] != "pass":
         raise FeatureValidationError(
