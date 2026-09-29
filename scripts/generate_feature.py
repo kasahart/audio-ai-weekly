@@ -239,7 +239,7 @@ def recover_metadata_code_link(paper: dict) -> dict:
         text = paper.get(field)
         if not isinstance(text, str):
             continue
-        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}]+", text):
+        for match in re.finditer(r"https://[^\s<>\"\'‘’“”{}]+", text, re.IGNORECASE):
             url = match.group(0).rstrip(".,;:!?) ]")
             prefix = text[:match.start()]
             # Keep sentence punctuation but hide dots inside preceding URLs.
@@ -248,24 +248,28 @@ def recover_metadata_code_link(paper: dict) -> dict:
                 lambda m: "URL" + (re.search(r"[.!?;]+[)\]]*$", m.group(0)).group(0)
                                     if re.search(r"[.!?;]+[)\]]*$", m.group(0)) else ""),
                 prefix,
+                flags=re.IGNORECASE,
             )
             context = re.split(r"[.!?;\n]", prefix)[-1].strip()
             context = re.sub(r"\\(?:url|href)\{$", "", context)
             context = context.rstrip(" \"'‘’“”(")
-            if re.search(r"\b(?:baselines?|dependencies|dependency|third[- ]party)\b", context, re.IGNORECASE):
-                continue
             # Anchor declarations to the subject; availability of dependencies
             # and baselines must not count as this paper's repository.
             availability = re.search(
-                r"^(?:(?:(?:our|the|source|our source|the source)\s+)?"
+                r"(?:^|,\s*)(?:(?:(?:our|the|source|our source|the source)\s+)?"
                 r"(?:code(?: repository)?|repository)\s*:|"
                 r"(?:(?:our|the|the accompanying)\s+)?"
-                r"(?:code|repository)\b[^.!?;]{0,100}"
+                r"(?:(?:source\s+)?code|repository)\b[^.!?;]{0,100}"
                 r"\b(?:available|released|open[- ]sourced)\b[^.!?;]{0,100})[^.!?;]*$|"
                 r"\bwe\s+(?:publicly\s+)?release\s+(?:our\s+)?"
                 r"(?:source\s+)?code\b[^.!?;]{0,100}$",
                 context, re.IGNORECASE,
             )
+            if availability and re.search(
+                r"\b(?:baselines?|dependencies|dependency|third[- ]party)\b",
+                availability.group(0), re.IGNORECASE,
+            ):
+                continue
             if availability and is_valid_primary_link("Code", url):
                 result["githubRepo"] = url
                 return result

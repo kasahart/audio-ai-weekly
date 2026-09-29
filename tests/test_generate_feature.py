@@ -2023,7 +2023,7 @@ def test_available_dependency_is_not_paper_code(prefix):
     assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
 
 
-@pytest.mark.parametrize("prefix", ["Repository:", "Code repository:", "Code is available at https://project.example.org/demo and"])
+@pytest.mark.parametrize("prefix", ["Repository:", "Code repository:", "Code is available at https://project.example.org/demo and", "Our source code is available at", "For comparisons with baselines, our code is available at"])
 def test_repository_labels_and_preceding_urls(prefix):
     text = prefix + " https://github.com/authors/project"
     assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "https://github.com/authors/project"
@@ -2033,3 +2033,8 @@ def test_repository_labels_and_preceding_urls(prefix):
 def test_preceding_url_preserves_sentence_boundary(boundary):
     text = "Code is available at https://project.example.org/demo" + boundary + " documentation is at https://github.com/vendor/tool"
     assert not generate_feature.recover_metadata_code_link({"abstract":text}).get("githubRepo")
+
+
+def test_case_insensitive_url_scheme():
+    text = "Code: HTTPS://github.com/authors/project"
+    assert generate_feature.recover_metadata_code_link({"abstract":text})["githubRepo"] == "HTTPS://github.com/authors/project"
