@@ -1,0 +1,335 @@
+{
+  "title": "大規模音声言語モデルにおけるメカニズム、内部ルーティング、および評価のボトルネック",
+  "titleEn": "Mechanisms, Internal Routing, and Evaluation Bottlenecks in Large Audio Language Models",
+  "dek": "大規模音声言語モデルがどのようにテキストバックボーンのアテンションを継承し、音声情報をルーティングし、実運用において評価のボトルネックに直面するのかを分析する。",
+  "dekEn": "An analysis of how large audio language models inherit text-backbone attention, route audio information, and face evaluation bottlenecks in practical deployments.",
+  "summaryEn": "Large Audio Language Models (LALMs) have rapidly advanced in processing speech and acoustic data, yet their internal mechanisms and evaluation frameworks remain poorly understood. Recent investigations reveal that many LALMs rely heavily on inherited attention heads from their text-only backbones, tracking inputs without necessarily depending on audio-specific training. Furthermore, information routing analyses show task-dependent vulnerabilities, such as a sharp performance degradation in audio question answering compared to automatic speech recognition when inputs are concatenated. To address transparency and practical deployment gaps, researchers have proposed novel frameworks like ARIA-Rubrics for annotation-free reasoning assessment and post-training methods like AudioChaps for aligning models with editorial judgment in media chapterization. Concurrently, internal workspace probes demonstrate that audio concepts become lexically legible in middle layers before token generation. However, relying purely on final-answer accuracy obscures whether models perform genuine reasoning or rely on superficial pattern matching, highlighting the necessity of structured chain-of-thought supervision and rigorous evaluation protocols.",
+  "keyPointsEn": [
+    "LALMs often repurpose attention heads from their text-only backbones, enabling speaker tracking and steering without modality-specific training.",
+    "Audio information routing exhibits task-dependent bottlenecks, where question-answering tasks suffer from retrieval failures while speech recognition remains stable.",
+    "Evaluating LALMs requires moving beyond standard accuracy metrics toward annotation-free rubrics and chain-of-thought verification to eliminate perceptual hallucinations."
+  ],
+  "perspectives": [
+    {
+      "id": "internal-routing-mechanisms",
+      "label": "内部ルーティングと継承されたアテンション",
+      "description": "テキストバックボーンのアテンション機構の継承とタスク依存のルーティングパスに焦点を当て、音声情報がモデルの内部レイヤーでどのように処理され表現されるかを理解する。",
+      "labelEn": "Internal Routing and Inherited Attention",
+      "descriptionEn": "Focusing on the inheritance of text backbone attention mechanisms and task-dependent routing paths to understand how audio information is processed and represented in internal model layers.",
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S5"
+      ]
+    },
+    {
+      "id": "practical-deployment-workflows",
+      "label": "実践的なワークフローとチャプター化",
+      "description": "実用的な制約の下で、LALMがどのように実践的なワークフローに統合され、編集上の判断や現実世界のメディア構築のためにポリシー最適化を通じて整合されるかを検証する。",
+      "labelEn": "Practical Workflows and Chapterization",
+      "descriptionEn": "Examining how LALMs can be integrated into practical workflows and aligned through policy optimization for editorial judgments and real-world media construction under practical constraints.",
+      "sourceIds": [
+        "S4"
+      ]
+    },
+    {
+      "id": "evaluation-limits-and-reasoning",
+      "label": "評価の限界と推論の整合性",
+      "description": "精度のみの評価の限界を浮き彫りにし、ハルシネーションを排除しながら真の音声理解と推論プロセスを保証するための評価フレームワークを確立する。",
+      "labelEn": "Evaluation Limits and Reasoning Integrity",
+      "descriptionEn": "Highlighting the limitations of accuracy-only evaluations and establishing evaluation frameworks to ensure genuine audio understanding and reasoning processes while eliminating hallucinations.",
+      "sourceIds": [
+        "S2",
+        "S6",
+        "S7",
+        "S8"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "current-signal",
+      "heading": "音声言語モデルにおける現在のシグナル",
+      "headingEn": "Current Signal in Audio Language Models",
+      "blocks": [
+        {
+          "id": "block-current-signal-1",
+          "text": "大規模音声言語モデル（LALM）は、複雑な音響環境を処理できる強力なシステムとして登場したものの、その根底にある動作特性は研究者や開発者の双方にとって依然として不透明である。音声トークン位置におけるロジットレンズを通じた内部表現のプルービングにより、音声による質問は、出力トークンが生成されるはるか以前に、モデルの中間層内で語彙として判読可能になることが明らかになっている。この内部ワークスペースは言語非依存かつパラ言語的な方法で動作し、標準的なテキストキャプションが前処理の段階で捨てがちな音響的特徴、話者の役割、感情的質を捉えている。研究者らは、この音声駆動型の信号が通常ネットワークの1割ほど進んだところで活性化し、中間帯域でテキストの事前情報とはっきりと分離し、最終層の前に因果的に確定することを観察している。こうした洞察は、LALMを一枚岩のブラックボックスとみなす見方に挑戦し、生波形が意味概念にどのように変換されるかについてのきめ細かな視点を提供するとともに、モデルの振る舞いを理解する上で中間層のダイナミクスが持つ重要性を浮き彫りにしている。\n\nさらに、これらの中間層のワークスペースをプルービングすると、明示的な思考連鎖プロンプトとは独立して動作する、隠されたマルチホップ推論チェーン（酷く乱れた音声クリップから特定の歴史的エンティティを再構築するなど）が明らかになる。この能力は、LALMがスクリプトを越えて洗練された内部概念合成を実行することを示しており、英語の入力からであっても、上位読み出しのかなりの割合が別の言語で出現している[S5]。\n\nこのパラ言語的ワークスペースは、外部生成の前に内部表現がマルチホップの文脈推論を統合していることを確認している[S5]。",
+          "textEn": "Large Audio Language Models (LALMs) have emerged as powerful systems capable of processing complex acoustic environments, yet their underlying operational characteristics remain opaque to researchers and developers alike. Probing internal representations through logit lenses at audio-token positions reveals that spoken questions become lexically legible within a model's middle layers well before any output token is emitted. This internal workspace operates in a language-agnostic and paralinguistic manner, capturing acoustic features, speaker roles, and affective qualities that standard text captions often discard during preprocessing. Researchers observe that this audio-driven signal typically activates roughly a tenth of the way into the network, separates distinctly from the text prior in intermediate bands, and commits causally before the final layers. Such insights challenge the view of LALMs as monolithic black boxes, offering a granular perspective on how raw waveforms translate into semantic concepts and highlighting the importance of middle-layer dynamics for understanding model behavior.\n\nFurthermore, probing these middle-layer workspaces reveals hidden multi-hop reasoning chains—such as reconstructing specific historical entities from heavily garbled audio clips—that operate independently of explicit chain-of-thought prompts. This capability demonstrates that LALMs perform sophisticated internal concept synthesis across scripts, with a notable fraction of top-readouts emerging in alternative languages even from English inputs [S5].\n\nThis paralinguistic workspace confirms that internal representations integrate multi-hop contextual inferences prior to external generation [S5].",
+          "sourceIds": [
+            "S5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "positions",
+      "heading": "アテンションの継承とルーティングに関する見解",
+      "headingEn": "Positions on Attention Inheritance and Routing",
+      "blocks": [
+        {
+          "id": "block-positions-1",
+          "text": "LALMのアーキテクチャにおける中心的な議論は、特化した音声推論が、専用のモダリティ特化型トレーニングに由来するのか、それとも既存のテキストアーキテクチャの転用によるものなのかという点に関わっている。アテンション機構の調査によると、音声モデルは、テキスト専用のバックボーンから直接継承したアテンションヘッドを使用して、頻繁に話者を追跡していることが示されている。特定のアテンションロジットにバイアスをかけたり、パフォーマンスの優れたテキストバックボーンヘッドを変更せずに引き継いだりすると、モダリティ特化型のトレーニングをプロセスに持ち込むことなく、多くの場合高い成功率で話者の記述をリダイレクトできる。同時に、結合された音声セグメントを通じて入力構成を検証する研究からは、明確な情報ルーティング経路が明らかになっている。自動音声認識（ASR）は主に音声トークンからの直接検索に依存する一方、音声質問応答（AQA）は、音声情報をプロンプトトークンに統合することを必要とする媒介された経路に依存している。この乖離により、タスク依存のロバスト性のギャップが生じ、関連する音響属性が中間デコーダー層でデコード可能であり続けた場合でも、AQAのパフォーマンスが著しく低下する理由が説明される。\n\n継承されたテキストヘッドへの依存は、複雑な音響シーンにおける複数の話者の追跡にも及ばJ、アテンションロジットのわずか一部分に対するターゲットを絞った修正により、モダリティ特化型のトレーニングを必要とせずに、モデルの焦点を劇的にリダイレクトできる[S1]。一方、ASRの直接検索と媒介されたAQA経路の間のアーキテクチャ上の乖離は、プロンプトトークンの統合が、結合された入力構成の下で特定の推論操作をどのようにボトルネックにするかを浮き彫りにしている[S3]。\n\nこれらの継承されたアテンションダイナミクスは、構造化されたテキストの事前分布が、異なる検索タスクにわたってクロスモーダル処理をどのように形作るかを強調している[S1, S3]。",
+          "textEn": "A central debate in LALM architecture concerns whether specialized audio reasoning stems from dedicated modality-specific training or the repurposing of pre-existing text architectures. Investigations into attention mechanisms show that audio models frequently track speakers using attention heads inherited directly from their text-only backbones. When specific attention logits are biased or top-performing text-backbone heads are carried over unchanged, models can redirect speaker descriptions with high success rates, often without modality-specific training entering the selection process. Concurrently, studies examining input configurations through concatenated audio segments uncover distinct information routing pathways. Automatic speech recognition (ASR) relies primarily on direct retrieval from audio tokens, whereas audio question answering (AQA) depends on a mediated route that requires integrating audio information into prompt tokens. This divergence creates a task-dependent robustness gap, explaining why AQA performance can deteriorate severely even when relevant audio attributes remain decodable in intermediate decoder layers.\n\nThe reliance on inherited text heads extends to tracking multiple speakers in complex acoustic scenes, where targeted modifications to a small fraction of attention logits can dramatically redirect model focus without requiring modality-specific training [S1]. Meanwhile, the architectural divergence between direct ASR retrieval and mediated AQA pathways highlights how prompt-token integration bottlenecks specific reasoning operations under concatenated input configurations [S3].\n\nThese inherited attention dynamics underscore how structural text priors shape cross-modal processing across different retrieval tasks [S1, S3].",
+          "sourceIds": [
+            "S1",
+            "S3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "heading": "推論と情報のボトルネックに関する証拠",
+      "headingEn": "Evidence on Reasoning and Information Bottlenecks",
+      "blocks": [
+        {
+          "id": "block-evidence-1",
+          "text": "さまざまなテストパラダイムにわたる実証的分析は、高いベンチマークスコアが、真の音声理解ではなく表面的なパターンマッチングを時折隠す可能性があることを示している。複数話者の設定において、誘導のない音声モデルは、特定のアテンションヘッドが操作されるか明示的にステアリングされない限り、ランダム推測の基準値に近いかそれを下回る性能しか示さない。さらに、保存された中間層表現と劣化したAQAパフォーマンスとの間の乖離は、音声情報の完全な喪失ではなく、下流での利用におけるボトルネックを指し示している。入力が複雑または見慣れないものになると、モデルの内部デコーダー状態はデコード可能な音響属性を保持しているにもかかわらず、回答生成中にプロンプト媒介情報を取得して利用する責任を持つメカニズムが、その溝をうまく埋めることに失敗する。これらの発見は、生データの音響エンコーディング能力を拡大することだけに頼るのではなく、情報の利用効率の向上にアーキテクチャの修正が焦点を当てなければならないことを実証しており、より効果的な事前トレーニングとアライメントの戦略へと研究者を導いている。\n\nこれらの評価のボトルネックを厳密に克服し、真の理解と表面的な推測を区別するために、最近のフレームワークは、知覚的グラウンディングと回答の一貫性を評価する、軽量でアノテーション不要のゴールド推論チェーンを提案している[S2]。したがって、構造化された強化学習とポリシー最適化を通じてこれらの利用ギャップに対処することは、標準化されたベンチマークと、ロバストで実世界におけるメディア展開との間の溝を埋めるために不可欠である[S4]。\n\nこれらの複雑な推論プロセスの評価には、真の理解を確保するための透明な評価フレームワークとロバストなアライメント戦略が必要である[S2, S4]。",
+          "textEn": "Empirical analyses across various testing paradigms indicate that high benchmark scores can occasionally mask superficial pattern matching rather than genuine audio comprehension. In multi-speaker settings, unguided audio models perform close to or below random guessing baselines unless specific attention heads are manipulated or explicitly steered. Furthermore, the dissociation between preserved middle-layer representations and degraded AQA performance points to downstream utilization bottlenecks rather than a complete loss of audio information. When inputs become complex or unfamiliar, the model's internal decoder states retain decodable audio attributes, yet the mechanism responsible for retrieving and utilizing prompt-mediated information during answer generation fails to bridge the gap successfully. These findings demonstrate that architectural modifications must focus on improving information utilization rather than solely expanding raw acoustic encoding capacity, guiding researchers toward more effective pre-training and alignment strategies.\n\nTo rigorously overcome these evaluation bottlenecks and distinguish genuine understanding from surface-level guessing, recent frameworks propose lightweight, annotation-free gold reasoning chains that assess perceptual grounding and answer consistency [S2]. Addressing these utilization gaps through structured reinforcement learning and policy optimization is therefore essential for bridging the divide between standardized benchmarks and robust, real-world media deployment [S4].\n\nEvaluating these complex reasoning processes requires transparent evaluation frameworks and robust alignment strategies to ensure true comprehension [S2, S4].",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S2",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "heading": "評価の限界と透明性のあるアセスメント",
+      "headingEn": "Evaluation Limits and Transparent Assessment",
+      "blocks": [
+        {
+          "id": "block-evaluation-1",
+          "text": "最終的な回答の正確さのみに依存する標準的な評価手法は、LALM（大規模音声言語モデル）の審査において不十分であると認識されることが増えている。これは、単なる当てずっぽうと真の知覚的裏付けを区別できないためである。この限界に対処するため、ARIA-Rubricsのようなアノテーション不要のゴールド推論チェーンのフレームワークが導入され、複数の補完的な指標にわたって知覚的裏付け、推論の一貫性、および回答の整合性を評価する。思考の連鎖（CoT）プロンプティングを外部化のメカニズムとして活用することにより、これらのフレームワークは内部の推論プロセスを観測可能にし、知覚的ハルシネーションのリスクを軽減する。共有タスクやチャレンジは、推論品質を評価するためのインスタンスレベルのプロトコルを確立することでこの転換をさらに強化し、モデルやエージェントシステムが、論理的な欠陥を露呈させるよう設計された構造化された強化学習や堅牢なデータパイプラインから大きな恩恵を受けることを実証している。\n\nさらに、内部の中間層表現を調査すると、音声駆動型の概念がトークンの出力よりも前に読み取り可能になることが明らかになり、明示的なテキストのトランスクリプトとは独立して動作する多ホップ推論チェーンが解き明かされる。",
+          "textEn": "Standard evaluation methodologies relying purely on final-answer accuracy are increasingly recognized as insufficient for vetting LALMs, as they fail to distinguish random guessing from true perceptual grounding. To address this limitation, annotation-free gold reasoning chain frameworks, such as ARIA-Rubrics, have been introduced to evaluate perceptual grounding, reasoning coherence, and answer consistency across multiple complementary metrics. By leveraging Chain-of-Thought (CoT) prompting as an externalization mechanism, these frameworks make the internal reasoning process observable and mitigate the risks of perceptual hallucinations. Shared tasks and challenges further reinforce this shift by establishing instance-level protocols to assess reasoning quality, demonstrating that models and agent systems benefit significantly from structured reinforcement learning and robust data pipelines designed to expose logical flaws.\n\nFurthermore, examining the internal middle-layer representations reveals that audio-driven concepts become legible before token emission, uncovering multi-hop reasoning chains that operate independently of explicit textual transcripts.",
+          "sourceIds": [
+            "S2",
+            "S6",
+            "S7",
+            "S8",
+            "S5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implications",
+      "heading": "実践的なワークフローとデプロイメントへのインプリケーション",
+      "headingEn": "Implications for Practical Workflows and Deployment",
+      "blocks": [
+        {
+          "id": "block-implications-1",
+          "text": "学術的なベンチマークと現実世界のメディア展開との間の溝を埋めるには、LALMを主観的な編集上の判断と一致させる必要がある。自動音声チャプター化は、セグメントの境界が客観的な音響マーカーではなく作成者の意図やナラティブの流れによって定義される、代表的な商業的設定である。AudioChapsのようなポストトレーニングフレームワークは、構造化されたCoT推論に導かれたグループ相対方策最適化（GRPO）を採用することで、この課題に対処する。標準的な教師ありファインチューニングのコールドスタートから脱却し、方策の応答を直接最適化することにより、整列されたモデルは、構造化されていない連続した音声ストリームを、ナビゲート可能な構造化されたメディアチャプターへと確実に変換できる。実践者や研究者にとって、これらの進展は、本番環境での信頼性を確保するために、将来の展開において方策最適化と透明性のある推論ワークフローを組み込む必要があることを示している。\n\nこれらの最適化された方策による展開は、静的な評価データセットと動的な消費者プラットフォームの間のギャップを首尾よく埋め、クリエイティブなキュレーション基準が体系的に尊重されるようにする。",
+          "textEn": "Bridging the gap between academic benchmarks and real-world media deployments requires aligning LALMs with subjective editorial judgment. Automated audio chapterization serves as a prime commercial setting where segment boundaries are defined by creator intent and narrative flow rather than objective acoustic markers. Post-training frameworks like AudioChaps address this challenge by employing Group Relative Policy Optimization (GRPO) guided by structured CoT reasoning. By moving away from standard supervised fine-tuning cold starts and directly optimizing policy responses, aligned models can reliably transform unstructured continuous audio streams into navigable, structured media chapters. For practitioners and researchers, these developments indicate that future deployments must incorporate policy optimization and transparent reasoning workflows to ensure reliability in production environments.\n\nThese policy-optimized deployments successfully bridge the gap between static evaluation datasets and dynamic consumer platforms, ensuring that creative curation standards are systematically respected.",
+          "sourceIds": [
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "watch",
+      "heading": "将来の音声AI研究に向けた注目点",
+      "headingEn": "Watchpoints for Future Audio AI Research",
+      "blocks": [
+        {
+          "id": "block-watch-1",
+          "text": "大規模音声言語モデルの分野が進化し続けるにつれて、今後の調査に向けていくつかの重要な課題が残されたままである。研究者たちは、テキストのバックボーンからのアテンションヘッドの継承が効率的なマルチモーダル融合を加速させるのか、それとも複雑な推論タスクを制約する構造的制限を生み出すのかを特定しなければならない。さらに、音声質問応答などのタスクにおける下流の検索のボトルネックを解決するには、多額のコストがかかる人間のアノテーションに大きく依存することなく情報利用を向上させる、新しいアーキテクチャ設計が必要となる。最後に、透明性の高い評価フレームワークと方策最適化技術のより幅広い採用により、LALMが制御された実験環境から現実世界の音声アプリケーションにおける堅牢で信頼性の高いエージェントへとどれほど首尾よく移行できるかが決定づけられ、最終的には次世代の音声理解システムの軌道が形作られることになる。\n\nロジットレンズ分析とアテンションマスランキングを通じてこれらの内部メカニズムを調査することは、マルチモーダル推論における現在のアーキテクチャの障壁を克服するための重要な手がかりを提供する。",
+          "textEn": "As the field of large audio language models continues to evolve, several critical challenges remain open for future investigation. Researchers must determine whether attention head inheritance from text backbones accelerates efficient multimodal fusion or creates structural limitations that constrain complex reasoning tasks. Additionally, resolving downstream retrieval bottlenecks in tasks like audio question answering will require novel architectural designs that enhance information utilization without relying heavily on costly human annotations. Finally, the broader adoption of transparent evaluation frameworks and policy optimization techniques will dictate how successfully LALMs transition from controlled experimental settings to robust, dependable agents in real-world audio applications, ultimately shaping the trajectory of next-generation audio understanding systems.\n\nInvestigating these internal mechanisms through logit-lens analysis and attention-mass ranking offers vital clues for overcoming current architectural barriers in multimodal reasoning.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S4",
+            "S5"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 1,
+    "verifiedAt": "2026-09-29T07:25:44.058248+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-09-22-debate-lalm-mechanisms-routing-and-evaluation",
+  "type": "debate",
+  "date": "2026-09-22",
+  "generatedAt": "2026-09-29T07:25:44.058248+00:00",
+  "topicKey": "lalm-mechanisms-routing-and-evaluation",
+  "searchTerms": [
+    "audio language models",
+    "audio reasoning",
+    "audio information",
+    "audio chapterization"
+  ],
+  "sources": [
+    {
+      "arxivId": "2609.14174",
+      "title": "Inherited Heads: Audio language models track speakers with their text backbone's attention, and an attention-mass ranking retrieves a different set",
+      "abstract": "Asked to describe what one of six speakers in a recording talks about, audio language models describe the right one on 6 to 16% of trials, below the 16.7% a guess would give. Adding a fixed bias to the attention logits of a hundred heads, under a tenth of the model's and with no training, redirects the description to whichever speaker we choose, on 90.7% to 99.0% of trials. Those heads are largely not specific to audio. Rank the text-only language model an audio model was built from, or a released model of the same family, on a written version of the task, take its top hundred heads, and carry them over unchanged: they redirect the audio model on 80.8% to 95.0% of trials, with nothing about audio entering the selection. The audio and text head sets share 66 to 74 of 100 where chance would give about 20, and the shared part alone reproduces almost all of the steering. What that does not show is that sharing is what makes the heads work: an equal-sized draw from the same discovered hundred does nearly as well, and none of our three models separates the two explanations. A second finding concerns how such heads are found. Ranking heads by how much attention they place on the segment asked about, as an established score does, or by how much of their attention moves with the question, as a per-head normalised variant does, gives top hundreds that share 69, 37 and 4 heads across our three models. In Ultravox, where they share 4, the established score's heads leave output the judge cannot place on any segment on 69.7% of trials, against 40.0% with no intervention and 1.0% for the normalised variant. That is one arm of six; on the other five the established score steers above a random draw.",
+      "authors": [
+        "Bojro Das"
+      ],
+      "publishedAt": "2026-09-18",
+      "url": "https://arxiv.org/abs/2609.14174",
+      "origin": "archive",
+      "archiveDate": "2026-09-18",
+      "primaryLinks": [],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2609.09681",
+      "title": "Beyond Accuracy: ARIA-Rubrics for Evaluating Audio Reasoning in Large Audio Language Models",
+      "abstract": "Large Audio Language Models (LALMs) have shown strong performance on audio reasoning benchmarks, but accuracy alone cannot distinguish true reasoning from superficial pattern matching, often overestimating reasoning ability since high scores may result from guessing rather than genuine audio understanding. Evaluating the reasoning process itself is essential for improving LALMs' reasoning ability, yet remains challenging. Existing methods either rely on costly human annotation or opaque LLM-as-judge approaches, making them impractical, biased, and lacking transparency. Moreover, audio reasoning introduces unique challenges absent in text-based settings, perceptual hallucination and cross-modal alignment between audio understanding and textual inference, hence text-based evaluation frameworks cannot be directly applied. Therefore, we propose ARIA-Rubrics (Audio Reasoning Integrity Assessment), a lightweight, annotation-free gold reasoning chains, automatic and transparent framework comprising six complementary metrics that evaluate audio reasoning quality across perceptual grounding, reasoning coherence, and answer consistency. We use Chain-of-Thought prompting as an externalization mechanism to make the reasoning process observable. Experiments on 9 models across 2 benchmarks identify three reasoning modes of current LALMs with actionable directions for future development, with ARIA-Rubrics achieving high correlation with human judgments. The code is available at the Github Repository.",
+      "authors": [
+        "Yupei Li",
+        "Qiyang Sun",
+        "Mohamed Mady",
+        "Chenxi Wang",
+        "Zhengwei Gong"
+      ],
+      "publishedAt": "2026-09-11",
+      "url": "https://arxiv.org/abs/2609.09681",
+      "origin": "archive",
+      "archiveDate": "2026-09-11",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2608.27026",
+      "title": "Direct or Mediated? Task-Dependent Audio Information Routing in Large Audio Language Models",
+      "abstract": "Large Audio Language Models (LALMs) have demonstrated strong performance across a wide range of audio understanding tasks. However, they are typically evaluated on single, coherent audio segments, leaving their behavior under less familiar input configurations underexplored. We study this issue through a controlled setting in which two audio segments are concatenated into a single input. Across multiple LALMs, we observe a striking task-dependent robustness gap: automatic speech recognition (ASR) remains comparatively stable, whereas audio question answering (AQA) degrades substantially. To investigate the mechanisms underlying this disparity, we analyze how audio information is routed through LALM decoders using layer-wise attention knockout. The results reveal distinct task-dependent pathways. ASR relies primarily on direct retrieval from audio tokens by answer tokens, whereas AQA depends more strongly on a mediated route in which audio information is first integrated into prompt tokens and subsequently accessed during generation. We further probe prompt-token representations under audio concatenation and find that task-relevant audio attributes remain readily decodable, particularly in middle and later decoder layers, even when AQA performance deteriorates sharply. This dissociation indicates that the failure cannot be explained by complete loss of audio information from the decoder states and is instead consistent with a downstream bottleneck in retrieving or utilizing prompt-mediated information during answer generation. Together, our findings reveal task-dependent audio information routing in LALMs and highlight information utilization as a potential limitation on their generalization.",
+      "authors": [
+        "Yizhou Zhang",
+        "Wangjin Zhou",
+        "Xin Gu",
+        "Yichi Wang",
+        "Wei Tan"
+      ],
+      "publishedAt": "2026-08-28",
+      "url": "https://arxiv.org/abs/2608.27026",
+      "origin": "archive",
+      "archiveDate": "2026-08-28",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2608.16539",
+      "title": "Listen, Reason, and Segment: Aligning LALMs with Editorial Judgment for Media Chapterization",
+      "abstract": "Large Audio Language Models (LALMs) have made rapid progress on standardized benchmarks, yet their deployment in practical media workflows, curation, archival indexing, and content distribution remains largely unrealized. We identify automated audio chapterization, the task of segmenting continuous audio streams into thematically coherent chapters, as a demanding and commercially consequential setting that exposes this gap. Chapterization is challenging because boundaries are defined less by objective acoustic events than by subjective editorial judgment, requiring models to reason sequentially over long acoustic contexts and approximate creator-authored boundary decisions. We present AudioChaps, a post-training framework for aligning end-to-end LALMs for this task via Group Relative Policy Optimization (GRPO) guided by Chain-of-Thought (CoT) reasoning. To support training and evaluation, we curate three datasets: AudioChaps-Alignment, derived from creator-annotated chapter boundaries on YouTube; AudioChaps-CoT, which provides structured supervision for well-formatted, high-quality, and evidence-grounded boundary reasoning; and AudioChaps-Eval, a held-out benchmark for audio chapterization. Applying GRPO directly without a Supervised Fine-Tuning (SFT) cold start, AudioChaps-R1-Zero already improves average F1 by 33 points over the state-of-the-art LALM Audio-Flamingo-3-Think. The AudioChaps framework produces our final aligned LALM, AudioChaps-R1, which improves average F1 by 49 points. These results demonstrate that GRPO-trained LALMs can reliably transform unstructured auditory streams into navigable, structured media. Our code, models, and dataset resources will be released upon acceptance at https://github.com/ta012/AudioChaps.",
+      "authors": [
+        "Tony Alex",
+        "Wish Suharitdamrong",
+        "Sara Atito",
+        "Armin Mustafa",
+        "Muhammad Awais"
+      ],
+      "publishedAt": "2026-08-21",
+      "url": "https://arxiv.org/abs/2608.16539",
+      "origin": "archive",
+      "archiveDate": "2026-08-21",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/ta012/AudioChaps"
+        }
+      ],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2608.24958",
+      "title": "Can We Read the Mind of an Audio LLM? A Verbalizable, Multilingual Middle-Layer Workspace",
+      "abstract": "An audio language model is a black box in a specific way: we see what it says, never what it works out on the way there, and chain-of-thought monitoring helps only if the model writes its reasoning down. Reading a base Qwen3-Omni with a logit lens at the audio-token positions, we find that the answer to a spoken question becomes legible - in words - in the model's middle layers, before it emits any token. Five findings follow. (1) The readout carries concepts in neither the question, the options, nor the model's own transcription: on a clip whose verbatim transcription is empty garbling, it reconstructs Watergate and scandal, passes through the role president, and resolves to Nixon - a hidden multi-hop chain, read with no chain-of-thought. (2) The content is language-agnostic: one audio-inferred concept surfaces in several scripts at once, and 38% of top-1 readouts are Chinese on English inputs. (3) It is paralinguistic: given the same clip as audio and as the model's own emotion-free caption, the audio mind forms the sound source, speaker role, or affect that the caption discards, and answers correctly more often. (4) The audio-driven signal is absent at the input, turns on about a tenth of the way into the network, separates most cleanly from the text prior in the middle band (35-80% of depth), and activation patching shows it is causally used and committed before the last fifth of the layers. (5) Deleting single layers maps the pipeline: reading the sound in is localized to the entry layers and answer delivery to the output layer, while retrieval is distributed across the interior. Throughout, a waveform-swap control - identical text, only the sound changed - isolates the audio-driven signal from a prior over the printed options. This is a qualitative account of what an audio model works out before it speaks: the quantities are controls, not benchmark scores.",
+      "authors": [
+        "Jiajun Fan",
+        "Jingyuan Li",
+        "Prashanth Gurunath Shivakumar",
+        "Qi Luo",
+        "Jia-Hong Huang"
+      ],
+      "publishedAt": "2026-08-28",
+      "url": "https://arxiv.org/abs/2608.24958",
+      "origin": "archive",
+      "archiveDate": "2026-08-28",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2602.14224",
+      "title": "The Interspeech 2026 Audio Reasoning Challenge: Evaluating Reasoning Process Quality for Audio Reasoning Models and Agents",
+      "abstract": "Recent Large Audio Language Models (LALMs) excel in understanding but often lack transparent reasoning. To address this \"black-box\" limitation, we organized the Audio Reasoning Challenge at Interspeech 2026, the first shared task dedicated to evaluating Chain-of-Thought (CoT) quality in the audio domain. The challenge introduced MMAR-Rubrics, a novel instance-level protocol assessing the factuality and logic of reasoning chains. Featured Single Model and Agent tracks, the competition attracting 156 teams from 18 countries and regions. Results show agent systems currently lead in reasoning quality, utilizing iterative tool orchestration and cross-modal analysis. Besides, single models are rapidly advancing via reinforcement learning and sophisticated data pipeline. We details the challenge design, methodology, and a comprehensive analysis of state-of-the-art systems, providing new insights for explainable audio intelligence.",
+      "authors": [
+        "Ziyang Ma",
+        "Ruiyang Xu",
+        "Yinghao Ma",
+        "Chao-Han Huck Yang",
+        "Bohan Li",
+        "Jaeyeon Kim",
+        "Jin Xu",
+        "Jinyu Li",
+        "Carlos Busso",
+        "Kai Yu",
+        "Eng Siong Chng",
+        "Xie Chen"
+      ],
+      "publishedAt": "2026-02-15T16:38:09Z",
+      "url": "https://arxiv.org/abs/2602.14224",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2604.12527",
+      "title": "Audio-Cogito: Towards Deep Audio Reasoning in Large Audio Language Models",
+      "abstract": "Recent advances in reasoning models have driven significant progress in text and multimodal domains, yet audio reasoning remains relatively limited. Only a few Large Audio Language Models (LALMs) incorporate explicit Chain-of-Thought (CoT) reasoning, and their capabilities are often inconsistent and insufficient for complex tasks. To bridge this gap, we introduce Audio-Cogito, a fully open-source solution for deep audio reasoning. We develop Cogito-pipe for high-quality audio reasoning data curation, producing 545k reasoning samples. Based on this dataset, we adopt a self-distillation strategy for model fine-tuning. Experiments on the MMAR benchmark, the only audio benchmark evaluating the CoT process, show that our model achieves the best performance among open-source models and matches or surpasses certain closed-source models in specific metrics. Our approach also ranks among the top-tier systems in the Interspeech 2026 Audio Reasoning Challenge.",
+      "authors": [
+        "Longhao Li",
+        "Hongjie Chen",
+        "Zehan Li",
+        "Qihan Hu",
+        "Jian Kang",
+        "Jie Li",
+        "Lei Xie",
+        "Yongxiang Li"
+      ],
+      "publishedAt": "2026-04-14T10:00:39Z",
+      "url": "https://arxiv.org/abs/2604.12527",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2503.02318",
+      "title": "Audio-Reasoner: Improving Reasoning Capability in Large Audio Language Models",
+      "abstract": "Recent advancements in multimodal reasoning have largely overlooked the audio modality. We introduce Audio-Reasoner, a large-scale audio language model for deep reasoning in audio tasks. We meticulously curated a large-scale and diverse multi-task audio dataset with simple annotations. Then, we leverage closed-source models to conduct secondary labeling, QA generation, along with structured COT process. These datasets together form a high-quality reasoning dataset with 1.2 million reasoning-rich samples, which we name CoTA. Following inference scaling principles, we train Audio-Reasoner on CoTA, enabling it to achieve great logical capabilities in audio reasoning. Experiments show state-of-the-art performance across key benchmarks, including MMAU-mini (+25.42%), AIR-Bench chat/foundation(+14.57%/+10.13%), and MELD (+8.01%). Our findings stress the core of structured CoT training in advancing audio reasoning.",
+      "authors": [
+        "Zhifei Xie",
+        "Mingbao Lin",
+        "Zihang Liu",
+        "Pengcheng Wu",
+        "Shuicheng Yan",
+        "Chunyan Miao"
+      ],
+      "publishedAt": "2025-03-04T06:18:34Z",
+      "url": "https://arxiv.org/abs/2503.02318",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 9,
+  "readTimeMinutesEn": 5,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-09-29T07:25:44.058248+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 1
+  }
+}

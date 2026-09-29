@@ -1,6 +1,37 @@
 {
   "features": [
     {
+      "slug": "2026-09-22-debate-lalm-mechanisms-routing-and-evaluation",
+      "type": "debate",
+      "date": "2026-09-22",
+      "readTimeMinutes": 9,
+      "readTimeMinutesEn": 5,
+      "sourceCount": 8,
+      "title": "大規模音声言語モデルにおけるメカニズム、内部ルーティング、および評価のボトルネック",
+      "titleEn": "Mechanisms, Internal Routing, and Evaluation Bottlenecks in Large Audio Language Models",
+      "dek": "大規模音声言語モデルがどのようにテキストバックボーンのアテンションを継承し、音声情報をルーティングし、実運用において評価のボトルネックに直面するのかを分析する。",
+      "dekEn": "An analysis of how large audio language models inherit text-backbone attention, route audio information, and face evaluation bottlenecks in practical deployments.",
+      "file": "2026-09-22-debate-lalm-mechanisms-routing-and-evaluation.json",
+      "topicKey": "lalm-mechanisms-routing-and-evaluation",
+      "searchTerms": [
+        "audio language models",
+        "audio reasoning",
+        "audio information",
+        "audio chapterization"
+      ],
+      "sourcePaperIds": [
+        "2609.14174",
+        "2609.09681",
+        "2608.27026",
+        "2608.16539",
+        "2608.24958",
+        "2602.14224",
+        "2604.12527",
+        "2503.02318"
+      ],
+      "generatedAt": "2026-09-29T07:25:44.058248+00:00"
+    },
+    {
       "slug": "2026-09-08-primer-audio-language-model-reasoning-and-alignment",
       "type": "primer",
       "date": "2026-09-08",
@@ -152,5 +183,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-09-29T07:11:34.706305+00:00"
+  "generatedAt": "2026-09-29T07:25:44.058248+00:00"
 }
