@@ -18,3 +18,8 @@ Return JSON only with exactly this shape:
 
 Return every supplied block exactly once and preserve every ID. If `validationFeedback` is present,
 correct all listed problems without changing the English meaning.
+When previousBlockTranslations is present, revise those actual translations against the English
+original. Compare actualCharacters with targetCharacters for each block. If the article was too
+short, avoid compressed summaries: translate every detail, qualification, and logical connection
+in full natural Japanese sentences. If too long, remove unnecessary verbosity while preserving
+all meaning. Never add new explanations, evidence, or repeated padding to meet a character target.

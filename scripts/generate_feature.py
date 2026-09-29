@@ -2052,6 +2052,7 @@ def _translate_japanese_blocks(
     english_body: dict,
     cfg: Mapping[str, Any],
     validation_feedback: list[str] | None,
+    previous_translations: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
     instructions = render_prompt(
         PROMPTS["translate_ja_blocks"],
@@ -2075,6 +2076,16 @@ def _translate_japanese_blocks(
     for start in range(0, len(blocks), batch_max):
         batch = blocks[start : start + batch_max]
         payload: dict[str, Any] = {"blocks": batch}
+        if previous_translations:
+            payload["previousBlockTranslations"] = [
+                {
+                    "id": block["id"],
+                    "text": previous_translations[block["id"]],
+                    "actualCharacters": len(re.sub(r"\s+", "", previous_translations[block["id"]])),
+                    "targetCharacters": block["targetCharacters"],
+                }
+                for block in batch if block["id"] in previous_translations
+            ]
         if validation_feedback is not None:
             payload["validationFeedback"] = validation_feedback
         raw = model.complete(
@@ -2221,6 +2232,7 @@ def translate_english_body(
     verification_instructions = render_prompt(PROMPTS["verify_translation"])
     retry_max = max(1, int(cfg.get("translation_retry_max", 1)))
     feedback: list[str] | None = None
+    block_texts: dict[str, str] = {}
     for attempt in range(retry_max):
         metadata_payload: dict[str, Any] = {
             "title": english_body["title"],
@@ -2251,7 +2263,7 @@ def translate_english_body(
                 raw_metadata, english_body, cfg
             )
             block_texts = _translate_japanese_blocks(
-                model, english_body, cfg, feedback
+                model, english_body, cfg, feedback, block_texts
             )
             bilingual_body = _merge_bilingual_body(
                 english_body, metadata, block_texts, attempt
