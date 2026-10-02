@@ -1,0 +1,983 @@
+{
+  "date": "2026-1002",
+  "generated_at": "2026-10-02T00:00:00+00:00",
+  "total": 19,
+  "categories": [
+    {
+      "id": "foundation",
+      "label": "音の基盤モデル",
+      "labelEn": "Audio Foundation Models",
+      "color": "#38bdf8",
+      "papers": [
+        {
+          "id": "2610.01864v1",
+          "date": "Oct 01",
+          "title": "From Isolated Feature to Orbits: Discovering Music Concepts via Multi-SAE Alignment",
+          "titleJa": "孤立した特徴から軌道へ：マルチSAEアライメントによる音楽概念の発見",
+          "authors": [
+            "Liwei Lin",
+            "Gus Xia"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "How can we understand what a music foundation model has learned \\textit{internally}? Most interpretability approaches, such as probing and Sparse Autoencoders (SAEs), focus on identifying individual features with minimal structural assumptions. We argue that many concepts are better understood as \\textit{structured relations} rather than isolated features. This is especially prominent in music, where tonal structures are organized in the space of pitch and time. For example, concepts such as chords or keys are naturally expressed as structured sets (e.g., the 12 transpositions of a chord or the diatonic system within a key), rather than isolated features. In this study, \\textbf{we shift from feature identification to structure-based analysis}, asking whether the learned inner representations of music foundation model emerge as organized structures over features. To this end, we introduce a framework that uses pitch transposition as an inductive bias to induce ordered orbits via multi-view SAE alignment. Concretely, we generate pitch-shifted input pairs and align their SAE representations to discover structured groups of pitch-related features. Experimental results show that this approach recovers orbit structures corresponding to chords, keys, and melodic patterns across two state-of-the-art music foundation models, while requiring only minimal grounding (e.g., a few anchor examples) to interpret entire concept families.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2610.01864v1",
+          "category": "foundation",
+          "task": "モデル解釈性",
+          "taskEn": "Model Interpretability",
+          "proposedMethod": "Multi-SAE Alignment",
+          "datasets": [],
+          "what": "複数の音楽基盤モデルの内部表現から、ピッチ移調を利用して構造化された概念（コードやキーなど）を「軌道」として抽出・発見するフレームワークを提案している。",
+          "whatEn": "This paper proposes a framework that extracts and discovers structured musical concepts (such as chords and keys) as \"orbits\" from the internal representations of music foundation models by leveraging pitch transposition.",
+          "novel": "孤立した単一の特徴を探す従来の解釈可能性アプローチから、構造化された関係性（軌道）の分析へと移行し、ピッチ移調をインダクティブバイアスとして用いるマルチビューSAEアライメントを提案した点。",
+          "novelEn": "The authors claim novelty in shifting from traditional feature identification to structure-based analysis (orbits), introducing a multi-view SAE alignment framework that uses pitch transposition as an inductive bias.",
+          "method": "ピッチシフトした入力ペアを生成し、それらのSAE（稀薄自動符号化器）表現をアライメントすることで、ピッチに関連する特徴の構造化されたグループ（軌道）を検出する。",
+          "methodEn": "The method generates pitch-shifted input pairs and aligns their SAE (Sparse Autoencoder) representations to discover structured groups of pitch-related features.",
+          "validation": "2つの最先端の音楽基盤モデルにおいて、コード、キー、旋律パターンに対応する軌道構造を、最小限のアンカー例（グラウンディング）のみで復元できることを実証した。",
+          "validationEn": "Validation on two state-of-the-art music foundation models demonstrates that the approach recovers orbit structures corresponding to chords, keys, and melodic patterns with minimal grounding.",
+          "discussion": "アプローチの解釈には少数のアンカー（グラウンディング例）が必要であり、完全に自動化された抽象的構造のラベリングについては抽象度や手法に依存する可能性がある。",
+          "discussionEn": "The interpretation still requires a few anchor examples for grounding, and fully automated labeling of abstract structures may depend on the level of abstraction and specific methodologies.",
+          "abstractJa": "音楽基盤モデルが「内部的」に何を学習したかをどのように理解できるだろうか。プロービングや稀薄自動符号化器（SAE）といったほとんどの解釈可能性アプローチは、最小限の構造的仮定のもとで個々の特徴を特定することに焦点を当てている。私たちは、多くの概念は孤立した特徴としてよりも、「構造化された関係」として理解する方が適切であると主張する。これは、音高と時間の空間において調性構造が組織化される音楽において特に顕著である。例えば、コードやキーといった概念は、孤立した特徴ではなく、構造化されたセット（例えば、コードの12の移調やキー内の全音階システム）として自然に表現される。本研究では、特徴特定から構造ベースの分析へとシフトし、音楽基盤モデルの学習された内部表現が、特徴にわたる組織化された構造として創発するかどうかを検証する。この目的のために、ピッチ移調をインダクティブバイアスとして使用し、マルチビューSAEアライメントを介して順序付けられた軌道を誘導するフレームワークを提案する。具体的には、ピッチシフトされた入力ペアを生成し、それらのSAE表現をアライメントして、ピッチ関連特徴の構造化されたグループを発見する。実験結果は、このアプローチが2つの最先端の音楽基盤モデルにわたり、コード、キー、旋律パターンに対応する軌道構造を復元することを示しており、概念ファミリー全体を解釈するために最小限のグラウンディング（例えば数個のアンカー例）しか必要としない。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.39847v1",
+          "date": "Sep 30",
+          "title": "SEAR: Spoofing Evidence-Grounded Audio Reasoning Benchmark for Audio Language Models",
+          "titleJa": "SEAR：音響言語モデル向け証拠根拠型なりすまし音声推論ベンチマーク",
+          "authors": [
+            "Rong Wan",
+            "Suliu Qin",
+            "Jiaxi Li",
+            "Wei Xie",
+            "Wenwu Wang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio language models (ALMs) are increasingly used for audio deepfake detection (ADD), yet existing benchmarks assess their verdicts or rationale plausibility without verifying the underlying acoustic evidence. To address this issue, we first introduce spoofing evidence-grounded audio reasoning (SEAR), a four-task AQA benchmark to evaluate ALM-based ADD through acoustic evidence identification and quantification, deepfake detection, and forensic rationale generation. We further propose a bona-fide-based acoustic evidence agent (BAEA), which equips a frozen ALM with controlled acoustic tools under \\textsc{fixed} or \\textsc{adaptive} evidence-acquisition policies. Experiments with six ALMs reveal a clear gap between plausible rationales and verifiable acoustic evidence reasoning, while BAEA-\\textsc{Fixed} improves final verdicts and forensic rationales on both evaluation partitions. Controlled interventions further show that misleading evidence degrades both detection and grounding performance.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.LG"
+          ],
+          "url": "https://arxiv.org/abs/2609.39847v1",
+          "category": "foundation",
+          "task": "音声偽造検出",
+          "taskEn": "Audio Deepfake Detection",
+          "proposedMethod": "BAEA (Bona-fide-based Acoustic Evidence Agent)",
+          "datasets": [
+            "SEAR"
+          ],
+          "what": "音響言語モデル（ALM）を用いた音声なりすまし検出（ADD）を評価するための、4つのタスクからなる新しいベンチマーク「SEAR」と、音響ツールを用いて推論を支援するエージェント「BAEA」を提案している。",
+          "whatEn": "This paper introduces SEAR, a four-task benchmark to evaluate audio language model-based audio deepfake detection (ADD), and proposes BAEA, an agent that equips audio language models with acoustic tools for evidence reasoning.",
+          "novel": "単に正誤判定やもっともらしい説明の妥当性を評価するだけでなく、検証可能な「音響的証拠」に基づいたなりすまし判定と推論プロセスを明示的に検証・評価するベンチマークとエージェントを提案した点。",
+          "novelEn": "The authors claim novelty in establishing a benchmark that verifies factual \"acoustic evidence\" instead of just plausible-sounding rationales, and introducing an agent framework that uses explicit acoustic tools to guide evidence-grounded reasoning.",
+          "method": "ベンチマークSEARは、音響的証拠の特定・定量化、ディープフェイク検出、フォレンジックリーズニング生成の4タスクから構成される。また提案手法のBAEAは、固定（FIXED）または適応的（ADAPTIVE）なポリシーのもと、制御された音響ツールを用いて凍結されたALMを機能拡張する。",
+          "methodEn": "The SEAR benchmark evaluates four tasks including evidence identification, quantification, deepfake detection, and forensic reasoning. The proposed BAEA equips a frozen ALM with controlled acoustic tools under FIXED or ADAPTIVE evidence-acquisition policies.",
+          "validation": "6つのALMを用いた実験により、説得力のある説明と実際の検証可能な音響的証拠の推論との間にあるギャップを明らかにし、提案したBAEA-Fixedが最終的な判定精度と根拠生成の質を向上させることを示した。",
+          "validationEn": "Experiments with six ALMs revealed a clear gap between plausible rationales and verifiable acoustic evidence reasoning, while BAEA-Fixed improved final verdicts and forensic rationales across evaluation partitions.",
+          "discussion": "誤ったまたは誘導的な証拠が与えられた場合、検出精度と根拠検出性能の両方が低下することが制御された介入実験によって示されている。",
+          "discussionEn": "Controlled interventions demonstrated that misleading or incorrect acoustic evidence degrades both the detection accuracy and the evidence grounding performance.",
+          "abstractJa": "音響言語モデル（ALM）は、音声なりすまし検出（ADD）においてますます使用されるようになっているが、既存のベンチマークは、根底にある音響的証拠を検証することなく、それらの判定や推論の妥当性のみを評価している。この課題に対処するため、私たちはまず、音響的証拠の特定と定量化、ディープフェイク検出、およびフォレンジックリーズニング（法医学的根拠）生成の4つのタスクからなるAQAベンチマーク「SEAR（Spoofing Evidence-Grounded Audio Reasoning）」を導入し、ALMベースのADDを評価する。さらに、固定または適応的な証拠取得ポリシーのもと、制御された音響ツールを凍結されたALMに装備する「BAEA（Bona-fide-based Acoustic Evidence Agent）」を提案する。6つのALMを用いた実験により、もっともらしい推論と検証可能な音響的証拠の推論との間に明確なギャップがあることが明らかになったが、BAEA-Fixedは両方の評価パーティションにおいて、最終的な判定とフォレンジックリーズニングを改善した。制御された介入実験により、誤解を招く証拠が検出と根拠づけ（グラウンディング）の両方の性能を低下させることがさらに示された。",
+          "nextReads": [
+            {
+              "label": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (2020)",
+              "arxivId": "2010.11929",
+              "url": "https://arxiv.org/abs/2010.11929",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.39679v1",
+          "date": "Sep 30",
+          "title": "SE-ADD: Self-Evolving Audio Deepfake Detection with Mistake-Driven Supervision",
+          "titleJa": "SE-ADD: 誤り駆動型監視による自己進化型オーディオディープフェイク検出",
+          "authors": [
+            "Rong Wan",
+            "Wei Xie",
+            "Jiaxi Li",
+            "Wenwu Wang",
+            "Lu Yin"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio deepfake detection (ADD) must remain effective when new spoofing attacks emerge after deployment. Emerging audio language model (ALM)-based ADD methods are built on predefined supervision from ground-truth labels or verified forensic rationales. However, this paradigm overlooks an ALM's own mistakes, which indicate where targeted supervision is most needed. To this end, we first introduce evolving spoofing environments for ALM-based ADD, where a new attack becomes dominant while previously observed attacks persist. Motivated by the above learning-from-mistakes perspective, we further propose SE-ADD, a self-evolving framework that iteratively adapts an ALM via low-rank adaptation (LoRA) using mistake-driven supervision built from its verdicts and self-generated forensic cues. All training samples receive direct authenticity supervision, while misclassified ones receive additional cue-augmented supervision. As verdicts and cues are regenerated by the updated ALM, the resulting supervision evolves accordingly. Experiments on two ALMs demonstrate the effectiveness of SE-ADD in generalizing to unseen attacks, reducing the equal error rate (EER) from $36.72\\%$ to $7.52\\%$ for Qwen2-Audio and from $19.93\\%$ to $3.97\\%$ for MOSS-Audio.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.LG"
+          ],
+          "url": "https://arxiv.org/abs/2609.39679v1",
+          "category": "foundation",
+          "task": "オーディオディープフェイク検出",
+          "taskEn": "Audio Deepfake Detection",
+          "proposedMethod": "SE-ADD",
+          "datasets": [],
+          "what": "新種の模倣攻撃が継続的に出現する進化型の模倣環境において、オーディオ言語モデル（ALM）ベースの検出器が自らの誤りから学習して自己進化するフレームワークを提案している。",
+          "whatEn": "This paper proposes SE-ADD, a self-evolving framework that allows audio language model (ALM)-based detectors to learn from their own mistakes in evolving spoofing environments.",
+          "novel": "静的な事前定義ラベルに依存する従来のパラダイムとは異なり、モデル自身の判定と自己生成したフォレンジック手がかりから誤り駆動型の監視信号を構築し、LoRAを通じて反復的に適応する点にあると著者は主張している。",
+          "novelEn": "The authors claim novelty in constructing mistake-driven supervision from the model's own verdicts and self-generated forensic cues to iteratively adapt via LoRA, rather than relying on static predefined labels.",
+          "method": "すべての訓練サンプルに直接的な真正性監視を適用し、誤分類されたサンプルには手がかりで拡張された追加の監視を適用する。更新されたALMによって判定と手がかりが再生成されることで、監視信号も自己進化する。",
+          "methodEn": "Direct authenticity supervision is applied to all training samples, while misclassified samples receive additional cue-augmented supervision. The supervision evolves as verdicts and cues are regenerated by the updated ALM.",
+          "validation": "2つのALM（Qwen2-AudioおよびMOSS-Audio）を用いて検証した結果、未知の攻撃に対する汎化性能が向上し、等価エラー率（EER）が大幅に低下した（Qwen2-Audioでは36.72%から7.52%へ、MOSS-Audioでは19.93%から3.97%へ低減）。",
+          "validationEn": "Validation on two ALMs (Qwen2-Audio and MOSS-Audio) demonstrated improved generalization to unseen attacks, reducing the equal error rate (EER) from 36.72% to 7.52% for Qwen2-Audio and from 19.93% to 3.97% for MOSS-Audio.",
+          "discussion": "アブストラクトには、提案手法の限界や具体的な課題についての言及はない。",
+          "discussionEn": "The abstract does not mention specific limitations or challenges of the proposed method.",
+          "abstractJa": "オーディオディープフェイク検出（ADD）は、デプロイ後に新しい模倣攻撃が出現した場合でも有効性を維持する必要がある。新興のオーディオ言語モデル（ALM）ベースのADD手法は、正解ラベルや検証済みのフォレンジック根拠からの事前定義された監視に基づき構築されている。しかし、このパラダイムは、ターゲットを絞った監視が最も必要とされる場所を示す、ALM自身の誤りを見落としている。この目的に向け、我々はまず、以前に観測された攻撃が持続しつつ新しい攻撃が支配的になる、ALMベースのADDのための進化型模倣環境を導入する。上述の「誤りから学ぶ」という視点に動機付けられ、我々はさらに、更新されたALMの判定と自己生成されたフォレンジック手がかりから構築された誤り駆動型の監視を利用して、低ランク適応（LoRA）を介してALMを反復的に適応させる自己進化型フレームワークSE-ADDを提案する。すべての訓練サンプルは直接的な真正性監視を受け、誤分類されたサンプルはさらなる手がかり拡張監視を受ける。判定と手がかりは更新されたALMによって再生成されるため、結果として得られる監視はそれに応じて進化する。2つのALMに関する実験により、未知の攻撃への汎化におけるSE-ADDの有効性が実証され、等価エラー率（EER）はQwen2-Audioで36.72%から7.52%に、MOSS-Audioで19.93%から3.97%に低下した。",
+          "nextReads": [
+            {
+              "label": "LoRA: Low-Rank Adaptation of Large Language Models (2021)",
+              "arxivId": "2106.09685",
+              "url": "https://arxiv.org/abs/2106.09685",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": 0,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.39199v1",
+          "date": "Sep 30",
+          "title": "UniAE-MoE: A Unified Audio Encoder via Mixture of Experts",
+          "titleJa": "UniAE-MoE: 混合専門家を用いた統一オーディオエンコーダ",
+          "authors": [
+            "Shengbo Cai",
+            "Zhisheng Zhang",
+            "Zichao Nie",
+            "Jing Peng",
+            "Jingran Xie"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Large Audio Language Models (LALMs) rely on effective audio encoders for multi-task performance. We introduce UniAE-MoE, a unified audio encoder designed to model cross-domain audio representations and achieve outstanding downstream understanding performance via a Mixture-of-Experts (MoE) architecture. Specifically, we explore mainstream audio encoders and integrate those from Qwen2-Audio and Audio-Flamingo 3, which demonstrate superior downstream capabilities. To facilitate effective model fusion, we improve our encoder using SwiGLU with shared experts to decouple encoder networks, and we further introduce a two-stage instruction-tuning strategy to better adapt the model to diverse downstream tasks. Moreover, we propose the task-specific data scaling (TSDS) technique to enhance \\tool's understanding capabilities. On the XARES-LLM benchmark, UniAE-MoE attains a score of 0.802, achieving state-of-the-art performance. It also delivers top-tier performance in the official Interspeech 2026 Audio Encoder Capability Challenge, further demonstrating robust generalization across diverse audio tasks. Together, these results validate the effectiveness of \\tool for unified audio understanding across speech, music, and general audio domains.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2609.39199v1",
+          "category": "foundation",
+          "task": "オーディオ理解",
+          "taskEn": "Audio Understanding",
+          "proposedMethod": "UniAE-MoE",
+          "datasets": [
+            "XARES-LLM"
+          ],
+          "what": "音声、音楽、一般音などのドメイン横断的なオーディオ表現をモデル化し、多様な下流タスクにおいて優れた性能を発揮する、混合専門家（MoE）アーキテクチャを用いた統一オーディオエンコーダを提案している。",
+          "whatEn": "This paper introduces UniAE-MoE, a unified audio encoder designed to model cross-domain audio representations and achieve high downstream performance using a Mixture-of-Experts (MoE) architecture.",
+          "novel": "Qwen2-AudioとAudio-Flamingo 3のエンコーダを統合し、共有専門家を備えたSwiGLUを用いることで、エンコーダネットワークのデカップリングと融合を効果的に実現した点にあると著者は主張している。",
+          "novelEn": "The authors claim novelty in integrating the encoders of Qwen2-Audio and Audio-Flamingo 3 and improving them using SwiGLU with shared experts to effectively decouple and fuse the encoder networks.",
+          "method": "共有専門家付きSwiGLUによるエンコーダの統合に加え、2段階のインストラクションチューニング戦略、およびタスク固有データスケーリング（TSDS）技術を導入して多様なタスクに適応させている。",
+          "methodEn": "In addition to integrating encoders with shared-expert SwiGLU, the method introduces a two-stage instruction-tuning strategy and task-specific data scaling (TSDS) to adapt to diverse tasks.",
+          "validation": "XARES-LLMベンチマークで0.802のスコアを獲得して最高性能を達成したほか、Interspeech 2026 Audio Encoder Capability Challengeにおいて優れた汎化性能を示した。",
+          "validationEn": "Validation on the XARES-LLM benchmark yielded a state-of-the-art score of 0.802, and top-tier performance was achieved in the official Interspeech 2026 Audio Encoder Capability Challenge.",
+          "discussion": "アブストラクトには、本手法の制約や計算コストに関する具体的な議論は記載されていない。",
+          "discussionEn": "The abstract does not provide specific discussions on the limitations or computational overhead of the proposed method.",
+          "abstractJa": "大規模オーディオ言語モデル（LALM）は、マルチタスク性能のために効果的なオーディオエンコーダに依存している。我々は、ドメイン横断的なオーディオ表現をモデル化し、混合専門家（MoE）アーキテクチャを介して優れた下流の理解性能を達成するために設計された、統一オーディオエンコーダUniAE-MoEを紹介する。具体的には、主要なオーディオエンコーダを探索し、優れた下流能力を示すQwen2-AudioおよびAudio-Flamingo 3のエンコーダを統合する。効果的なモデル融合を促進するため、共有専門家を備えたSwiGLUを使用してエンコーダネットワークをデカップリングするようにエンコーダを改善し、さらに、モデルを多様な下流タスクによりよく適合させるために、2段階のインストラクションチューニング戦略を導入する。さらに、本モデルの理解能力を高めるために、タスク固有データスケーリング（TSDS）技術を提案する。XARES-LLMベンチマークにおいて、UniAE-MoEは0.802のスコアを達成し、最高性能を達成した。また、公式のInterspeech 2026 Audio Encoder Capability Challengeにおいてトップティアの性能を発揮し、多様なオーディオタスクにわたる堅牢な汎化性能をさらに証明した。これらの結果を総合すると、音声、音楽、一般オーディオのドメインにわたる統一的なオーディオ理解における本モデルの有効性が実証される。",
+          "nextReads": [
+            {
+              "label": "Audio Flamingo: A Novel Audio Language Model with Few-Shot Learning and Dialogue Abilities (2024)",
+              "arxivId": "2402.01831",
+              "url": "https://arxiv.org/abs/2402.01831",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer (2017)",
+              "arxivId": "1701.06538",
+              "url": "https://arxiv.org/abs/1701.06538",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.38878v1",
+          "date": "Sep 30",
+          "title": "Audio Token Attention Is Predictable Before the Language Model Runs",
+          "titleJa": "オーディオトークンへのアテンションは言語モデルの実行前に予測可能である",
+          "authors": [
+            "Kyoungjun Park",
+            "Yunzhe Li",
+            "Lili Qiu"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "A large audio language model (LALM) turns a minute of speech into 750-1,500 tokens and prefills every one. Image-token pruning often cuts after the language model's first layers, where image tokens draw little attention. Audio tokens draw much more attention there, and their ranking is still far from final, so audio needs a ranking before the language model runs. Surprisingly, the attention an audio token will receive across the language model is already linearly predictable from its encoder output, before the language model runs. A linear map, fitted in closed form without labels, predicts this all-layer attention ranking at $ρ\\geq .69$ on eleven of thirteen LALMs. Our method, Triage, cuts audio tokens by this prediction and, on multiple choice, cuts again at layer 2, correcting the prediction with the attention observed there. Triage sets its compression without labels, under two budgets that limit how far its output may differ from the model's own full-audio output. At the conservative budget, its word error rate and accuracy stay within .04 of full audio. At the aggressive budget, Triage beats every baseline in all twelve transcription cases. On multiple choice, at 2.2-5x compression, it outperforms DART, the strongest baseline on average, by .043 in mean accuracy. Because it cuts before the language model, it raises the audio that fits in Qwen2.5-Omni-3B's context window from 21.8 to about 62 minutes. At its most compressive point, Triage lets one GPU serve 4x as many concurrent 5-minute streams of that model. Project page: https://audio-triage.github.io",
+          "comment": "43 pages, 7 figures",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "cs.CL"
+          ],
+          "url": "https://arxiv.org/abs/2609.38878v1",
+          "category": "foundation",
+          "task": "トークン削減",
+          "taskEn": "Token Pruning",
+          "proposedMethod": "Triage",
+          "datasets": [],
+          "what": "大規模オーディオ言語モデル（LALM）が処理するオーディオトークンへのアテンションが、言語モデルを実行する前にエンコーダ出力から線形予測可能であることを示し、この予測に基づきトークンを効率的に削減する手法「Triage」を提案している。",
+          "whatEn": "This paper shows that the attention an audio token will receive in a large audio language model (LALM) is linearly predictable from the encoder output before the language model runs, and proposes 'Triage', a token pruning method based on this prediction.",
+          "novel": "オーディオトークンが受ける全レイヤーのアテンションの順位が、ラベルなしの閉形式で適合された線形写像によって、言語モデルの実行前に高い相関で予測可能であることを発見した点にあると著者は主張している。",
+          "novelEn": "The authors claim novelty in discovering that the all-layer attention ranking of audio tokens is highly predictable before the language model runs using a linear map fitted in closed form without labels.",
+          "method": "提案手法「Triage」は、実行前の予測によってオーディオトークンを削減し、多肢選択タスクにおいてはレイヤー2でアテンションを補正して再度削減する。圧縮率は、モデル本来の出力との差を制限する2つの予算基準に基づいて設定される。",
+          "methodEn": "The proposed method, Triage, prunes audio tokens based on the pre-execution prediction, and for multiple-choice tasks, prunes again at layer 2 by correcting the prediction with observed attention. Compression is regulated under two budget constraints that limit deviation from full-audio outputs.",
+          "validation": "13種中11種のLALMにおいて順位相関が0.69以上であることを示し、Qwen2.5-Omni-3Bなどを用いた評価において、従来手法DARTを上回る精度と、オーディオの文脈ウィンドウの約3倍への拡張、および同時処理数の4倍向上を達成した。",
+          "validationEn": "Validation across 11 of 13 LALMs showed a rank correlation of 0.69 or higher. Triage outperformed the strong baseline DART, expanded the context window of Qwen2.5-Omni-3B by nearly 3x, and served 4x as many concurrent streams on a single GPU.",
+          "discussion": "アブストラクトには、線形予測モデルが適合しない残り2つのLALMにおける特性や、さらに複雑な音声タスクへの影響についての具体的な限界の言及はない。",
+          "discussionEn": "The abstract does not explicitly discuss limitations regarding the two LALMs where the linear model is less effective, or potential impacts on more complex audio tasks.",
+          "abstractJa": "大規模オーディオ言語モデル（LALM）は、1分間の音声を750〜1,500個のトークンに変換し、すべてをプレフィル（事前処理）する。画像トークンの削減（プルーニング）は、画像トークンがほとんどアテンションを引き付けない言語モデルの最初の数レイヤーの後に行われることが多い。一方、オーディオトークンはそこではるかに多くの注目を集め、その順位付けも最終的な状態から程遠いため、オーディオは言語モデルが動作する前に順位付けを必要とする。驚くべきことに、オーディオトークンが言語モデル全体で受けるアテンションは、言語モデルが動作する前に、エンコーダ出力からすでに線形に予測可能である。ラベルなしの閉形式で適合された線形写像は、13個中11個のLALMにおいて、この全レイヤーのアテンション順位をρ≧0.69で予測する。我々の手法であるTriageは、この予測によってオーディオトークンを削減し、多肢選択問題では、レイヤー2でそこで観察されたアテンションを用いて予測を修正し、再度削減を行う。Triageは、その出力がモデル自身のフルオーディオ出力とどの程度異なってよいかを制限する2つの予算の下で、ラベルなしで圧縮率を設定する。保守的な予算では、単語誤り率と精度はフルオーディオの0.04以内に留まる。積極的な予算では、Triageは12の文字起こしケースすべてにおいて、すべてのベースラインを上回る。多肢選択問題において、2.2〜5倍の圧縮率で、平均で最も強力なベースラインであるDARTを平均精度で0.043上回る。言語モデルの前に削減を行うため、Qwen2.5-Omni-3Bのコンテキストウィンドウに収まるオーディオを21.8分から約62分に増加させる。最も圧縮された状態では、Triageにより1つのGPUでそのモデルの同時5分ストリームを4倍多く処理することが可能になる。",
+          "nextReads": [],
+          "citationCount": 0,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.38491v1",
+          "date": "Sep 29",
+          "title": "Role-guided Speaker Deletion Verification in Clinical Psychiatry Speech Recordings with Audio Language Models",
+          "titleJa": "音声言語モデルを用いた精神科臨床音声録音における役割主導型話者削除検証",
+          "authors": [
+            "Joseph T Colonel",
+            "Daniel Katzman",
+            "Kelsey Kirker",
+            "Adam N Davidson",
+            "Shalaila S Haas"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Clinical research in psychiatry increasingly relies on large scale collection of spoken language data to identify acoustic and linguistic biomarkers. Yet evolving consent and protocol requirements can oblige investigators to remove a designated speaker from multi-speaker recordings and to verify said removal at a scale infeasible for manual review of entire corpora. We study this verification problem for role-driven dyadic clinical dialogue in psychiatry and investigate it with two parallel, symmetric pipelines: confirming that clinician speech has been removed from psychiatric interview recordings, and confirming that patient speech has been removed from the same recordings. Each pipeline redacts the raw audio for its target role and then scans the surviving output with audio-language and large-language models to identify missed deletions. We evaluate this approach on a corpus of 48 dyadic recordings drawn from psychiatry settings, testing four open-weight models in an inference-only setting: Gemma-4-12B, Gemma-4-31B, Nemotron-3-Nano, and Nemotron-3-Nano-Omni. A disjunctive OR ensemble over fourteen model-view configurations had a combined F1 of 0.478 (precision 0.330, recall 0.870), an improvement over individual model estimates driven by recall gains that point to substantial complementarity across models and context views.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.LG",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.38491v1",
+          "category": "foundation",
+          "task": "話者検証",
+          "taskEn": "Speaker verification",
+          "proposedMethod": null,
+          "datasets": [],
+          "what": "精神医学の臨床会話録音から特定の役割（臨床医または患者）の音声が正しく削除されたかを、音声言語モデルおよび大規模言語モデルを用いて自動的に検証する手法の提案。",
+          "whatEn": "A proposed method using audio-language and large-language models to automatically verify whether a designated speaker role (clinician or patient) has been successfully removed from clinical psychiatric dialogue recordings.",
+          "novel": "手動による全コーパスの確認が困難な規模において、役割に応じた生の音声を編集した後に、複数のオープンウェイトモデルのアンサンブルを用いて未削除の話者を高精度に識別・検証するパイプラインを構築した点。",
+          "novelEn": "The authors claim novelty in constructing a pipeline that redacts raw audio based on roles and utilizes an ensemble of multiple open-weight models to identify missed speaker deletions, addressing verification at a scale where manual review is infeasible.",
+          "method": "Gemma-4-12B、Gemma-4-31B、Nemotron-3-Nano、Nemotron-3-Nano-Omniなどのモデルを使用し、臨床医の音声削除と患者の音声削除という2つの対称的なパイプラインを評価した。14のモデル構成にまたがる論理和（OR）アンサンブルを適用した。",
+          "methodEn": "The method evaluates two symmetric pipelines (for clinician and patient speech removal) using models like Gemma-4-12B, Gemma-4-31B, Nemotron-3-Nano, and Nemotron-3-Nano-Omni, applying a disjunctive OR ensemble across fourteen model-view configurations.",
+          "validation": "精神科の設定から得られた48の二者間会話録音コーパスを用いて検証し、論理和アンサンブルがF1スコア0.478、再現率0.870を達成し、個別モデルと比較して相補的な効果と再現率の向上を示した。",
+          "validationEn": "The method was validated on a corpus of 48 dyadic recordings from psychiatric settings, where the disjunctive OR ensemble achieved a combined F1 of 0.478 and a recall of 0.870, showing substantial complementarity and recall gains over individual models.",
+          "discussion": "F1スコアが0.478と、適合率（0.330）が比較的低い点や、推論に多くの計算資源を要する点についてさらなる改善が必要であると推測されるが、アブストラクトには明示的な限界は記述されていない。",
+          "discussionEn": "While the abstract does not explicitly state limitations, the relatively low precision (0.330) leading to an F1 of 0.478 and the computational overhead of running multiple models suggest areas for improvement.",
+          "abstractJa": "精神医学における臨床研究は、音響的および言語的なバイオマーカーを特定するために、話し言葉データのデータ収集にますます依存するようになっている。しかし、同意やプロトコルの要件の変化により、研究者は複数話者の録音から指定された話者を除去し、コーパス全体のすべてを手動で確認することが不可能な規模で、その除去を確認することを義務付けられることがある。我々は、精神医学における役割主導型の二者間臨床対話に対するこの検証問題を研究し、2つの並行で対称的なパイプラインを用いて調査する。1つは精神科の面接録音から臨床医の音声が削除されたことを確認するものであり、もう1つは同じ録音から患者の音声が削除されたことを確認するものである。各パイプラインは、対象となる役割の生音声を編集し、残った出力を音声言語モデルおよび大規模言語モデルでスキャンして、削除漏れを特定する。我々は、精神医学の設定から得られた48の二者間録音のコーパスにおいて、推論のみの設定で4つのオープンウェイトモデル（Gemma-4-12B、Gemma-4-31B、Nemotron-3-Nano、Nemotron-3-Nano-Omni）をテストし、このアプローチを評価する。14のモデルビュー構成にわたる論理和（OR）アンサンブルは、総合F1が0.478（適合率0.330、再現率0.870）であり、モデル間およびコンテキストビュー間の実質的な相補性を示す再現率の向上により、個々のモデルの見積もりから改善された。",
+          "nextReads": [
+            {
+              "label": "Gemma: Open Models Based on Gemini Research and Technology (2024)",
+              "arxivId": "2403.08295",
+              "url": "https://arxiv.org/abs/2403.08295",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.37617v1",
+          "date": "Sep 29",
+          "title": "AS$^2$D: Accelerating On-Demand Audio Understanding on Mobile Devices",
+          "titleJa": "AS$^2$D：モバイルデバイス上でのオンデマンド音響理解の高速化",
+          "authors": [
+            "Yunzhe Li",
+            "Kyoungjun Park",
+            "Hongzi Zhu",
+            "Lili Qiu"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Speculative decoding accelerates autoregressive generation by using a smaller drafter to propose tokens for batched verification by a larger target. However, conventional speculative decoding couples drafting to the target's evolving verified prefix, serializing drafting and verification. We ask whether this dependency is necessary for source-conditioned generation. Our key observation is that, for audio language models, the input audio and user request can provide useful speculative candidates without following the target's evolving text prefix. We propose AS$^2$D (Audio Speculative Speculative Decoding), which enables target-decoupled drafting: an audio-conditioned drafter follows its own generation history while the target independently verifies and corrects ready candidates. Without usable candidates, the target advances alone. Thus, target feedback determines which candidates are committed but no longer determines when the drafter can make progress, enabling drafting and verification to proceed concurrently while retaining target-side verification and correction. We implement AS$^2$D in MNN for Android and evaluate two target models across four phones, seven datasets, and three tasks covering 12.2 hours of audio. Across four phones, AS$^2$D improves pooled ASR throughput by 42-76% over target-only decoding, while only 5.7% of evaluation windows are slower than target-only, compared with 58.1-63.0% for speculative baselines. For ASR, AS$^2$D reaches 97.33-98.20% of a hindsight per-window oracle's pooled throughput over the evaluated drafter/budget catalog. Native on-demand execution with a 7B target achieves up to 78% higher throughput than target-only. These results show that source-conditioned audio generation can relax the conventional dependence of speculative drafting on the target's evolving output prefix, exposing substantial parallelism for efficient inference.",
+          "comment": "43 pages, 9 figures, 16 tables",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2609.37617v1",
+          "category": "foundation",
+          "task": "音響言語モデル高速化",
+          "taskEn": "Audio language model acceleration",
+          "proposedMethod": "AS^2D",
+          "datasets": [],
+          "what": "モバイルデバイス上で音響基盤モデルの推論を高速化するため、ターゲットの最新プレフィックスに依存しない、ソース条件付きのターゲット非結合型投機的デコーディング手法を提案する。",
+          "whatEn": "A target-decoupled speculative decoding method, AS^2D, designed to accelerate the inference of audio language models on mobile devices by exploiting source-conditioned generation without strict dependence on the target's evolving prefix.",
+          "novel": "音響入力とユーザ要求からターゲットのテキスト履歴に依存せずに投機的トークン候補を生成でき、ドラフト処理と検証処理を並行して実行できる「ターゲット非結合型投機」を実現した点。",
+          "novelEn": "The authors claim novelty in enabling 'target-decoupled drafting,' where the audio-conditioned drafter generates candidates based on its own history and audio inputs, allowing concurrent drafting and target-side verification.",
+          "method": "ターゲットと結合していないドラフターが自らの生成履歴に従って候補を提案し、ターゲットが独立して検証と修正を行う仕組みをモバイルフレームワークMNN（Android）上に実装した。",
+          "methodEn": "The method decouples drafting from the target's prefix by letting the audio-conditioned drafter generate candidates from its own history, which the target independently verifies and corrects. It was implemented in MNN for Android.",
+          "validation": "4台のスマートフォン、7つのデータセット、3つのタスク（ASRを含む）にわたり、合計12.2時間の音響データを用いて評価。ターゲット単体のデコーディングと比較してASRのプールスループットが42-76%向上し、遅延が発生する割合を従来の58.1-63.0%から5.7%に抑制した。",
+          "validationEn": "The evaluation covered 12.2 hours of audio across 4 phones, 7 datasets, and 3 tasks. AS^2D improved pooled ASR throughput by 42-76% over target-only decoding, and only 5.7% of evaluation windows were slower than target-only, compared to 58.1-63.0% for traditional baselines.",
+          "discussion": "アブストラクトでは明示的な限界は論じられていないが、極端に条件付き情報（音響入力）が乏しい場合における投機ドラフターの候補品質や、追加のオンデバイスメモリ要件が課題となる可能性がある。",
+          "discussionEn": "The abstract does not explicitly state limitations, but potential challenges may include drafter candidate quality when conditioning information is sparse, or extra on-device memory footprints.",
+          "abstractJa": "投機的デコーディングは、より小さなドラフターを使用してバッチ検証用のトークンを提案し、それをより大きなターゲットで検証することで、自己回帰生成を高速化する。しかし、従来の投機的デコーディングは、ドラフト処理をターゲットの進化する検証済みプレフィックスに結合させるため、ドラフト処理と検証処理をシリアル化してしまう。我々は、この依存関係がソース条件付き生成において本当に必要であるかを問い直す。我々の重要な観察は、音響言語モデルにおいて、入力オーディオとユーザー要求が、ターゲットの進化するテキストプレフィックスに従うことなく、有用な投機的候補を提供できるということである。我々は、ターゲット非結合型のドラフト処理を可能にするAS$^2$D（Audio Speculative Speculative Decoding）を提案する。これは、音響条件付きドラフターが独自の生成履歴に従う一方で、ターゲットが準備された候補を独立して検証および修正するものである。使用可能な候補がない場合、ターゲットは単独で進む。したがって、ターゲットのフィードバックによってどの候補がコミットされるかが決定されるが、ドラフターがいつ進捗できるかは決定されなくなり、ターゲット側の検証と修正を維持しながら、ドラフト処理と検証処理を同時に進めることが可能になる。我々はAndroid用のMNNにAS$^2$Dを実装し、4台のスマートフォン、7つのデータセット、3つのタスクにわたり、12.2時間の音声をカバーする2つのターゲットモデルを評価した。4台のスマートフォン全体で、AS$^2$Dはターゲットのみのデコーディングと比較して、プールされたASRスループットを42〜76%向上させ、ターゲットのみよりも遅くなる評価ウィンドウはわずか5.7%であった（従来の投機的ベースラインでは58.1〜63.0%）。ASRにおいて、AS$^2$Dは、評価されたドラフター/バジェットカタログ全体で、ハインドサイトのウィンドウごとのオラクルのプールスループットの97.33〜98.20%に達した。7Bターゲットを使用したネイティブなオンデマンド実行は、ターゲットのみよりも最大78%高いスループットを達成する。これらの結果は、ソース条件付き音声生成が、ターゲットの進化する出力プレフィックスに対する投機的ドラフトの従来の依存関係を緩和し、効率的な推論のための実質的な並行性を明らかにできることを示している。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.36577v1",
+          "date": "Sep 29",
+          "title": "Long-Term Memory-Guided Enhancement for Target Perception in Audio-Language Models",
+          "titleJa": "音響言語モデルにおけるターゲット知覚のための長期記憶誘導型音声強調",
+          "authors": [
+            "Zhenhong Zhou",
+            "Xuanyue Zhao",
+            "Youji Liu",
+            "Yuanhe Zhang",
+            "Xiaoyu Ma"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio large language models (ALLMs) can reason about the content of audio recordings to perform complex tasks. However, these capabilities usually collapse in real-world environments when background noise and competing sources mix the target sound. Inspired by long-term memory in human listening, we propose Long-Term Memory-Guided Audio Enhancement (LTM-AE) to improve selective target perception by refining the audio representations of ALLMs without training. LTM-AE extracts representations in hidden states from separate clean reference recordings as long-term memory for each category, guiding enhancement toward a user-specified listening target. We reconstruct incoming audio tokens in the selected category long-term memory and interpolate the reconstructions with the original tokens before language backbone decoding. This interpolation controls the influence of stored auditory experience while keeping all ALLM parameters fixed. Diagnostic readouts across twenty sound categories and three ALLMs show that LTM-AE strengthens responses to a specified target amid three interfering sources. Averaged over constrained and free-form classification, accuracy gains over raw mixtures range from 29.53 to 46.15 percentage points across multiple open source models. For speech content recovery, LTM-AE with an additional learned token-level gate reduces Qwen2-Audio's word error rate from 23.07% to 14.77%. This work takes an initial step toward using principles of human long-term memory to enhance ALLMs for real-world listening. Our code is available at https://github.com/aynlp/ltm-audio-code",
+          "comment": "28 pages, 5 figures, 17 tables",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "cs.CL"
+          ],
+          "url": "https://arxiv.org/abs/2609.36577v1",
+          "category": "foundation",
+          "task": "音声強調",
+          "taskEn": "Speech Enhancement",
+          "proposedMethod": "LTM-AE",
+          "datasets": [],
+          "what": "実環境の混相ノイズ下における音響言語モデル（ALLM）の標的知覚能力低下を防ぐため、事前トレーニングを必要とせず、人間の長期記憶を模した参照表現を用いて目的音トークンを再構成・強化する手法（LTM-AE）を提案する。",
+          "whatEn": "A proposed training-free method, Long-Term Memory-Guided Audio Enhancement (LTM-AE), which utilizes representations from separate clean reference recordings as long-term memory to refine audio tokens in ALLMs for enhanced target perception in noisy environments.",
+          "novel": "モデル全体のパラメータを完全に固定したまま、クリーンな参照音から抽出されたカテゴリごとの長期記憶表現を用いて、言語デコーダ前段階で入力オーディオートークンを動的に再構成・補間するトレーニングフリーのアプローチを開発した点。",
+          "novelEn": "The authors claim novelty in developing a training-free approach that reconstructs and interpolates incoming audio tokens before language backbone decoding using stored long-term memory categories while keeping all ALLM parameters fixed.",
+          "method": "クリーンな参照音の隠れ状態表現を長期記憶としてカテゴリごとに抽出。言語モデルのデコーディング前に、指定カテゴリのメモリを用いて入力オーディオートークンを再構成し、元のトークンと補間（ブレンド）する。また、音声内容の復元のために、学習可能なトークンレベルのゲートをオプションとして統合した。",
+          "methodEn": "Category-specific hidden state representations from clean reference recordings are stored as long-term memory. Input audio tokens are reconstructed using the selected category's memory and interpolated with the original tokens before decoding. An optional learned token-level gate is integrated for speech recovery.",
+          "validation": "20種類の音カテゴリと3つのALLM（Qwen2-Audio等）を用いて評価。混合音に対して分類精度が29.53〜46.15％向上し、音声内容復元タスクにおいては、トークンレベルゲートを適用したLTM-AEによってQwen2-Audioの単語誤り率（WER）が23.07%から14.77%へと低減された。",
+          "validationEn": "Evaluated across 20 sound categories and three ALLMs (including Qwen2-Audio). LTM-AE improved classification accuracy over raw mixtures by 29.53 to 46.15 percentage points and reduced Qwen2-Audio's word error rate (WER) from 23.07% to 14.77% when paired with a learned token-level gate.",
+          "discussion": "音声内容の復元において、最良のパフォーマンスを得るためには追加の「学習可能な」トークンレベルのゲート（一部パラメータの学習）が必要になる点については完全なトレーニングフリーとは言えない点が挙げられる。",
+          "discussionEn": "A limitation is that achieving optimal performance for speech content recovery requires introducing an additional learned token-level gate, deviating from the strictly training-free setting.",
+          "abstractJa": "音声大規模言語モデル（ALLM）は、音響録音の内容を推論して複雑なタスクを実行できる。しかし、現実世界の環境において背景雑音や競合する音源がターゲット音と混ざり合うと、これらの能力は通常崩壊してしまう。人間の聴覚における長期記憶に触発されて、我々はトレーニングなしでALLMの音響表現を洗練させることにより、選択的な標的知覚を向上させる「長期記憶誘導型音声強調（LTM-AE）」を提案する。LTM-AEは、各カテゴリの長期記憶として別々のクリーンな参照録音から隠れ状態の表現を抽出し、ユーザーが指定した試聴ターゲットに向けた強調を誘導する。言語バックボーンのデコーディング前に、選択されたカテゴリの長期記憶において入力オーディオートークンを再構成し、再構成されたトークンを元のトークンと補間する。この補間により、すべてのALLMパラメータを固定したまま、保存された聴覚体験の影響を制御する。20の音カテゴリと3つのALLMにわたる診断用読み出しにより、LTM-AEは3つの干渉源がある中で指定されたターゲットへの応答を強化することを示した。制約付き分類とフリーフォーム分類の平均で、元の混合物に対する正解率の向上は、複数のオープンソースモデルにおいて29.53から46.15パーセンテージポイントの範囲であった。音声コンテンツの復元において、追加の学習されたトークンレベルゲートを備えたLTM-AEは、Qwen2-Audioの単語誤り率（WER）を23.07%から14.77%に低減させた。本研究は、人間の長期記憶の原理を利用して、現実世界の試聴に向けてALLMを強化するための最初の一歩を踏み出すものである。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.35952v1",
+          "date": "Sep 28",
+          "title": "HEAR: Real Voices, Real Bias: A Large-Scale Human-Recorded, Demographically Diverse Benchmark for Audio Language Models",
+          "titleJa": "HEAR: リアルな声、リアルなバイアス：音声言語モデルにおける大規模な人間の録音による人口統計学的に多様なベンチマーク",
+          "authors": [
+            "Shen Yan",
+            "Duc Le",
+            "Irina-Elena Veliche"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "We introduce HEAR (Human-recorded Evaluation of Audio-LLM bias by Real speakers), a large-scale, ecologically valid benchmark comprising 87k real human audio samples from 843 demographically diverse participants. HEAR enables comprehensive evaluation through Multiple Choice Question Answering (MCQA) and open-ended long-form tasks. To our knowledge, this is the first large-scale voice benchmark grounded entirely in authentic human speech.   We evaluate model behavior across both real-time speech-to-speech and speech-to-text architectures. Our results reveal that voice-conditioned bias is a model-specific property. Furthermore, we demonstrate that personalization instructions consistently exacerbate demographic disparities. Our findings establish that voice bias is a controllable model characteristic, providing a foundational framework for future bias mitigation and evaluation in Audio-LLM development.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "cs.CY"
+          ],
+          "url": "https://arxiv.org/abs/2609.35952v1",
+          "category": "foundation",
+          "task": "バイアス評価",
+          "taskEn": "Bias Evaluation",
+          "proposedMethod": "HEAR",
+          "datasets": [
+            "HEAR"
+          ],
+          "what": "音声言語モデル（Audio-LLM）のバイアスを評価するため、843人の人口統計学的に多様な参加者から得られた8万7千サンプルの本物の人間の音声に基づく大規模ベンチマークを提案している。",
+          "whatEn": "This paper introduces HEAR, a large-scale benchmark of 87k real human audio samples from 843 demographically diverse participants, designed for evaluating biases in Audio Large Language Models (Audio-LLMs).",
+          "novel": "著者らによると、完全に本物の人間の音声に基づき、複数選択式質問応答とオープンエンド型のタスクの両方に対応した最初の大規模音声バイアス評価ベンチマークである点。",
+          "novelEn": "According to the authors, this is the first large-scale voice benchmark grounded entirely in authentic human speech, enabling comprehensive evaluation through multiple choice and open-ended tasks.",
+          "method": "リアルタイム音声対音声および音声対テキストのアーキテクチャにわたるモデルの挙動を評価し、音声に起因するバイアスの特性や、パーソナライズ指示が人口統計学的な格差を悪化させる影響を検証する。",
+          "methodEn": "The method evaluates model behavior across speech-to-speech and speech-to-text architectures to study voice-conditioned bias and how personalization instructions impact demographic disparities.",
+          "validation": "提案したHEARベンチマークにより評価を行った結果、音声バイアスはモデル固有の特性であり、制御可能であることを示し、今後のバイアス緩和のための基盤を確立した。",
+          "validationEn": "Validation using the HEAR benchmark reveals that voice-conditioned bias is model-specific and controllable, providing a foundational framework for future bias mitigation.",
+          "discussion": "アブストラクトには特定の制限事項について言及されていない。",
+          "discussionEn": "The abstract does not explicitly mention specific limitations.",
+          "abstractJa": "私たちは、843人の人口統計学的に多様な参加者から得られた8.7万サンプルの本物の人間の音声からなる、エコロジカルに有効な大規模ベンチマークであるHEAR（Real speakersによるAudio-LLMバイアスの人間の録音に基づく評価）を提案します。HEARは、複数選択式質問応答（MCQA）およびオープンエンドの長文タスクを通じて、包括的な評価を可能にします。私たちの知る限り、これは完全に本物の人間の音声に基づいた最初の大規模音声ベンチマークです。私たちは、リアルタイムの音声対音声（speech-to-speech）および音声対テキスト（speech-to-text）の両方のアーキテクチャにわたってモデルの挙動を評価します。私たちの結果は、音声に条件付けられたバイアスがモデル固有の特性であることを明らかにしています。さらに、パーソナライズの指示が一貫して人口統計学的な格差を悪化させることを実証します。私たちの知見は、音声バイアスが制御可能なモデルの特性であることを確立し、音声LLM開発における今後のバイアス緩和と評価のための基礎的な枠組みを提供します。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.34806v1",
+          "date": "Sep 28",
+          "title": "On Temporal Binding in Large Audio Language Models",
+          "titleJa": "大規模音声言語モデルにおける時間的バインディングについて",
+          "authors": [
+            "Paul Primus",
+            "Gerhard Widmer"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Reasoning about temporal structure of audio recordings requires Large Audio Language Models (LALMs) to associate sound events with their temporal position. Understanding the underlying mechanisms is a first step toward diagnosing failures and identifying model components that may need improvement. Using mechanistic interpretability, we investigate how temporal information is represented and bound to sound events in three open-source LALMs. We find that across all three, event-specific location becomes concentrated in event name representations at intermediate modality integration layers. These representations encode coarse event position along a low-dimensional, curved relative time trajectory. Steering event name representations along this trajectory systematically shifts before/after beliefs, providing evidence that these representations contribute to coarse temporal reasoning. In contrast, the same interventions do not reliably shift predicted onset timestamps, suggesting that coarse temporal reasoning and precise metric event localization rely on distinct mechanisms.",
+          "comment": "Repository: https://github.com/OptimusPrimus/icassp2027_temporal_binding This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.LG"
+          ],
+          "url": "https://arxiv.org/abs/2609.34806v1",
+          "category": "foundation",
+          "task": "モデル解析",
+          "taskEn": "Model Analysis",
+          "proposedMethod": "Mechanistic Interpretability for LALMs",
+          "datasets": [],
+          "what": "大規模音声言語モデル（LALM）において、音イベントが時間的な位置情報とどのように結合・表現されるかをメカニスティックな解釈可能性の手法を用いて調査・分析している。",
+          "whatEn": "This paper investigates how Large Audio Language Models (LALMs) represent temporal structure and bind sound events to their temporal positions using mechanistic interpretability.",
+          "novel": "3つのオープンソースLALMを対象に、音響イベントの時間バインディングの内部メカニズムを明らかにし、大まかな時間推論と正確なミリ秒単位のイベント位置特定が異なるメカニズムに依存していることを特定した点。",
+          "novelEn": "The authors identify the inner mechanisms of event-time binding in three open-source LALMs, showing that coarse temporal reasoning and precise metric event localization rely on distinct internal mechanisms.",
+          "method": "中間モダリティ統合レイヤーでのイベント名表現にイベント固有の位置情報が集中することを発見し、これらの表現を低次元の相対時間軌道に沿って操作することでモデルの「前後関係」の認識をシフトさせる実験を行った。",
+          "methodEn": "The study analyzes how event-specific locations concentrate in event name representations at intermediate integration layers, and steers these representations along a low-dimensional relative time trajectory to influence the model's before/after beliefs.",
+          "validation": "提案された表現操作を適用した結果、大まかな時間的推論（前後関係など）は系統的に変化したが、詳細な開始タイムスタンプの予測には変化が見られないことを示し、両者が異なるメカニズムであることを実証した。",
+          "validationEn": "The validation showed that while the interventions systematically shifted before/after temporal beliefs, they did not reliably affect predicted metric onset timestamps, confirming distinct underlying mechanisms.",
+          "discussion": "アブストラクトには特定の制限事項について言及されていない。",
+          "discussionEn": "The abstract does not explicitly mention specific limitations.",
+          "abstractJa": "オーディオ録音の時間的構造について推論することは、大規模音声言語モデル（LALM）が音響イベントとその時間的位置を関連付けることを要求します。その基礎となるメカニズムを理解することは、障害を診断し、改善が必要なモデルコンポーネントを特定するための第一歩です。メカニスティックな解釈可能性（mechanistic interpretability）を用いて、私たちは3つのオープンソースLALMにおいて、時間情報がどのように表現され、音響イベントにバインドされるかを調査します。3つのモデルすべてにおいて、イベント固有の位置情報が中間のモダリティ統合レイヤーにおけるイベント名表現に集中することを発見しました。これらの表現は、低次元で湾曲した相対時間軌道に沿って、大まかなイベント位置をエンコードします。この軌道に沿ってイベント名表現を操作すると、系統的に「前/後」の確信がシフトし、これらの表現が大まかな時間的推論に寄与しているという証拠を提供します。対照的に、同じ介入を行っても予測される開始タイムスタンプは確実にはシフトせず、大まかな時間的推論と正確なメトリックイベント位置特定が異なるメカニズムに依存していることを示唆しています。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.34407v1",
+          "date": "Sep 28",
+          "title": "Beyond Textual Chain-of-Thought: JEPA-Conditioned Latent Reasoning for Large Audio Language Models",
+          "titleJa": "テキストによる思考の連鎖を超えて：大規模オーディオ言語モデルのためのJEPAを条件とする潜在的推論",
+          "authors": [
+            "Donghang Wu",
+            "Haoyang Zhang",
+            "Yizhou Peng",
+            "Shreyas Gopal",
+            "Yi-Wen Chao"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Explicit textual Chain-of-Thought (CoT) has improved the reasoning ability of large audio language models (LALMs). However, textual CoTs are often constructed from text captions of audio and provide limited access to the acoustic evidence, which can introduce problems like hallucination. To address this modality-gap issue, we introduce JELAR, a Joint-Embedding Predictive Architecture (JEPA)-based latent reasoning framework that conditions latent reasoning supervision on acoustic representations learned from raw waveforms. During training, a frozen WavJEPA model provides representations learned directly from raw waveforms. A non-causal expert first constructs answer-aware queries, which cross-attend to WavJEPA embeddings to produce latent reasoning targets. The LALM is trained to predict these targets before generating its response. Experimental results show that JELAR improves the Audio-Reasoner baseline by 2.70 and 9.10 absolute percentage points on MMAU-mini and MMAR, respectively, demonstrating the effectiveness of JEPA-conditioned latent reasoning as an alternative to explicit textual CoT supervision.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.34407v1",
+          "category": "foundation",
+          "task": "オーディオ理解",
+          "taskEn": "Audio understanding",
+          "proposedMethod": "JELAR",
+          "datasets": [
+            "MMAU-mini",
+            "MMAR"
+          ],
+          "what": "テキストによる思考の連鎖（CoT）がオーディオから欠落した音響的証拠にアクセスできないというモダリティギャップ問題を解決するため、生の波形から学習された音響表現に基づいて潜在的推論の監視を行う、JEPAベースの潜在推論フレームワークを提案している。",
+          "whatEn": "To address the modality-gap issue where textual Chain-of-Thought (CoT) lacks access to acoustic evidence missing from audio, this paper proposes a JEPA-based latent reasoning framework that conditions latent reasoning supervision on acoustic representations learned from raw waveforms.",
+          "novel": "陽に表出されるテキストのCoTに代わるものとして、凍結されたWavJEPAから直接抽出された生波形表現とターゲット予測を組み合わせた、JEPAを条件とする潜在的な推論空間の学習手法を大規模オーディオ言語モデル（LALM）に導入した点である。",
+          "novelEn": "The novelty lies in introducing a JEPA-conditioned latent reasoning framework for large audio language models (LALMs) that predicts target representations directly from raw waveforms via a frozen WavJEPA model, serving as an alternative to explicit textual CoT supervision.",
+          "method": "凍結されたWavJEPAモデルが生の波形から音響表現を抽出し、非因果的エキスパートが応答を意識したクエリを構築してWavJEPA埋め込みとクロスアテンションを行うことで、潜在的推論ターゲットを生成する。LALMは応答を生成する前に、これらのターゲットを予測するように訓練される。",
+          "methodEn": "A frozen WavJEPA model extracts acoustic representations from raw waveforms, and a non-causal expert constructs answer-aware queries that cross-attend to WavJEPA embeddings to produce latent reasoning targets. The LALM is trained to predict these targets before generating responses.",
+          "validation": "MMAU-miniおよびMMARデータセットを用いて評価を行い、ベースラインであるAudio-Reasonerと比較して、それぞれ2.70および9.10パーセンテージポイントの絶対的な改善を達成した。",
+          "validationEn": "Validation was performed on MMAU-mini and MMAR datasets, achieving absolute improvements of 2.70 and 9.10 percentage points, respectively, over the Audio-Reasoner baseline.",
+          "discussion": "アブストラクトには明示的な限界や課題に関する言及はないが、潜在的な表現空間の学習とターゲットの整合性に対する依存性が制限となる可能性がある。",
+          "discussionEn": "No explicit limitations or challenges are mentioned in the abstract, though the dependence on latent representation space alignment could be a potential constraint.",
+          "abstractJa": "明示的なテキストによる思考の連鎖（CoT）は、大規模オーディオ言語モデル（LALM）の推論能力を向上させてきた。しかし、テキストのCoTはオーディオのテキストキャプションから構築されることが多く、音響的な証拠へのアクセスが制限されるため、ハルシネーションなどの問題を引き起こす可能性がある。このモダリティギャップの問題に対処するため、生波形から学習された音響表現を条件とする潜在的推論監視を行う、Joint-Embedding Predictive Architecture (JEPA) ベースの潜在推論フレームワーク「JELAR」を提案する。訓練中、凍結されたWavJEPAモデルが生波形から直接学習された表現を提供する。非因果的エキスパートが、まず応答を意識したクエリを構築し、これがWavJEPAの埋め込みとクロスアテンションを行うことで潜在的推論ターゲットを生成する。LALMは、応答を生成する前にこれらのターゲットを予測するように訓練される。実験結果は、JELARがMMAU-miniおよびMMARにおいて、ベースラインのAudio-Reasonerをそれぞれ絶対値で2.70および9.10パーセンテージポイント向上させ、明示的なテキストCoT監視の代替としてのJEPA条件付き潜在推論の有効性を示している。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.34347v1",
+          "date": "Sep 28",
+          "title": "SAIL: Spatial Audio Intelligence with Large Language Models via Disentangled Acoustic-Spatial Encoding and Dual-Stream Q-Former",
+          "titleJa": "SAIL：音響・空間的なもつれ戻しエンコーディングとデュアルストリームQ-Formerによる大規模言語モデルを用いた空間音響インテリジェンス",
+          "authors": [
+            "Zhengding Luo",
+            "Jinyang Wu",
+            "Haozhe Ma",
+            "Yanghao Zhou",
+            "Woon-Seng Gan"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Spatial audio large language models (LLMs) enable embodied agents, wearable assistants, and immersive systems to recognize sound events, localize sources, and reason about their spatial relationships. However, existing spatial audio LLMs often rely on early fusion of acoustic and spatial features and source-agnostic token representations. These designs make it difficult to preserve the correspondence between individual sound events and their spatial attributes, particularly in multi-source scenes. To address this limitation, we propose SAIL, a Spatial Audio Intelligence framework with LLMs that preserves acoustic-spatial structure and source-level correspondence from audio encoding to LLM alignment. SAIL introduces a Disentangled Spatial Audio Transformer that represents Mel-spectrogram and interaural phase difference features as separate acoustic and spatial streams. Source-discriminative task queries further learn event, direction, and distance information for each source. A Dual-Stream Q-Former then aligns the two streams with the LLM using acoustic and spatial queries organized by source slots. Compared with the early-fusion baseline, SAIL achieves consistent improvements in dual-source sound event detection, direction and distance estimation, and spatial reasoning. These results demonstrate the importance of structured, source-discriminative audio representations for multi-source spatial understanding and reasoning.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.34347v1",
+          "category": "foundation",
+          "task": "音源定位",
+          "taskEn": "Sound localization",
+          "proposedMethod": "SAIL",
+          "datasets": [],
+          "what": "複数音源のシーンにおいて、音響イベントとその空間的属性の対応関係を維持しながら、音イベント検出、音源の方向・距離推定、空間推論を行うための大規模言語モデル（LLM）ベースの空間音響フレームワークを提案している。",
+          "whatEn": "The paper proposes a large language model (LLM)-based spatial audio framework for detecting sound events, estimating source direction/distance, and performing spatial reasoning in multi-source scenes while preserving the correspondence between acoustic events and spatial attributes.",
+          "novel": "音響特徴と空間特徴を初期融合させる既存モデルとは異なり、音響と空間を分離したエンコーディングと、音源スロットごとに組織されたQ-Formerを用いることで、複数音源シーンでの音響・空間構造および音源レベルの対応関係をLLMのアライメントまで維持できる点にある。",
+          "novelEn": "The novelty lies in maintaining structured, source-level acoustic-spatial correspondence up to LLM alignment by using a disentangled spatial audio Transformer and a dual-stream Q-Former organized by source slots, unlike existing early-fusion spatial audio LLMs.",
+          "method": "Disentangled Spatial Audio Transformerを導入し、Melスペクトログラムと両耳間位相差（IPD）特徴をそれぞれ独立した音響および空間ストリームとして表現する。音源ごとのタスククエリが各音源のイベント、方向、距離の情報を学習し、Dual-Stream Q-Formerを用いてこれら2つのストリームをLLMとアラインさせる。",
+          "methodEn": "A Disentangled Spatial Audio Transformer is introduced to represent Mel-spectrogram and interaural phase difference (IPD) features as separate acoustic and spatial streams. Source-discriminative task queries learn the event, direction, and distance for each source, which are aligned with the LLM using a Dual-Stream Q-Former.",
+          "validation": "初期融合を行うベースラインと比較して、2音源の音響イベント検出、方向および距離の推定、さらに空間推論において一貫した性能向上を達成した。",
+          "validationEn": "Compared with the early-fusion baseline, the proposed framework achieves consistent improvements in dual-source sound event detection, direction and distance estimation, and spatial reasoning.",
+          "discussion": "アブストラクトでは言及されていないが、音源数のさらなる増加（2音源を超える複雑な環境）におけるスケーラビリティや実時間処理への影響についてはさらなる議論が必要であると推測される。",
+          "discussionEn": "No limitations are explicitly provided in the abstract, but scalability to more than two sources in highly complex environments and real-time processing constraints could be potential concerns.",
+          "abstractJa": "空間音響大規模言語モデル（LLM）は、エンボディドエージェント、ウェアラブルアシスタント、およびイマーシブシステムが、音響イベントを認識し、音源を定位し、それらの空間的関係を推論することを可能にする。しかし、既存の空間音響LLMはしばしば、音響特徴と空間特徴の初期融合や、音源を特定しないトークン表現に依存している。これらの設計では、特に複数音源のシーンにおいて、個々の音響イベントとその空間的属性との対応関係を維持することが困難である。この制限に対処するため、我々は、オーディオエンコーディングからLLMアライメントに至るまで、音響・空間構造および音源レベルの対応関係を維持するLLM搭載の空間音響インテリジェンスフレームワーク「SAIL」を提案する。SAILは、Melスペクトログラムと両耳間位相差特徴を個別の音響ストリームと空間ストリームとして表現するDisentangled Spatial Audio Transformerを導入する。さらに、音源を識別するタスククエリが、各音源のイベント、方向、および距離の情報を学習する。その後、Dual-Stream Q-Formerが、音源スロットごとに整理された音響クエリと空間クエリを使用して、これら2つのストリームをLLMと整合させる。初期融合のベースラインと比較して、SAILは2音源の音響イベント検出、方向および距離の推定、そして空間推論において一貫した向上を達成した。これらの結果は、複数音源の空間的理解と推論における、構造化され、音源識別能力を持つオーディオ表現の重要性を示している。",
+          "nextReads": [
+            {
+              "label": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models (2023)",
+              "arxivId": "2301.12597",
+              "url": "https://arxiv.org/abs/2301.12597",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "SALMONN: Towards Generic Hearing Abilities for Large Language Models (2023)",
+              "arxivId": "2310.13289",
+              "url": "https://arxiv.org/abs/2310.13289",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.32607v1",
+          "date": "Sep 26",
+          "title": "VoxMem: Benchmarking Multimodal Memory in Large Audio Language Models",
+          "titleJa": "VoxMem: 大規模音声言語モデルにおけるマルチモーダルメモリのベンチマーク評価",
+          "authors": [
+            "Yang Xiao",
+            "Vidhyasaharan Sethu",
+            "Eun-Jung Holden",
+            "Ting Dang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Spoken conversational systems must recover information from prior interactions (i.e., memory), yet relevant information in speech extends beyond what was said to who said it, how it was spoken, and what was audible, information that exists only in the audio signal and cannot be recovered from a transcript. Beyond what to remember, memory also demands diverse operations: retrieving a single fact, integrating evidence across turns, tracking an evolving state. Real interactions further unfold across sessions, meaning information accumulates across distinct episodes rather than a single continuous recording. Existing benchmarks fall short on all three dimensions: they focus primarily on lexical content, adopt limited and ad hoc memory operations, and treat memory as a single-session problem. We argue that principled memory evaluation requires jointly characterizing the acoustic evidence to be retained and the operations applied to it, and introduce a taxonomy along these two axes. Building on this taxonomy, we present VoxMem: 3,196 evaluation instances over 34,743 spoken sessions (177 hours) crossing four acoustic evidence types (speech semantics, speaker identity, paralinguistic cues, environmental sound) with four memory operations (information extraction, multi-session reasoning, temporal tracking, and answer refusal), grounded in multi-session histories and stratified across context budgets from 8K to 64K tokens. Evaluating 15 LALMs, no model exceeds 40% at 32K. Models retain what was said far better than who said it, how, or what was audible, a gap that widens for complex operations, grows with history length, and manifests as qualitatively distinct failure modes across evidence types. VoxMem aims to provide a foundation to measure and drive progress on the full scope of spoken conversational memory.",
+          "comment": "working in process",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.32607v1",
+          "category": "foundation",
+          "task": "メモリ評価",
+          "taskEn": "Memory Evaluation",
+          "proposedMethod": "VoxMem",
+          "datasets": [
+            "VoxMem"
+          ],
+          "what": "大規模音声言語モデル（LALM）において、書き起こしからでは復元できない音響的な証拠（発話内容、話者識別、副言語学的手がかり、環境音）と、それに対する多様な記憶操作を統合的に評価する新しいベンチマークを提案している。",
+          "whatEn": "This paper proposes VoxMem, a new benchmark for evaluating multimodal memory in Large Audio Language Models (LALMs) by jointly characterizing acoustic evidence (speech semantics, speaker identity, paralinguistic cues, and environmental sound) and diverse memory operations.",
+          "novel": "音声対話モデルの記憶評価において、単なるテキスト内容だけでなく、音響特徴（誰が、どのように、何が聞こえたか）と、複数セッションにわたる複雑なメモリ操作（情報抽出、推論、時系列追跡など）を体系的に組み合わせたタキソノミーと大規模データセットを初めて構築した点。",
+          "novelEn": "The authors claim novelty in establishing a taxonomy and a large-scale evaluation suite that, for the first time, systematically combines acoustic evidence types with complex multi-session memory operations, moving beyond simple lexical-content memory evaluation.",
+          "method": "4つの音響証拠タイプと4つのメモリ操作（情報抽出、複数セッション推論、時系列追跡、応答拒否）を交差させた3,196個の評価インスタンス（34,743の音声セッション、177時間）を構築し、8Kから64Kトークンのコンテキストサイズで評価する。",
+          "methodEn": "The method involves constructing 3,196 evaluation instances across 34,743 spoken sessions (177 hours) crossing four acoustic evidence types with four memory operations (information extraction, multi-session reasoning, temporal tracking, and answer refusal), stratified across context budgets from 8K to 64K tokens.",
+          "validation": "15種類のLALMを評価した結果、32Kトークンのコンテキストにおいて40%を超える性能を達成したモデルは存在しなかった。また、モデルは「誰が・どのように話したか」よりも「何を話したか」を大幅に良く記憶しており、複雑な操作や履歴長が増すにつれてこの差が広がることを示した。",
+          "validationEn": "The evaluation of 15 LALMs showed that no model exceeded 40% accuracy at 32K tokens. Models retained what was said much better than who said it or how, a performance gap that widens with complex operations and longer histories.",
+          "discussion": "複雑な記憶操作や音響情報の保持において顕著な性能低下が見られ、特にコンテキスト長の増加に伴う証拠タイプ特有の失敗モードが存在することが示されており、現状のLALMの音声メモリ機能には大きな課題が残されている。",
+          "discussionEn": "The evaluation reveals significant performance drops in complex memory operations and acoustic retention, with distinct failure modes across evidence types as history length increases, indicating substantial room for improvement in LALMs' spoken memory.",
+          "abstractJa": "音声対話システムは過去のやり取りから情報を回収（すなわち記憶）する必要があるが、音声における関連情報は、何が言われたかだけでなく、誰が言ったか、どのように言われたか、そして何が聞こえたかという、書き起こしからは復元できず音声信号にのみ存在する情報にまで及ぶ。何を覚えているかを超えて、記憶はまた、単一の事実の検索、複数ターンにわたる証拠の統合、変化する状態の追跡など、多様な操作を要求する。さらに、実際のやり取りはセッションをまたいで展開されるため、情報は単一の連続的な録音ではなく、個別のエピソードをまたいで蓄積される。既存のベンチマークは、これら3つの次元すべてにおいて不足している。それらは主に語彙内容に焦点を当て、限定的かつアドホックな記憶操作を採用し、記憶を単一セッションの問題として扱っている。我々は、原則に基づいた記憶評価には、保持されるべき音響的証拠とそれに適用される操作を共同で特徴付ける必要があると主張し、これら2つの軸に沿った分類法を導入する。この分類法に基づいて、4つの音響証拠タイプ（音声の意味、話者識別、副言語学的手がかり、環境音）と4つの記憶操作（情報抽出、複数セッション推論、時系列追跡、および応答拒否）を交差させた、複数セッションの履歴に接地し、8Kから64Kトークンのコンテキスト予算にわたって層別化された、34,743の音声セッション（177時間）におよぶ3,196の評価インスタンスからなるVoxMemを提案する。15のLALMを評価したところ、32Kで40%を超えるモデルは存在しなかった。モデルは、誰が、どのように、あるいは何が聞こえたかよりも、何が言われたかをはるかに良く保持しており、このギャップは複雑な操作で広がり、履歴の長さとともに成長し、証拠タイプ全体で定性的に異なる失敗モードとして現れる。VoxMemは、音声対話メモリの全範囲における進歩を測定し、推進するための基盤を提供することを目指している。",
+          "nextReads": [
+            {
+              "label": "Lost in the Middle: How Language Models Use Long Contexts (2023)",
+              "arxivId": "2307.03172",
+              "url": "https://arxiv.org/abs/2307.03172",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": "https://github.com/swagshaw/voxmem",
+          "upvotes": 139,
+          "projectPage": "https://swagshaw.github.io/voxmem/"
+        },
+        {
+          "id": "2609.32536v1",
+          "date": "Sep 26",
+          "title": "Do Audio LLMs Listen Before They Act? Diagnosing Acoustic-Context Gating in Voice Agents",
+          "titleJa": "Audio LLMは行動する前に聴いているのか？音声エージェントにおける音響コンテキスト制御の診断",
+          "authors": [
+            "Yanjie Zhang",
+            "Nanchen Hu",
+            "Yushi Sun"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio language models can recognize spoken commands and invoke tools, but an agent must first decide whether the acoustic and conversational context warrants action. We introduce VGBench, a 1,018-item diagnostic benchmark for action-level addressedness across side-talk, self-talk, and speaker-switch scenarios. Each item uses a shared action space comprising silence, a tool call, and a natural-language answer. Speaker-switch pairs hold the specified words fixed while source, distance rendering, and a temporal boundary define a controlled wearer-to-bystander shift. Six raw Audio LLMs and three training-free adaptations often identify the target tool yet rarely withhold action under this shift; the highest raw switch mute rate is 14%. We then use VoxGate as a post-training case study. Supervised training mutes 91.3% of switched commands while choosing the correct tool for all nearby wearer commands and text-only controls. An exploratory GRPO stage has similar switch performance; side-talk accuracy rises from 68.4% to 70.9%, and self-talk muting from 52.0% to 60.0%. Factorized controls identify an independent source-change effect, while sensitivity to the far-field manipulation varies across acoustic renderings. The benchmark therefore measures multi-cue acoustic-context gating rather than isolated speaker identity.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "cs.CL",
+            "cs.MM",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.32536v1",
+          "category": "foundation",
+          "task": "音響制御診断",
+          "taskEn": "Acoustic Context Gating Diagnosis",
+          "proposedMethod": "VGBench",
+          "datasets": [
+            "VGBench"
+          ],
+          "what": "音声言語モデルが音声コマンドを実行する前に、周囲の音響コンテキスト（他人の話し声、独り言、話者交代など）を正しく判断して行動を抑制できるかを診断するベンチマーク「VGBench」を提案し、分析を行っている。",
+          "whatEn": "This paper introduces VGBench, a diagnostic benchmark to evaluate whether Audio LLMs can correctly decide to withhold actions based on acoustic and conversational contexts (such as side-talk, self-talk, and speaker switches) before executing voice commands.",
+          "novel": "音声エージェントがコマンドを実行すべきか無視すべきかを判断する「音響コンテキスト制御」能力を評価するための、音響特徴（距離、音源の変化など）を制御した初のマルチキュー診断ベンチマークVGBenchを構築した点。",
+          "novelEn": "The authors claim novelty in presenting VGBench, the first multi-cue diagnostic benchmark to evaluate action-level 'addressedness' (acoustic-context gating) under controlled acoustic variations like source identity and distance rendering.",
+          "method": "独り言、他人の話し声、話者交代のシナリオを含む1,018項目の診断ベンチマークVGBenchを提案し、6つの標準Audio LLMと3つのプロンプトベースの手法、および事後学習手法であるVoxGateを用いて検証を行った。",
+          "methodEn": "The study introduces VGBench, a 1,018-item diagnostic benchmark covering side-talk, self-talk, and speaker-switch scenarios, and evaluates six raw Audio LLMs, three zero-shot adaptations, and a post-trained model using VoxGate with supervised learning and GRPO.",
+          "validation": "標準的なAudio LLMは話者交代時にコマンド実行を抑制できず（ミュート率は最大で14%）、正しくツールを特定できても誤動作しやすいことが判明した。一方で、VoxGateを用いた教師あり学習やGRPO最適化により、ミュート率が91.3%まで大幅に向上することを確認した。",
+          "validationEn": "Evaluation revealed that raw Audio LLMs rarely withhold actions during speaker switches (maximum mute rate of 14%), while VoxGate via supervised learning or GRPO successfully muted up to 91.3% of switched commands while retaining accuracy on valid wearer commands.",
+          "discussion": "遠隔音響処理に対する感度は音響レンダリング手法に依存して変動するため、環境の残響や雑音に対するより頑健なモデルの汎化性能の向上が今後の課題である。",
+          "discussionEn": "Sensitivity to far-field manipulations varies across acoustic renderings, suggesting a limitation in robust generalization across diverse reverberant environments and noise conditions.",
+          "abstractJa": "音声言語モデルは音声コマンドを認識し、ツールを呼び出すことができるが、エージェントはまず、音響的および会話的なコンテキストが行動を保証するかどうかを決定しなければならない。我々は、サイドトーク、セルフセルフ（独り言）、および話者交代のシナリオにわたる行動レベルの宛先判断を診断するための1,018項目のベンチマークであるVGBenchを紹介する。各項目は、無音、ツール呼び出し、および自然言語による回答からなる共有のアクション空間を使用する。話者交代ペアは、指定された言葉を固定したまま、音源、距離レンダリング、および時間的境界が、装着者から傍観者への制御されたシフトを定義する。6つの生の音声LLMと3つの学習不要の適応手法は、ターゲットツールを特定することが多いものの、この話者交代シフト下で行導を差し控えることはめったにない。生のモデルにおける最も高い話者交代時のミュート率は14%である。次に、事後学習のケーススタディとしてVoxGateを使用する。教師あり学習により、近くの装着者コマンドやテキストのみのコントロールに対して正しいツールを選択しつつ、交代したコマンドの91.3%をミュートする。探索的なGRPOステージでも同様の話者交代パフォーマンスが得られ、サイドトークの精度は68.4%から70.9%に上昇し、独り言のミュート率は52.0%から60.0%に上昇した。因子分解されたコントロールは、独立した音源変化効果を識別するが、遠隔操作に対する感度は音響レンダリングによって異なる。したがって、このベンチマークは、孤立した話者識別ではなく、マルチキューの音響コンテキスト制御を測定するものである。",
+          "nextReads": [
+            {
+              "label": "SpeechGPT: Empowering Large Language Models with Intrinsic Cross-Modal Conversational Abilities (2023)",
+              "arxivId": "2305.11000",
+              "url": "https://arxiv.org/abs/2305.11000",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "Gemini: A Family of Highly Capable Multimodal Models (2023)",
+              "arxivId": "2312.11805",
+              "url": "https://arxiv.org/abs/2312.11805",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 5,
+          "projectPage": null
+        },
+        {
+          "id": "2609.30784v1",
+          "date": "Sep 25",
+          "title": "Symbiotic Architecture for Post-Hoc Audio Extension of Frozen Language Models",
+          "titleJa": "凍結された言語モデルの事後的オーディオ拡張のための共生アーキテクチャ",
+          "authors": [
+            "Yotaro Kubo",
+            "Qi Sun",
+            "Yujin Tang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "This paper proposes an architecture for equipping large language models (LLMs) with audio-understanding capabilities without fine-tuning their weights. The proposed symbiotic architecture employs an injector module that writes audio-conditioned vectors directly into the target LLM's short-term memory, i.e., the key-value (KV) cache, enabling the LLM to behave as an audio language model (ALM). The architectural advantages are twofold. First, it improves the scalability of ALMs: because the proposed method bypasses the LLM during audio injection, the injection cost is governed by the injector width rather than the backbone width, and can therefore scale more slowly than the cost of full-backbone prefilling. Second, since the training scheme does not update the LLM weights, the original capabilities of the LLM are preserved without the risk of degradation from fine-tuning. The effectiveness of the proposed method is evaluated on both audio-understanding tasks (automatic speech recognition, audio question answering, and acoustic scene classification) and text-only tasks. We confirm that, while activating fewer parameters during audio prefilling, our architecture outperforms the conventional method with a frozen LLM and approaches the performance of a fine-tuned ALM, all while preserving the backbone LLM's original text-only task performance by construction.",
+          "comment": "Submitted to ICASSP",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.CL",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.30784v1",
+          "category": "foundation",
+          "task": "オーディオ言語モデリング",
+          "taskEn": "Audio Language Modeling",
+          "proposedMethod": "Symbiotic Architecture",
+          "datasets": [],
+          "what": "重みを微調整することなく、大規模言語モデル（LLM）にオーディオ理解機能を付加するための、インジェクターモジュールを用いた共生アーキテクチャを提案している。",
+          "whatEn": "This paper proposes a symbiotic architecture using an injector module to equip large language models (LLMs) with audio-understanding capabilities without fine-tuning their weights.",
+          "novel": "音声等のオーディオ注入時にLLMのバックボーンをバイパスし、LLMのショートタームメモリ（キー・値キャッシュ）に直接オーディオ条件付けベクトルを書き込むことで、計算のスケーラビリティを向上させつつ、LLM本来のテキスト能力を劣化させずに維持できる点である。",
+          "novelEn": "The novelty lies in bypassing the LLM backbone during audio injection by writing audio-conditioned vectors directly into the LLM's short-term memory (KV cache), which improves scalability and preserves the LLM's original text-only capabilities without degradation.",
+          "method": "オーディオ入力から特徴量を抽出し、凍結されたLLMのKVキャッシュに直接情報を書き込むインジェクターモジュールを導入することで、LLM全体を動作させることなく低コストでオーディオ事前充填（prefilling）を行う手法を提案している。",
+          "methodEn": "The method introduces an injector module that extracts features from audio inputs and writes them directly into the KV cache of a frozen LLM, enabling low-cost audio prefilling without running the entire LLM backbone.",
+          "validation": "音声認識、オーディオ質問応答、音響シーン分類のオーディオ理解タスク、およびテキスト専用タスクにおいて評価された。その結果、従来の凍結LLM手法を上回り、微調整されたモデルの性能に迫るとともに、テキスト専用タスクの性能を完全に維持できることが示された。",
+          "validationEn": "The architecture was evaluated on audio-understanding tasks (speech recognition, audio QA, and acoustic scene classification) and text-only tasks. It outperformed conventional frozen LLM methods, approached the performance of a fine-tuned model, and fully preserved text-only performance.",
+          "discussion": "アブストラクトには、提案手法の具体的な限界や適用困難なシナリオに関する詳細な言及はなく、さらなる分析や他のアーキテクチャとの比較が必要である可能性がある。",
+          "discussionEn": "The abstract does not explicitly mention specific limitations or scenarios where the method might fail, suggesting a potential need for further analysis or comparison with other architectures.",
+          "abstractJa": "本論文では、大型言語モデル（LLM）の重みを微調整することなく、オーディオ理解機能を装備するためのアーキテクチャを提案する。提案する共生アーキテクチャは、オーディオ条件付けベクトルをターゲットLLMの短期メモリ（すなわちキー・値（KV）キャッシュ）に直接書き込むインジェクターモジュールを採用しており、これによりLLMがオーディオ言語モデル（ALM）として動作することを可能にする。このアーキテクチャの利点は二重にある。第一に、ALMのスケーラビリティが向上する。提案手法はオーディオ注入時にLLMをバイパスするため、注入コストはバックボーンの幅ではなくインジェクターの幅に依存し、したがってバックボーン全体を使用する事前充填（prefilling）のコストよりも緩やかにスケールさせることができる。第二に、訓練スキーマがLLMの重みを更新しないため、微調整による劣化のリスクなしに、LLMの本来の機能が維持される。提案手法の有効性は、オーディオ理解タスク（自動音声認識、オーディオ質問応答、音響シーン分類）とテキスト専用タスクの両方で評価されている。オーディオの事前充填中にアクティブ化するパラメータ数が少ないにもかかわらず、本アーキテクチャは凍結されたLLMを用いる従来の手法を上回り、微調整されたALMの性能に迫る一方で、設計上、バックボーンLLMの本来のテキスト専用タスク性能を維持することを確認した。",
+          "nextReads": [
+            {
+              "label": "LLaMA-Adapter: Efficient Fine-tuning of Language Models with Zero-init Attention (2023)",
+              "arxivId": "2303.16199",
+              "url": "https://arxiv.org/abs/2303.16199",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "separation",
+      "label": "音源分離",
+      "labelEn": "Source Separation",
+      "color": "#4ade80",
+      "papers": [
+        {
+          "id": "2610.00691v1",
+          "date": "Sep 30",
+          "title": "Soundwich: Video Generation with Layered and Controllable Audio",
+          "titleJa": "Soundwich: 階層的かつ制御可能なオーディオを備えたビデオ生成",
+          "authors": [
+            "Zhuo Ning",
+            "AmirHossein Naghi Razlighi",
+            "Sagi Polaczek",
+            "Daniel Cohen-Or",
+            "Ali Mahdavi-Amiri"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Recent joint audio-video generative models can synthesize realistic videos with synchronized sound, but typically generate audio as a single mixed track. This limits source-level control and differs from practical audiovisual workflows, where speech, music, sound effects, and ambient sounds are represented as separate editable tracks. We introduce Soundwich, a training-free framework that transforms a frozen joint audio-video flow-matching model into a generator of multiple synchronized, independently editable audio stems coupled to a shared video. Soundwich generates separate audio stems with explicit control over their temporal activity. To keep separately generated sounds coherent, we introduce a shared scene representation that communicates global audiovisual context across stems while preserving their source-level separation. We further route cross-modal interactions between each audio stem and its corresponding visual source, improving audiovisual consistency. The resulting stems remain synchronized with the video and can be independently retimed, muted, replaced, or remixed. Experiments and human evaluations show improved temporal control, source separation, and naturalness, while enabling flexible source-level editing within coherent audiovisual generation. Code is available at https://github.com/CodyNing/Soundwich.",
+          "comment": "35 pages. Code: https://github.com/CodyNing/Soundwich",
+          "journalRef": null,
+          "categories": [
+            "cs.CV",
+            "cs.MM",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2610.00691v1",
+          "category": "separation",
+          "task": "ビデオ音響生成",
+          "taskEn": "Video-to-Audio Generation",
+          "proposedMethod": "Soundwich",
+          "datasets": [],
+          "what": "学習不要（training-free）のフレームワークであり、単一の音流を生成する共同音響ビデオ・フローマッチングモデルを、ビデオと同期した独立して編集可能な複数の音響ステム（セパレートトラック）を生成するモデルへと変換する。",
+          "whatEn": "This paper introduces Soundwich, a training-free framework that converts a joint audio-video flow-matching model into a generator of multiple synchronized, independently editable audio stems matched to a single video.",
+          "novel": "訓練を追加することなく、既存のフローマッチングモデルから独立して制御可能かつ編集可能なオーディオステムを生成できるようにし、さらにステム間で文脈を共有しつつ音源分離性を保つ「共有シーン表現」を導入した点。",
+          "novelEn": "The authors claim the novelty of a training-free framework that generates controllable, editable audio stems from a frozen flow-matching model, incorporating a shared scene representation to maintain global audiovisual context across stems while preserving separation.",
+          "method": "共有ビデオに結合された各オーディオステムの活動を明示的に時間制御しながら生成し、共有シーン表現を通じてステム間でビデオ文脈を通信し、各ステムと対応する視覚ソースの間のクロスモーダル相互作用を制御する。",
+          "methodEn": "The method controls the temporal activity of separate audio stems generated alongside a shared video, communicates global context using a shared scene representation, and routes cross-modal interactions between each stem and its visual source.",
+          "validation": "実験および主観評価において、より優れた時間的制御性、音源分離品質、および自然さを実証し、さらに一貫性を保ったまま音源ごとの編集が可能であることを確認した。",
+          "validationEn": "Experiments and human evaluations demonstrated improved temporal control, source separation, and naturalness, while supporting flexible source-level editing within coherent audiovisual generation.",
+          "discussion": "抽象には計算コストや対応できる最大オーディオステム数に関する明示的な限界は述べられていないが、推論時の複数デコードが必要となるため効率性の面に制約がある可能性がある。",
+          "discussionEn": "The abstract does not explicitly detail computational limitations or the maximum number of supportable stems, though the necessity of multi-stem decoding during inference may impact efficiency.",
+          "abstractJa": "最近の共同音響・ビデオ生成モデルは、同期した音響を伴う現実的なビデオを合成できるが、通常は音響を単一のミックスされたトラックとして生成する。これは音源レベルの制御を制限し、音声、音楽、効果音、環境音が独立して編集可能な別々のトラックとして表現される、実際の音響映像ワークフローとは異なっている。本論文では、凍結された共同音響・ビデオ・フローマッチングモデルを、共有ビデオに結合され、同期して独立して編集可能な複数の音響ステムの生成器へと変換する、訓練不要のフレームワーク「Soundwich」を提案する。Soundwichは、時間的な活動を明示的に制御しながら、個別の音響ステムを生成する。個別に生成された音響の一貫性を維持するために、ステム間でグローバルな音響映像文脈を伝達しながら、音源レベルの分離を維持する「共有シーン表現」を導入する。さらに、各音響ステムとそれに対応する視覚ソースの間のクロスモーダル相互作用をルーティングし、音響映像の一貫性を向上させる。得られたステムはビデオと同期したままであり、個別にタイミング変更、ミュート、置換、またはリミックスが可能である。実験および人間による評価は、向上した時間的制御、音源分離、および自然さを示すと同時に、一貫した音響映像生成の中での柔軟な音源レベルの編集を可能にすることを示している。",
+          "nextReads": [
+            {
+              "label": "Flow Matching for Generative Modeling (2022)",
+              "arxivId": "2210.02747",
+              "url": "https://arxiv.org/abs/2210.02747",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.34931v1",
+          "date": "Sep 28",
+          "title": "JazzSAMBA: A Synchronous and Asynchronous Multi-take Band Audio Dataset of Jazz Standards for Live Music Models",
+          "titleJa": "JazzSAMBA: ライブ音楽モデルのためのジャズスタンダードの同期・非同期マルチテイク・バンドオーディオデータセット",
+          "authors": [
+            "Phillip Long",
+            "Jacob Nguyen",
+            "Jace Hosto",
+            "Gage Hosto",
+            "Jett Takazawa"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Machine learning has made strong progress on music tasks, both as assistive tools and as creative partners. However, most systems train on multitrack corpora that emphasize pop and rock. Jazz, with improvisation at the core of its practice, still lacks a well-annotated corpus of clean per-stem combo recordings on standards. We introduce JazzSAMBA (Jazz Synchronous and Asynchronous Multi-take Band Audio) to fill this gap: the first originally recorded jazz-combo multitrack dataset of standards with asynchronous (overdubbed) and synchronous (live ensemble) protocols, preferred and alternate takes chosen by the musicians, and timed annotations for bars, chords, sections, and soloists. JazzSAMBA covers 76 standards by eight musicians on drums, bass, piano, trumpet, and saxophone, with per-stem audio, mixtures, and MIDI. It can support chart-conditioned accompaniment, combo source separation, and form-aware music information retrieval. We demonstrate the dataset on two tasks: a jazz combo source-separation baseline and a chart-conditioned accompaniment ablation. The dataset, code, and samples are linked from the project demo page.",
+          "comment": "Submitted to IEEE ICASSP 2027; 5 pages, 6 figures",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "cs.LG",
+            "cs.MM",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.34931v1",
+          "category": "separation",
+          "task": "データセット構築",
+          "taskEn": "Dataset Creation",
+          "proposedMethod": "JazzSAMBA",
+          "datasets": [
+            "JazzSAMBA"
+          ],
+          "what": "即興演奏を特徴とするジャズを対象とし、非同期（オーバーダビング）と同期（ライブアンサンブル）のプロトコルで録音された、マルチトラックのジャズスタンダードのデータセット「JazzSAMBA」を提案している。",
+          "whatEn": "This paper introduces JazzSAMBA, a first-of-its-kind multitrack jazz-combo dataset featuring synchronized and asynchronized recording protocols of standard tunes to support music modeling and information retrieval.",
+          "novel": "ポップやロックに偏っていた既存のマルチトラックデータセットに対し、即興が主体のジャズにおいて、プロの演奏家によるクリーンなパート別録音、同期/非同期プロトコル、および豊富な時間注釈を提供する初のデータセットである点。",
+          "novelEn": "Unlike existing pop-heavy datasets, this is claimed as the first originally recorded jazz-combo multitrack dataset of standards containing both synchronous and asynchronous recordings, along with musician-selected takes and detailed timed annotations.",
+          "method": "ドラム、ベース、ピアノ、トランペット、サックスの5種類の楽器による8名のミュージシャンが演奏した76曲のジャズスタンダードを含み、パート別オーディオ、ミックス、MIDI、さらに小節、コード、セクション、ソロプレイヤーの時間アノテーションを提供する。",
+          "methodEn": "The dataset contains 76 standards recorded by eight musicians on drums, bass, piano, trumpet, and saxophone, providing per-stem audio, mixtures, MIDI, and synchronized annotations for bars, chords, sections, and soloists.",
+          "validation": "提案データセットの実用性を示すため、ジャズコンボの音源分離ベンチマークおよび楽譜（チャート）を条件とした自動伴奏のアブレーション実験という2つのタスクでデモンストレーションを行った。",
+          "validationEn": "The dataset was validated on two tasks: a jazz combo source-separation baseline and a chart-conditioned accompaniment ablation study, demonstrating its utility.",
+          "discussion": "アブストラクトには制限事項について直接の記述はない。",
+          "discussionEn": "No explicit limitations are mentioned in the abstract.",
+          "abstractJa": "機械学習は、支援ツールおよび創造的パートナーの両方として、音楽タスクにおいて強力な進歩を遂げてきました。しかし、ほとんどのシステムは、ポップやロックを重視したマルチトラックのコーパスでトレーニングされています。即興演奏を実践の中核とするジャズは、スタンダード曲におけるクリーンなパート（ステム）ごとのコンボ録音の十分にアノテーションされたコーパスが依然として不足しています。私たちは、このギャップを埋めるためにJazzSAMBA（Jazz Synchronous and Asynchronous Multi-take Band Audio）を紹介します。これは、非同期（オーバーダビング）および同期（ライブアンサンブル）プロトコル、ミュージシャンによって選ばれた好ましいテイクと別テイク、そして小節、コード、セクション、ソロ演奏者のための時間アノテーションを備えた、最初にオリジナル録音されたジャズコンボのスタンダード曲マルチトラックデータセットです。JazzSAMBAは、ドラム、ベース、ピアノ、トランペット、サックスを演奏する8人のミュージシャンによる76のスタンダード曲をカバーしており、パート別オーディオ、ミックス、およびMIDIを提供します。これは、楽譜を条件とした伴奏、コンボ音源分離、および形式を認識した音楽情報検索をサポートできます。私たちは、ジャズコンボの音源分離ベースラインと、楽譜条件付き伴奏のアブレーションという2つのタスクでこのデータセットのデモンストレーションを行います。データセット、コード、およびサンプルはプロジェクトデモページからリンクされています。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.33265v1",
+          "date": "Sep 27",
+          "title": "SCISSOR: Score-Conditioned Instrument Source Separation for Orchestral Recordings",
+          "titleJa": "SCISSOR：管弦楽録音のための楽譜を条件とする楽器音源分離",
+          "authors": [
+            "Yiheng Lu",
+            "Hao-Wen Dong"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Orchestral separation recovers instrument sections from mixtures in which shared pitches, harmonics, and timbres obscure source identity. An aligned score provides instrument labels, note pitches, and activity times. A score-informed approach appends piano rolls to audio features before mask prediction. We introduce SCISSOR (Score-Conditioned Instrument Source Separation for Orchestral Recordings), which uses the score to form a frame-wise query for each source. Each query matches a shared audio representation, and a softmax over instrument and background slots jointly assigns overlapping time-frequency evidence. The queries retain instrument identity even when notes are missing from the score. After training on SynthSOD and a small set of URMP and PHENICX-Anechoic recordings, SCISSOR achieves the highest average SDR on held-out real recordings. With SynthSOD-only training, it leads on SynthSOD and zero-shot PHENICX-Anechoic, and improves on its audio-only control on zero-shot URMP. SCISSOR also degrades less under score corruption than the evaluated score-based baselines.",
+          "comment": "5 pages, 1 figure, 3 tables. Submitted to ICASSP 2027",
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI",
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2609.33265v1",
+          "category": "separation",
+          "task": "音源分離",
+          "taskEn": "Audio Source Separation",
+          "proposedMethod": "SCISSOR",
+          "datasets": [
+            "SynthSOD",
+            "URMP",
+            "PHENICX-Anechoic"
+          ],
+          "what": "共通のピッチ、倍音、音色が重なり合う管弦楽の録音から、アラインメントされた楽譜情報を利用して個々の楽器セクションを分離する技術を提案している。",
+          "whatEn": "The paper proposes a technique to separate individual instrument sections from orchestral recordings, where shared pitches, harmonics, and timbres obscure source identity, by using aligned score information.",
+          "novel": "単にピアノロールをオーディオ特徴に追加する従来の楽譜準拠手法とは異なり、楽譜情報からフレームごとのクエリを形成して共通のオーディオ表現とマッチングさせ、楽器スロットと背景スロットに対するSoftmax処理により重なり合う時間周波数成分を共同で割り当てる点である。",
+          "novelEn": "The novelty lies in forming frame-wise queries for each source from the score to match a shared audio representation, and using a softmax over instrument and background slots to jointly assign overlapping time-frequency evidence, rather than simply prepending piano rolls to audio features.",
+          "method": "各音源に対して楽譜からフレームごとのクエリを作成し、共通のオーディオ表現とマッチングさせる。楽器および背景スロットに対するSoftmaxを適用することで、時間周波数成分を分配する。楽譜に音符が欠落している場合でも楽器の同一性を維持する特徴がある。",
+          "methodEn": "Frame-wise queries are formed from the score for each source to match a shared audio representation. Softmax over instrument and background slots is applied to assign overlapping time-frequency evidence. The queries retain instrument identity even when notes are missing from the score.",
+          "validation": "SynthSOD、URMP、およびPHENICX-Anechoicのデータセットを用いて評価を行い、ゼロショット環境や楽譜の破損に対しても、従来の楽譜ベースのベースラインを上回る平均SDRを達成し、劣化を最小限に抑えた。",
+          "validationEn": "Validation on SynthSOD, URMP, and PHENICX-Anechoic showed that the proposed method achieved the highest average SDR and was more robust to score corruption compared to score-based baselines in zero-shot settings.",
+          "discussion": "アブストラクトでは直接言及されていないが、楽譜のアラインメント精度が極端に低い場合や、学習データと実データとの楽器構成の乖離が大きい場合の限界についてさらなる検討が必要と推測される。",
+          "discussionEn": "No explicit limitations are provided in the abstract, though performance under extreme score misalignment or highly disparate instrument configurations not seen in training remains an inferred challenge.",
+          "abstractJa": "管弦楽の音源分離は、共有されたピッチ、倍音、および音色によって音源のアイデンティティが曖昧になっている混合音から、楽器セクションを復元する。アラインメントされた楽譜は、楽器のラベル、音符のピッチ、および発音時間を提供する。従来の楽譜情報を活用するアプローチは、マスク予測の前にオーディオ特徴にピアノロールを結合する。本稿では、楽譜を使用して各音源のフレームごとのクエリを形成するSCISSOR（Score-Conditioned Instrument Source Separation for Orchestral Recordings）を提案する。各クエリは共有されたオーディオ表現とマッチングされ、楽器および背景のスロットに対するソフトマックス処理により、重複する時間周波数領域の証拠を共同で割り当てる。このクエリは、楽譜から音符が欠落している場合でも楽器の同一性を維持する。SynthSODおよびURMPとPHENICX-Anechoicの小規模な録音セットで訓練した後、SCISSORは未知の実録音において最高の平均SDRを達成した。SynthSODのみの訓練でも、SynthSODおよびゼロショットのPHENICX-Anechoicで首位を獲得し、ゼロショットのURMPではオーディオのみの対照モデルよりも向上した。また、SCISSORは楽譜が破損した場合の劣化が、評価された楽譜ベースのベースラインよりも少なかった。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2609.30912v1",
+          "date": "Sep 25",
+          "title": "Music Source Separation via Stem Discovery",
+          "titleJa": "ステム発見による音楽音源分離",
+          "authors": [
+            "V. Valtteri Kallinen",
+            "Eloi Moliner",
+            "Lauri Juvela",
+            "Vesa Välimäki"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Music source separation (MSS) methods aim to extract stems from music mixtures, which is important, for example, in karaoke, music remixing, and pedagogical applications. While earlier research on MSS systems has been dominated by models targeting narrow sets of general stems, there have recently been attempts to support broader source definitions. One of these methods uses audio queries to provide direct and descriptive control over the desired separation targets based on the sound itself. However, query-based separation remains cumbersome due to the need to provide audio examples with features matching the sources contained within mixtures. This paper proposes Music Source Separation via Stem Discovery (MuS3D), a query-based source separation framework that iteratively discovers active sources from the mixture. On correctly detected sources, our model matches manually queried baselines and surpasses state-of-the-art text-based models. Subjective evaluation indicates encoding artifacts as the limiting factor in current generative separation. The findings suggest that audio-based query representations offer an effective and automatable interface for source separation.",
+          "comment": "Submitted to ICASSP 2027. 5 pages, 2 figures, 2 tables",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2609.30912v1",
+          "category": "separation",
+          "task": "音源分離",
+          "taskEn": "Audio Source Separation",
+          "proposedMethod": "MuS3D",
+          "datasets": [
+            "MUSDB18"
+          ],
+          "what": "混合音の中からアクティブな音源を反復的に探索・発見することで、クエリ用の音声サンプルを事前に用意する手間を省き、かつ高精度な抽出を可能にするクエリベースの音源分離フレームワークを提案している。",
+          "whatEn": "This paper proposes MuS3D (Music Source Separation via Stem Discovery), a query-based source separation framework that iteratively discovers active sources within a mixture without requiring pre-defined manual audio queries.",
+          "novel": "オーディオクエリによる柔軟性を維持しながら、混合音自体から音源（ステム）を反復的に「発見」するアルゴリズムを導入し、クエリ準備の煩雑さを解消した点。",
+          "novelEn": "The authors claim novelty in introducing an iterative discovery algorithm that automatically extracts active sources from the mixture, eliminating the need for manual reference query selection while maintaining audio-query flexibility.",
+          "method": "混合音信号からステム候補を自動検出する「ステム発見」アプローチを用い、クエリベース分離モデルを反復的に動作させて各構成音源を分離するフレームワークMuS3Dを開発した。",
+          "methodEn": "They developed MuS3D, a framework that employs a stem discovery process to iteratively detect and isolate active sources from the audio mixture using a query-based separation model.",
+          "validation": "提案システムは、正しく検出された音源において手動でクエリを与えたベースラインと同等の性能を達成し、最新のテキストベースの音源分離モデルを凌駕した。主観評価により、現在の生成的な分離における主な限界は符号化アーティファクトであることが示された。",
+          "validationEn": "The proposed model matched manually-queried baselines on correctly detected sources and outperformed state-of-the-art text-based models. Subjective evaluation indicated that encoding artifacts represent the primary limiting factor in current generative separation.",
+          "discussion": "現状の性能限界は生成的な分離処理における符号化時のアーティファクト（ノイズや歪み）に起因しており、より高音質な生成モデルの統合が今後の課題である。",
+          "discussionEn": "The subjective quality is currently limited by encoding artifacts inherent in generative separation processes, indicating a need for improved generative audio fidelity.",
+          "abstractJa": "音楽音源分離（MSS）手法は、カラオケ、音楽のリミックス、教育的アプリケーションなどで重要となる、音楽の混合音からステムを抽出することを目的としている。MSSシステムに関するこれまでの研究は、一般的なステムの限定されたセットをターゲットとするモデルが主流であったが、最近では、より広範な音源定義をサポートする試みが行われている。これらの手法の1つは、音声クエリを使用して、音自体に基づいて目的の分離ターゲットを直接的かつ記述的に制御する。しかし、クエリベースの分離は、混合物に含まれる音源と特徴が一致する音声の例を提供する必要があるため、依然として面倒である。本論文では、混合物からアクティブな音源を反復的に発見する、クエリベースの音源分離フレームワークである「ステム発見による音楽音源分離（MuS3D）」を提案する。正しく検出された音源において、提案モデルは手動でクエリされたベースラインと一致し、最先端のテキストベースのモデルを凌駕する。主観的な評価は、現在の生成的な分離における制限要因が符号化アーティファクトであることを示している。これらの知見は、オーディオベースのクエリ表現が、音源分離のための効果的で自動化可能なインターフェースを提供することを示唆している。",
+          "nextReads": [
+            {
+              "label": "Music Source Separation in the Waveform Domain (2019)",
+              "arxivId": "1911.13254",
+              "url": "https://arxiv.org/abs/1911.13254",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": 0,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    }
+  ],
+  "trend": [
+    "VoxMemなどのマルチモーダルメモリ評価ベンチマークやVGBenchなどの診断ツール、モバイル向け高速化技術であるAS^2Dの登場により、大規模音声言語モデルの性能と実用性が飛躍的に向上しています。",
+    "SAILによる空間音響推論、Soundwichによるレイヤー化された音響映像生成、そしてSCISSORやMuS3Dといった高精度な音源分離技術が、音響制御の限界を押し広げています。",
+    "HEARデータセットを用いた偏見評価、SE-ADDによる自己進化型ディープフェイク検出、BAEAエージェントによる根拠に基づいた推論など、音声AIの信頼性向上に向けた取り組みが活発化しています。"
+  ],
+  "trendEn": [
+    "Multi-modal memory benchmarks like VoxMem, diagnostic suites like VGBench, and mobile acceleration frameworks like AS^2D are significantly advancing the capabilities, robustness, and efficiency of Large Audio Language Models.",
+    "Spatial audio reasoning with SAIL, layered audio-video generation via Soundwich, and precise source separation techniques like SCISSOR and MuS3D are pushing the boundaries of audio control.",
+    "Trustworthiness in speech AI is being strengthened through the HEAR bias evaluation dataset, self-evolving deepfake detection with SE-ADD, and evidence-grounded reasoning using the BAEA agent."
+  ]
+}
