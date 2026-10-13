@@ -1,6 +1,37 @@
 {
   "features": [
     {
+      "slug": "2026-10-13-primer-lalm-reasoning-efficiency-and-memory",
+      "type": "primer",
+      "date": "2026-10-13",
+      "readTimeMinutes": 9,
+      "readTimeMinutesEn": 5,
+      "sourceCount": 8,
+      "title": "大規模音声言語モデルにおける潜在的推論、効率性、およびメモリ管理の動向",
+      "titleEn": "Trends in Latent Reasoning, Efficiency, and Memory Management in Large Audio Language Models",
+      "dek": "大規模音声言語モデルにおける最近の進歩は、潜在的推論、トークン効率、マルチモーダルメモリ、およびハルシネーション軽減における重要なボトルネックに対処しています。",
+      "dekEn": "Recent advances in Large Audio Language Models address critical bottlenecks in latent reasoning, token efficiency, multimodal memory, and hallucination reduction.",
+      "file": "2026-10-13-primer-lalm-reasoning-efficiency-and-memory.json",
+      "topicKey": "lalm-reasoning-efficiency-and-memory",
+      "searchTerms": [
+        "audio language models",
+        "audio understanding",
+        "audio token",
+        "multimodal memory"
+      ],
+      "sourcePaperIds": [
+        "2610.06949",
+        "2610.04004",
+        "2609.38878",
+        "2609.32607",
+        "2511.20973",
+        "2311.07919",
+        "2606.18273",
+        "2604.23717"
+      ],
+      "generatedAt": "2026-10-13T03:15:37.317394+00:00"
+    },
+    {
       "slug": "2026-09-22-debate-lalm-mechanisms-routing-and-evaluation",
       "type": "debate",
       "date": "2026-09-22",
@@ -183,5 +214,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-09-29T07:25:44.058248+00:00"
+  "generatedAt": "2026-10-13T03:15:37.317394+00:00"
 }
