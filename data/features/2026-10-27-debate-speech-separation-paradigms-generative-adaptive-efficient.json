@@ -1,0 +1,389 @@
+{
+  "title": "固定マスキングを超えて：音声分離における生成トークン、動的分割、適応的ルーティング",
+  "titleEn": "Beyond Fixed Masking: Generative Tokens, Dynamic Splitting, and Adaptive Routing in Speech Separation",
+  "dek": "音声分離およびターゲット話者抽出の最近の進歩は、静的な時間周波数マスキングから、生成トークンモデリング、コンテンツ適応型のスペクトル分割、疎な動的ルーティングへと転換しています。",
+  "dekEn": "Recent advances in speech separation and target speaker extraction pivot from static time-frequency masking to generative token modeling, content-adaptive spectral partitioning, and sparse dynamic routing.",
+  "summaryEn": "Traditional speech separation and target speaker extraction rely heavily on static time-frequency multiplicative masks optimized against signal-to-noise metrics like SI-SDR. Recent research introduces three architectural paradigms that redefine separation capabilities, computational overhead, and downstream utility. Generative tokenization and diffusion modeling frame separation as structured neural prediction or generative posterior sampling, replacing hand-crafted mask objectives with speech language models and generative priors. Dynamic spectral splitting adapts frequency band boundaries on a per-mixture basis to capture fine harmonic structure without blowing up parameter budgets. Meanwhile, efficient routing architectures deploy sparse mixture-of-experts or lightweight task-adaptive frontends to adjust compute according to local acoustic complexity or speaker difficulty. Together, these frameworks resolve traditional trade-offs between signal accuracy, perceptual naturalness, compute efficiency, and downstream automatic speech recognition or speech language model performance.",
+  "keyPointsEn": [
+    "Generative models and discrete neural codecs reformulate source separation from multiplicative signal masking into discrete token sequence modeling and guided latent diffusion.",
+    "Dynamic spectral partitioning abandons static time-frequency grids by adjusting frequency band boundaries per mixture under a fixed token budget.",
+    "Sparse mixture-of-experts routing and task-adaptive frontends dynamically scale computation based on local token complexity and sample-level extraction demands."
+  ],
+  "perspectives": [
+    {
+      "id": "generative-structural-modeling",
+      "label": "生成および離散構造モデリング",
+      "description": "複雑なスペクトル構造を捉えて知覚的な自然さを向上させるために、固定の乗算マスク予測を、生成トークンモデリング、ニューラル音声コーデック、または拡散事後確率サンプリングに置き換えることを提唱します。",
+      "labelEn": "Generative and Discrete Structural Modeling",
+      "descriptionEn": "Advocates replacing fixed multiplicative mask prediction with generative token modeling, neural speech codecs, or diffusion posterior sampling to capture complex spectral structures and improve perceptual naturalness.",
+      "sourceIds": [
+        "S2",
+        "S5",
+        "S8"
+      ]
+    },
+    {
+      "id": "efficient-adaptive-deployment",
+      "label": "適応的計算と効率的ルーティング",
+      "description": "音響トークンを動的な疎の専門家（Expert）にルーティングしたり、処理の深さを即座に調整する早期難易度推定器を配備したりすることで、FLOPs、メモリフットプリント、推論レイテンシの最小化に焦点を当てます。",
+      "labelEn": "Adaptive Compute and Efficient Routing",
+      "descriptionEn": "Focuses on minimizing FLOPs, memory footprint, and inference latency by routing acoustic tokens to dynamic sparse experts or deploying early difficulty estimators that adjust processing depth on the fly.",
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "id": "downstream-perceptual-evaluation",
+      "label": "下流タスクでの有用性と知覚的再現性",
+      "description": "従来の信号歪み指標は明瞭度や音声言語モデルの有用性を反映できないと強調し、単語エラー率（WER）の削減、人間の選好性、および下流タスクとの互換性を重視します。",
+      "labelEn": "Downstream Utility and Perceptual Fidelity",
+      "descriptionEn": "Emphasizes that classical signal distortion metrics fail to reflect intelligibility or speech language model utility, championing word error rate reductions, human preference, and downstream task compatibility.",
+      "sourceIds": [
+        "S2",
+        "S4",
+        "S6",
+        "S7"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "current-signal",
+      "heading": "音声分離パラダイムの進化",
+      "headingEn": "The Evolution of Speech Separation Paradigms",
+      "blocks": [
+        {
+          "id": "current-signal-p1",
+          "text": "ニューラル音声分離およびターゲット話者抽出（TSE）は、歴史的に、固定の時間周波数表現上で機能する判別型マスク予測ネットワークに依存してきました。これらの従来のシステムは、スケール不変信号対歪み比（SI-SDR）などの信号レベルの歪み指標において優れた性能を達成する一方で、深刻な音響的重複、位相の打ち消し合い、変動する混合難易度に対処する際に構造的な脆弱性を示します。0から1の間に制限された乗算マスキングは、重複する音声成分が互いに打ち消し合う場合に本質的に苦戦し、推定値を人工的に低下させたままにします。さらに、静的なスペクトルグリッドは、局所的な音響の複雑さに関わらずすべての音声フレームに対して均一な解像度を強制するため、単純なクリーンセグメントに対しても密度の高い複数話者の交差部分に対しても同一の計算容量を費やしてしまいます。",
+          "textEn": "Neural speech separation and target speaker extraction (TSE) have historically relied on discriminative mask-prediction networks that operate over fixed time-frequency representations. While these traditional systems achieve strong performance on signal-level distortion metrics such as Scale-Invariant Signal-to-Distortion Ratio (SI-SDR), they exhibit structural vulnerabilities when handling severe acoustic overlap, phase cancellation, and variable mixture difficulty. Multiplicative masking bounded between zero and one inherently struggles when overlapping speech components cancel each other out, leaving estimates artificially depressed. Furthermore, static spectral grids enforce uniform resolution across all audio frames regardless of local acoustic complexity, expending identical computational capacity on simple clean segments and dense multi-talker intersections.",
+          "sourceIds": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "id": "current-signal-p2",
+          "text": "これらの限界に対処するため、近年の文献では3つの異なるアーキテクチャ戦略に向けた大きなパラダイムシフトが示されています。第一に、生成フレームワークは、離散ニューラル音声コーデック、音声言語モデル（SLM）、または拡散事後確率サンプリングを活用して、信号分離を自己回帰的トークン生成やガイド付き反復精錬へと変換します。第二に、動的周波数分割手法は、混合条件付き帯域境界を学習することにより、静的なスペクトルグリッドから脱却します。第三に、計算効率に優れたアーキテクチャは、スパースなMixture-of-Experts（MoE）ルーティングと軽量な難易度推定フロントエンドを統合し、浮動小数点演算（FLOPs）を動的に割り当てます。これらの戦略は合わさることで、純粋な信号再構成から、知覚的に堅牢でダウンストリーム指向かつリソースを意識した音声分離への移行を際立たせています。",
+          "textEn": "To address these limitations, recent literature demonstrates a major paradigm shift toward three distinct architectural strategies. First, generative frameworks leverage discrete neural speech codecs, speech language models (SLMs), or diffusion posterior sampling to convert signal separation into autoregressive token generation or guided iterative refinement. Second, dynamic frequency partitioning methods break away from static spectral grids by learning mixture-conditioned band boundaries. Third, compute-efficient architectures integrate sparse mixture-of-experts (MoE) routing and lightweight difficulty estimation frontends to assign floating-point operations (FLOPs) dynamically. Together, these strategies highlight a transition from pure signal reconstruction toward perceptually robust, downstream-oriented, and resource-aware speech isolation.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "positions",
+      "heading": "核心となる理論的およびアーキテクチャ上の立場",
+      "headingEn": "Core Theoretical and Architectural Positions",
+      "blocks": [
+        {
+          "id": "positions-p1",
+          "text": "生成モデルおよび離散構造モデリングの提唱者は、連続的なマスク予測が、複雑な音響環境において本質的に可聴アーティファクトや不適切な明瞭度を引き起こしやすいと主張しています。SLM-SSのようなシステムは、クリーンなターゲット音声をニューラルコーデックトークンに離散化し、シリアル化出力トレーニングを用いて複数話者のターゲットをモデル化します。これにより、高次の残差コードブックを非自己回帰的に精錬する前に、話者順序を確立するために0次のトークンを自己回帰的に予測します。同様に、PromptSep-Speakerは、登録音声、時系列順序、文字起こし、話者キャプションを含むマルチモーダルなプロンプト全体で統合された潜在拡散としてターゲット話者抽出を定式化し、意味的再現性を強制するためにクロスアテンションアライメント損失を備えた固定WavLM特徴量を使用します。VM-ArrayDPSのような教師なし定式化は、学習済み拡散事前分布を採用し、物理的なマイクアレイを仮想的な高SNRチャネルで拡張することで、事後確率サンプリング中にマルチチャネル整合性制約を強制します。",
+          "textEn": "Proponents of generative and discrete structural modeling argue that continuous mask prediction is fundamentally prone to audible artifacts and suboptimal intelligibility in complex acoustic environments. Systems like SLM-SS discretize clean target speech into neural codec tokens and model multi-speaker targets using serialized output training, predicting zero-order tokens autoregressively to establish speaker order before refining higher-order residual codebooks non-autoregressively. Similarly, PromptSep-Speaker formulates target speaker extraction as latent diffusion unified across multimodal prompts including enrollment audio, temporal order, transcripts, and speaker captions, using frozen WavLM features with cross-attention alignment loss to enforce semantic fidelity. Unsupervised formulations like VM-ArrayDPS employ pretrained diffusion priors and augment physical microphone arrays with virtual high-SNR channels, enforcing multi-channel consistency constraints during posterior sampling.",
+          "sourceIds": [
+            "S2",
+            "S5",
+            "S8"
+          ]
+        },
+        {
+          "id": "positions-p2",
+          "text": "逆に、適応型計算の推進派は、生成モデルがリアルタイムでの運用を阻害する深刻な遅延やパラメータコストを招くと主張している。彼らは従来の識別的フレームワーク内における構造的改修を支持している。Dynamic Band Splitting（DBS）は、固定トークン予算内で周波数帯域幅を調整するために混合音条件付き境界スコアを予測し、周波数共有ヘッドで複雑なマスクを洗練する。マスクの相殺制限を肥大化なしで修正するため、SEALは局所的な混合音振幅で制限されるゼロサム加算残差再構成と、6つの残差エキスパートにわたるクエリベースのスパースなエキスパートルーティングを組み合わせている。多言語フロントエンドに対処するため、LATTEは推論時に言語IDを把握することなくネットワーク深度を動的に調整する、音響難易度推定量、音韻論に基づくゲイン、適応型アワーグラス抽出器を組み合わせた520万パラメータのモジュールを導入している。",
+          "textEn": "Conversely, champions of adaptive compute argue that generative models incur steep latency and parameter costs that hinder real-time deployment. They advocate for structural modifications within conventional discriminative frameworks. Dynamic Band Splitting (DBS) predicts mixture-conditioned boundary scores to adjust frequency band widths within fixed token budgets, refining complex masks with a frequency-shared head. To fix mask cancellation limits without adding bulk, SEAL combines zero-sum additive residual reconstruction bounded by local mixture amplitudes with query-based sparse expert routing across six residual experts. Addressing multilingual frontends, LATTE introduces a 5.2-million-parameter module combining an acoustic difficulty estimator, phonology-informed gains, and an adaptive hourglass extractor to adjust network depth dynamically without knowing language identity at inference.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "heading": "実証的証拠とベンチマーク結果",
+      "headingEn": "Empirical Evidence and Benchmark Findings",
+      "blocks": [
+        {
+          "id": "evidence-p1",
+          "text": "多様なデータセットにわたる実証的ベンチマークが、適応型および生成型アプローチの利点を検証している。DnR v2、MUSDB18-HQ、EchoSetベンチマークにおいて、DBSは混合音条件付き帯域境界の学習が静的手法に対して一貫した分離ゲインをもたらすことを示しており、DBS-BSRNNはDnR v2の平均SI-SDRで29.0%の相対的改善を達成した。効率的な時間周波数処理では、SEAL（small）がパラメータ数を28%減らし、積和演算（MAC）数を2.9倍削減しつつ、EchoSet上でTIGER（small）を0.31 dBのSI-SDR改善で上回る。大規模なスケールでは、SEAL（large）がMAC要件を3.1倍削減しつつ、TIGER（large）との差を0.07 dBのSI-SDR改善以内に収め、加算潜在再構成とノルム制限付きエキスパートルーティングの有効性を実証している。",
+          "textEn": "Empirical benchmarks across varied datasets validate the advantages of adaptive and generative approaches. On the DnR v2, MUSDB18-HQ, and EchoSet benchmarks, DBS demonstrates that learning mixture-conditioned band boundaries yields consistent separation gains over static counterparts, with DBS-BSRNN attaining a 29.0% relative improvement in average SI-SDR on DnR v2. In efficient time-frequency processing, SEAL (small) outperforms TIGER (small) on EchoSet by 0.31 dB SI-SDR improvement while using 28% fewer parameters and 2.9 times fewer Multiply-Accumulate operations (MACs). At larger scales, SEAL (large) matches TIGER (large) within 0.07 dB SI-SDR improvement while reducing MAC requirements by 3.1 times, demonstrating the effectiveness of additive latent reconstruction and norm-capped expert routing.",
+          "sourceIds": [
+            "S1",
+            "S3"
+          ]
+        },
+        {
+          "id": "evidence-p2",
+          "text": "生成型および自己教師ありアーキテクチャは、複雑な音声の下流評価タスクにおいて強力な能力を示している。Libri2Mixにおいて、話者ごとの非自己回帰デコーディングを備えたSLM-SSはクリーンなコーデック再構成限界に迫る6.92%の単語誤り率（WER）を達成し、そのWavTokenizer変種は未知の中国語や雑音混じりの混合音においてUTMOSおよびDNSMOSの利点に加え、人間の主観的品質で最高の評価を獲得している。ターゲット話者抽出において、LATTEはPolyExtract上で0.30 GFLOPsにて15.07 dBのマクロSI-SNR改善を達成し、固定深度の基準と比較して計算量を43.4%削減すると同時に、TF-GridNetに対してWERを16.8%から14.6%へと引き下げている。さらに、SepRQなどの自己教師あり事前学習フレームワークは、ランダム射影コードブックに対するマスク不要のマルチスケール分離目的が、8568万パラメータでSUPERBのダイアライゼーションおよび複数話者分離ベンチマークにおいてWavLMを凌駕することを示している。",
+          "textEn": "Generative and self-supervised architectures show strong capabilities on complex speech downstream evaluation tasks. On Libri2Mix, SLM-SS with per-talker non-autoregressive decoding achieves a Word Error Rate (WER) of 6.92%, approaching clean codec reconstruction limits, while its WavTokenizer variant secures top human subjective quality scores alongside UTMOS and DNSMOS advantages on unseen Chinese and noisy mixtures. For target speaker extraction, LATTE achieves a macro SI-SNR improvement of 15.07 dB on PolyExtract at 0.30 GFLOPs—cutting compute by 43.4% compared to fixed-depth baselines while bringing WER down from 16.8% to 14.6% relative to TF-GridNet. Additionally, self-supervised pretraining frameworks like SepRQ demonstrate that mask-free multi-scale separation objectives over random-projection codebooks outpace WavLM on SUPERB diarization and multi-speaker separation benchmarks with 85.68 million parameters.",
+          "sourceIds": [
+            "S2",
+            "S4",
+            "S6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "heading": "評価基準とSI-SDRにおける乖離",
+      "headingEn": "Evaluation Criteria and the SI-SDR Divergence",
+      "blocks": [
+        {
+          "id": "evaluation-p1",
+          "text": "現在の音声分離研究における核となる緊張関係は、伝統的な信号レベルの客観的指標（SI-SDRやSI-SNRiなど）と、実際のダウンストリーム性能や人間の知覚品質との間で拡大する乖離です。信号歪み指標は微細な位相シフトやわずかな生成リシンセシスのアーティファクトに対してペナルティを課す一方で、自動音声認識（ASR）エンジンや音声大規模言語モデル（Audio-LLM）などのダウンストリームモデルは、音響的・音韻論的な明瞭度および意味的一貫性を重視します。例えば、SLM-SSやPromptSep-Speakerといった生成フレームワークは、数学的な波形再構成指標でのスコアが控えめな出力波形を生成することがあるものの、主観的な自然さ（UTMOS/DNSMOS）において優れており、ダウンストリームの文字起こし器に入力した際には単語エラー率の大幅な低下を実現します。",
+          "textEn": "A central tension across current speech separation research is the growing mismatch between traditional signal-level objective metrics (such as SI-SDR and SI-SNRi) and actual downstream performance or human perceptual quality. While signal distortion metrics penalize fine phase shifts or subtle generative resynthesis artifacts, downstream models like automatic speech recognition (ASR) engines and Audio Large Language Models (Audio-LLMs) prioritize acoustic phonological clarity and semantic consistency. For example, generative frameworks like SLM-SS or PromptSep-Speaker may produce output waveforms that score modestly on mathematical waveform reconstruction metrics, yet deliver superior subjective naturalness (UTMOS/DNSMOS) and drastically lower word error rates when fed into downstream transcribers.",
+          "sourceIds": [
+            "S2",
+            "S5"
+          ]
+        },
+        {
+          "id": "evaluation-p2",
+          "text": "実用的な導入においては、フロントエンド処理の選択が最終的なシステムアーキテクチャや実行時の制約に大きく依存することが浮き彫りになっています。タイムスタンプ付き話者属性付与ASR向けのSoulX-Transcriberシステムなど、遠隔音場のノイズ環境が絡む実世界のスマートグラスの課題において、実証的な検証により、データ駆動型の分離フロントエンドが単体の検証スコアを向上させた一方で、推論全体の安定性を維持するために最終テストの提出には直接的なエンドツーエンドのマルチモーダルLLM文字起こしが選定されたことが示されました。同様に、VM-ArrayDPSのような無教師あり拡散事後確率サンプリング手法は、仮想マイクの制約と組み合わせた物理アレイの物理特性が、ターゲット登録なしで優れた分離をもたらすことを実証していますが、反復サンプリングのレイテンシが高くなるというコストを伴います。",
+          "textEn": "Practical deployments highlight that frontend processing choices depend heavily on the final system architecture and runtime constraints. In real-world smart glasses challenges involving far-field noisy environments, such as the SoulX-Transcriber system for time-stamped speaker-attributed ASR, empirical validation showed that while data-driven separation frontends improved standalone validation scores, direct end-to-end multimodal LLM transcription was selected for final test submission to preserve overall inference stability. Similarly, unsupervised diffusion posterior sampling methods like VM-ArrayDPS demonstrate that physical array physics combined with virtual microphone constraints yield superior separation without target enrollment, though at the expense of higher iterative sampling latency.",
+          "sourceIds": [
+            "S7",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implications",
+      "heading": "システムアーキテクチャへの実践的含意",
+      "headingEn": "Practical Implications for Systems Architecture",
+      "blocks": [
+        {
+          "id": "implications-p1",
+          "text": "実務家や機械学習エンジニアにとって、これらの発展は特定のデプロイ制約下で分離コンポーネントを選択するための実用的な基準を提供します。低レイテンシのエッジアプリケーションや埋め込み型ウェアラブルを構築する場合、コンテンツ適応型メカニズムを備えた識別モデルが最も実行可能な道筋となります。DBSのような動的バンド分割やSEALのようなノルム上限付きエキスパートルーティングを取り入れることで、システムはパラメータ数やMACフットプリントを大幅に削ぎ落としながら、高い信号忠実度を維持できます。ターゲット話者抽出がダウンストリームのAudio-LLMに向けた初期フロントエンドとして機能する場合、LATTEのような軽量な難易度推定器によって動的な計算リソース割り当てが可能となり、収束した単一話者セグメントの処理をスキップしつつ、難易度の高い多言語の重複にのみ計算処理を費やすことができます。",
+          "textEn": "For practitioners and machine learning engineers, these developments offer actionable criteria for selecting separation components under specific deployment constraints. When building low-latency edge applications or embedded wearables, discriminative models equipped with content-adaptive mechanisms present the most viable path. Incorporating dynamic band splitting like DBS or norm-capped expert routing like SEAL allows systems to maintain high signal fidelity while significantly paring down parameter counts and MAC footprint. When target speaker extraction serves as an early frontend for downstream Audio-LLMs, lightweight difficulty estimators such as LATTE enable dynamic compute allocation, spending operations only on hard multilingual overlaps while bypassing processing for converged single-speaker segments.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "id": "implications-p2",
+          "text": "反対に、ポストプロダクションでの音声編集、クラウド文字起こし、アーカイブ用会議要約のように、厳格なリアルタイム処理時間の制限よりも音声の自然さ、人間の聴取快適性、または後続の文字起こし精度が優先される場合は、生成トークンモデリングや潜在拡散フロントエンドが明確な優位性を提供します。PromptSep-Speakerのようなマルチモーダルプロンプトフレームワークを活用することで、プラットフォームは下層のニューラルアーキテクチャを再構築することなく、短い音声クリップからテキスト説明文、時系列順序に至るまで、多様な登録ヒントを受け入れることが可能になります。一方で、SepRQのような自己教師あり表現は、多話者表現学習のためのオープンなフレームワークを提供し、商用のクローズドソースモデルに依存することなく多話者のダイアライゼーションおよび抽出を実現します。",
+          "textEn": "Conversely, when speech naturalness, human listening comfort, or downstream transcript accuracy takes precedence over strict real-time budget boundaries—such as in post-production audio editing, cloud transcription, or archival meeting summarization—generative token modeling and latent diffusion frontends offer clear advantages. Utilizing multimodal prompting frameworks like PromptSep-Speaker allows platforms to accept diverse enrollment cues, ranging from short audio clips to text captions or temporal order, without restructuring the underlying neural architecture. Meanwhile, self-supervised representations like SepRQ provide an open framework for multi-talker representation learning, enabling multi-speaker diarization and extraction without relying on proprietary closed-source models.",
+          "sourceIds": [
+            "S2",
+            "S5",
+            "S6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "watch",
+      "heading": "トレードオフと今後の展望",
+      "headingEn": "Trade-offs and Future Horizons",
+      "blocks": [
+        {
+          "id": "watch-p1",
+          "text": "これらの進歩にもかかわらず、主要な限界と未解決の課題が3つのパラダイムすべてにおいて依然として存在しています。SLM-SSのような生成トークンベースのアーキテクチャは、多段階の自己回帰または非自己回帰デコーディングに依存しているため、コードブックレベル間での潜在的なエラー伝播や推論時の高いメモリオーバーヘッドを引き起こします。VM-ArrayDPSのような非教師あり拡散サンプリング手法は、仮想マイク制約によって信号分離を改善するものの、マルチチャンネル一貫性加重の慎重なチューニングを必要とし、反復サンプリングの遅延という制約を保持したままです。ハードウェア面では、理論上のFLOPおよびMACの削減を標準的なGPUやNPUハードウェア上での実際の実行時間の高速化へと変換するために、動的周波数分割（DBS）やスパースエキスパートルーティング（SEAL）においてカスタマイズされたカーネル実装が不可欠となります。",
+          "textEn": "Despite these advances, key limitations and open questions persist across all three paradigms. Generative token-based architectures like SLM-SS rely on multi-stage autoregressive or non-autoregressive decoding, introducing potential error propagation across codebook levels and higher memory overhead during inference. Unsupervised diffusion sampling methods like VM-ArrayDPS improve signal separation through virtual microphone constraints, but require careful tuning of multi-channel consistency weights and remaining constrained by iterative sampling delays. On the hardware side, dynamic frequency partitioning (DBS) and sparse expert routing (SEAL) necessitate customized kernel implementations to translate theoretical FLOP and MAC reductions into wall-clock speedups on standard GPU and NPU hardware.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S8"
+          ]
+        },
+        {
+          "id": "watch-p2",
+          "text": "今後に向けて、この分野は生成の質と動的な計算効率を統合するハイブリッドアーキテクチャへと収束していく可能性が高いと考えられます。注視すべき主な領域としては、凍結された大規模音声言語モデルと直接統合されるプラグアンドプレイの適応型フロントエンド、3人を超える多話者カクテルパーティー環境へと拡張可能なマスクフリーの自己教師あり事前学習目標、そして音声分離、ターゲット話者抽出、後続の文字起こしを単一のパイプライン内で動的にバランスさせる統合マルチモーダルプロンプト手法が挙げられます。",
+          "textEn": "Moving forward, the field is likely to converge toward hybrid architectures that merge generative quality with dynamic computational efficiency. Key areas to monitor include plug-and-play adaptive frontends that integrate directly with frozen large audio-language models, mask-free self-supervised pretraining objectives capable of scaling to multi-talker cocktail party environments beyond three speakers, and unified multimodal prompting schemes that dynamically balance speech separation, target speaker extraction, and downstream transcription within a single pipeline.",
+          "sourceIds": [
+            "S4",
+            "S5",
+            "S6",
+            "S7"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 1,
+    "verifiedAt": "2026-10-27T03:10:32.309354+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-10-27-debate-speech-separation-paradigms-generative-adaptive-efficient",
+  "type": "debate",
+  "date": "2026-10-27",
+  "generatedAt": "2026-10-27T03:10:32.309354+00:00",
+  "topicKey": "speech-separation-paradigms-generative-adaptive-efficient",
+  "searchTerms": [
+    "speech separation",
+    "source separation",
+    "target speaker extraction",
+    "expert routing"
+  ],
+  "sources": [
+    {
+      "arxivId": "2610.14993",
+      "title": "Learning Where to Split: Dynamic Band Splitting for Audio Source Separation",
+      "abstract": "Audio source separation models must preserve fine spectral structure while keeping the cost of the separator tractable. Band-split architectures reduce this cost by manually partitioning the spectrum into predefined frequency bands and encoding each band as a token, but the same boundaries are used for every mixture. Because informative spectral structure varies with source content, fixed boundaries can merge discriminative components or spend tokens where little resolution is needed. We introduce Dynamic Band Splitting (DBS), an end-to-end framework that adapts boundary locations and band widths to each mixture under a fixed band-token budget. DBS predicts content-conditioned boundary scores within frequency blocks, selects a prescribed number of boundaries using hard Top-$K$, and applies content-dependent pooling to obtain compact band tokens. After separation, it smooths and expands these tokens to the original STFT grid, refines them along frequency, and decodes complex masks with a frequency-shared head. DBS improved separation over the corresponding static models on DnR v2, MUSDB18-HQ, and EchoSet, with DBS-BSRNN achieving relative gain of 29.0% in average SI-SDR on DnR v2. These results and boundary analyses on DnR v2 show that content-adaptive frequency partitioning benefits multiple separator backbones under a fixed band-token budget. Code and audio demos are available at https://cslikai.cn/Dynamic-Band-Splitting",
+      "authors": [
+        "Bingzhe Zhang",
+        "Kai Li",
+        "Xiaolin Hu"
+      ],
+      "publishedAt": "2026-10-23",
+      "url": "https://arxiv.org/abs/2610.14993",
+      "origin": "archive",
+      "archiveDate": "2026-10-23",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/JusperLee/Dynamic-Band-Splitting"
+        },
+        {
+          "label": "Project",
+          "url": "https://cslikai.cn/Dynamic-Band-Splitting/"
+        }
+      ],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2610.27785",
+      "title": "SLM-SS: Token-Based Speech Separation with Speech Language Models",
+      "abstract": "Speech separation (SS) has witnessed substantial progress in recent years with the advent of neural network-based methods, achieving notable improvements on signal-level evaluation metrics. Existing speech separation systems are mostly optimized with signal-level objectives, and often yield outputs that are acceptable in waveform metrics but suboptimal for intelligibility-sensitive downstream tasks. To address this gap, we propose SLM-SS, a token-based generative speech separation framework that models multi-talker mixtures with speech language models. We first discretize clean speech into multi-codebook token sequences with neural codecs and serialize multi-speaker targets via Serialized Output Training (SOT). An encoder-decoder autoregressive speech language model predicts the zero-order sequence to establish speaker ordering and coarse linguistic content, and a non-autoregressive module then refines higher-order residual codebooks for efficient reconstruction. We further introduce a per-talker non-autoregressive strategy that simplifies high-order modeling and improves the stability. On Libri2Mix, SLM-SS with per-talker NAR achieves $6.92\\%$ WER, approaching codec-only reconstruction. The WavTokenizer variant eliminates NAR refinement and achieves the highest mean subjective quality score among evaluated separation systems. Its UTMOS and DNSMOS advantages over discriminative baselines persist on unseen noisy and Chinese mixtures without fine-tuning.",
+      "authors": [
+        "Chenda Li",
+        "Tianhua Li",
+        "Yiming Chen",
+        "Wei Wang",
+        "Jiahe Wang"
+      ],
+      "publishedAt": "2026-10-23",
+      "url": "https://arxiv.org/abs/2610.27785",
+      "origin": "archive",
+      "archiveDate": "2026-10-23",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2610.07047",
+      "title": "SEAL: Mixture-Closed Additive Reconstruction and Refinement-Aware Expert Routing for Efficient Speech Separation",
+      "abstract": "Compact time-frequency separators that mask the mixture and refine through a shared cell face two limits. First, a bounded multiplicative mask only scales a mixture bin, so where overlapping components cancel, the estimate stays small. Second, a shared cell applies the same weights to every time-frequency token at every step, so enlarging it adds compute everywhere. We present SEAL (Sparse Expert routing with Additive Latent reconstruction) to address both. For reconstruction, a zero-sum additive residual bounded by the local mixture amplitude lets estimates be nonzero where components cancel yet still sum to the mixture. For routing, a query built from acoustic and inter-step evidence sends each token to one of six residual experts, and a norm cap keeps the step cue from overriding clear acoustic evidence. On EchoSet, SEAL (small) surpasses TIGER (small) by 0.31 dB SI-SDRi with 28% fewer parameters and 2.9 times fewer MACs, and SEAL (large) is within 0.07 dB SI-SDRi of TIGER (large) at 3.1 times fewer MACs.",
+      "authors": [
+        "Shao-Chun Hu",
+        "Zi-Xiang Lin",
+        "Jeih-Weih Hung",
+        "Hung-Shin Lee"
+      ],
+      "publishedAt": "2026-10-09",
+      "url": "https://arxiv.org/abs/2610.07047",
+      "origin": "archive",
+      "archiveDate": "2026-10-09",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2610.13500",
+      "title": "Phonology-Aware Speaker Extraction Frontend for Audio LLMs",
+      "abstract": "Target speaker extraction (TSE) is a key frontend for enabling audio large language models (LLMs) to recognize and understand a designated speaker in overlapping speech. However, multilingual mixtures exhibit heterogeneous extraction demands, causing fixed-depth systems to either under-process challenging inputs or waste computation on inputs that have already converged. Existing TSE frontends generally apply uniform computation, while Audio-LLM adaptation methods neither explicitly model language-conditioned extraction demands nor preserve plug-and-play compatibility with frozen downstream models. We therefore propose LATTE, a lightweight 5.2M-parameter frontend that combines an acoustic Difficulty Estimator, a task-adaptive phonology-informed prior learned from multi-depth TSE gains, and an Adaptive Hourglass Extractor to route each mixture without requiring language identity at inference. On PolyExtract, LATTE achieves a macro SI-SNRi of 15.07 dB at 0.30 GFLOPs, retaining performance within 0.09 dB of a 0.53-GFLOP fixed-depth model while reducing computation by 43.4%, and lowers the average WER from 16.8% to 14.6% relative to TF-GridNet. By jointly modeling sample-level extraction demands and phonological structure, LATTE provides a practical framework for quality-aware, compute-efficient multilingual TSE and offers a scalable path toward robust Audio-LLM deployment.",
+      "authors": [
+        "Yanxiang Chen",
+        "Haoyuan Deng",
+        "Jinyu Wang",
+        "Hongyi Chen",
+        "Dingshan Li"
+      ],
+      "publishedAt": "2026-10-23",
+      "url": "https://arxiv.org/abs/2610.13500",
+      "origin": "archive",
+      "archiveDate": "2026-10-23",
+      "primaryLinks": [],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2610.23066",
+      "title": "PromptSep-Speaker: Generative Target Speaker Extraction via Multimodal Prompting and Semantic Alignment",
+      "abstract": "Target speaker extraction (TSE) isolates a desired speaker from a multi-speaker mixture using cues that identify the target. Prior work has explored acoustic and textual cues, such as enrollment audio and different types of speaker descriptors, but typically relies on a single cue family. Yet no single cue is both broadly available and reliably discriminative. Moreover, most TSE systems adopt mask-prediction models, which are prone to audible artifacts and generalize poorly across acoustic conditions. To address these limitations, we propose PromptSep-Speaker, a generative TSE model based on latent diffusion that unifies four interchangeable cues: speaker temporal order, transcript, enrollment audio, and speaker caption. The generative formulation delivers higher separation quality and multi-modal prompting improves applicability across scenarios. To fully exploit each cue, we further introduce a frozen WavLM representation with an auxiliary alignment loss that supervises query-mixture cross-attention without extra labeling. Across four evaluation sets and a listening study, PromptSep-Speaker achieves state-of-the-art performance over TSE and universal source separation baselines, improving separation accuracy and quality across cue modalities.",
+      "authors": [
+        "Yutong Wen",
+        "Ke Chen",
+        "Prem Seetharaman",
+        "Haonan Chen",
+        "Oriol Nieto"
+      ],
+      "publishedAt": "2026-10-23",
+      "url": "https://arxiv.org/abs/2610.23066",
+      "origin": "historical",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2610.04690",
+      "title": "SepRQ : Self-Supervised Speech Mixture Representation Learning via Mask-Free, Multi-Scale Source Separation",
+      "abstract": "Self-supervised learning (SSL) is standard for speech representation learning, but mainstream models are designed around single-speaker audio, limiting their usefulness in multi-speakers scenarios. We present SepRQ, an open-source SSL framework that replaces masked prediction with a pseudo-source-separation objective over frozen random-projection codebooks. By adopting a novel mask-free, multiresolution approach, SepRQ achieves state-of-the-art performance in Speaker Diarization and Speech Separation on the SUPERB benchmark, surpassing WavLM and other cocktail-party derived SSLs at both Base and Large scales, while requiring only 85.68M inference parameters. SepRQ also demonstrates strong performance across target-speaker tasks requiring enrollment (such as Target-Speaker Automatic Speech Recognition), and on the challenging multi-domain DIHARD 3 diarization dataset. Notably, we report strong separation capabilities on three-speaker mixtures (WSJ0-3Mix), where current SSL literature struggles. While cocktail-party SSLs remain scarce and closed-source, limited to C-HuBERT and the enrollment-based SA-WavLM, we open-source SepRQ to the community.",
+      "authors": [
+        "Séverin Baroudi",
+        "Hervé Bredin",
+        "Ricard Marxer"
+      ],
+      "publishedAt": "2026-10-09",
+      "url": "https://arxiv.org/abs/2610.04690",
+      "origin": "historical",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2610.13282",
+      "title": "Frontend-Assisted Large Audio-Language Models for SLT2026 SmartGlasses Challenge",
+      "abstract": "This paper describes our systems for the Track 1 time-stamped speaker-attributed ASR task of the SmartGlasses Challenge. To handle overlapping speech, background noise and far-field conditions in two-person conversations, we employ SoulX-Transcriber, a multimodal large language model that takes full-length audio as input and generates structured transcriptions. In addition, we investigate the effect of speech frontend processing, including a rule-based Guided Source Separation method and a data-driven speech separation model, both of which improve performance on the validation set. Considering inference stability, our final submission uses the fine-tuned SoulX-Transcriber system, achieving a tcpCER of 6.22 on the test set.",
+      "authors": [
+        "Yushi Wang",
+        "Zeyan Song",
+        "Xiaobin Rong",
+        "Chengwei Liu",
+        "Jun Gao"
+      ],
+      "publishedAt": "2026-10-23",
+      "url": "https://arxiv.org/abs/2610.13282",
+      "origin": "historical",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2610.09334",
+      "title": "VM-ARRAYDPS: Virtual Microphone Augmented Diffusion Posterior Sampling for Unsupervised Blind Speech Separation",
+      "abstract": "Blind Source Separation(BSS) is a fundamental problem in signal processing, aiming to separate multiple source signals from their mixtures without prior knowledge of the sources or the mixing process. Traditional approaches, such as Independent Vector Analysis (IVA) exploits statistical independence of sources. Recently, diffusion-based approaches have emerged as a promising alternative by leveraging powerful generative priors. Among them, ArrayDPS formulates BSS problem as a posterior sampling problem, and utilizes a pretrained speech diffusion model to guide the recovery of clean source signals. A key factor behind its separation capability is the multi-channel consistency (MC) objective, which enforces the estimated source signals to reconstruct the observed microphone mixtures through the estimated acoustic transfer functions. However, the number of microphones in the array is often limited, which constrains the performance of ArrayDPS. To address this issue, we propose VM-ArrayDPS, a novel method that augments the microphone array with virtual microphones with higher-SNR, these microphones can offer extra MC constraints to enhance the separation performance. Experimental results demonstrate that VM-ArrayDPS significantly outperforms ArrayDPS on both 2-speaker and 3-speaker datasets, showcasing the effectiveness of virtual microphone augmentation in improving BSS performance. We also did ablation studies to show the influence of the number of virtual microphones and weight of the MC objective brought by virtual microphones.",
+      "authors": [
+        "Jingqi Sun",
+        "Haozhan Tang",
+        "Shulin He",
+        "Zhong-Qiu Wang"
+      ],
+      "publishedAt": "2026-10-09",
+      "url": "https://arxiv.org/abs/2610.09334",
+      "origin": "historical",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 11,
+  "readTimeMinutesEn": 6,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-10-27T03:10:32.309354+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 1
+  }
+}
