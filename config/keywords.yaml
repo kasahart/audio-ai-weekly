@@ -10,6 +10,9 @@ categories:
 
 # Filtering keywords (OR condition)
 # Include papers whose title or abstract contains any of these terms.
+# Matching is case-insensitive and treats hyphens, dashes and other
+# punctuation as spaces, so
+# "audio language model" also matches "Audio-Language Model".
 include:
   # Audio foundation models
   - audio foundation model
@@ -20,6 +23,25 @@ include:
   - audio pre-training
   - audio self-supervised
   - universal audio
+  - audio llm
+  - acoustic foundation model
+  - bioacoustic foundation model
+  - audio representation learning
+  - general purpose audio
+  # Speech foundation models (speech LLMs, spoken dialogue models, speech SSL)
+  - speech foundation model
+  - speech language model
+  - speech large language model
+  - spoken language model
+  - speech llm
+  - speechllm
+  - full duplex
+  - spoken dialogue model
+  - spoken dialog model
+  - speech ssl
+  - self supervised speech
+  - speech self supervised
+  - ssl speech
   # Source separation
   - source separation
   - music separation
@@ -28,6 +50,12 @@ include:
   - speaker separation
   - vocal separation
   - music demixing
+  - voice separation
+  - target speaker extraction
+  - target speech extraction
+  - target sound extraction
+  - speaker extraction
+  - speech extraction
   # Anomalous sound detection
   - anomalous sound detection
   - anomaly sound detection
@@ -36,6 +64,10 @@ include:
   - machine sound anomaly
   - unsupervised anomaly
   - sound event detection
+  - fault detection
+  - anomaly score
+  # Sound event localization and detection (SELD)
+  - sound event localization
 
 # Exclusion keywords override include matches.
 exclude:
@@ -57,6 +89,25 @@ ui_categories:
       - audio pre-training
       - audio self-supervised
       - universal audio
+      - audio llm
+      - acoustic foundation model
+      - bioacoustic foundation model
+      - audio representation learning
+      - general purpose audio
+      # Speech foundation models (speech LLMs, spoken dialogue models, speech SSL)
+      - speech foundation model
+      - speech language model
+      - speech large language model
+      - spoken language model
+      - speech llm
+      - speechllm
+      - full duplex
+      - spoken dialogue model
+      - spoken dialog model
+      - speech ssl
+      - self supervised speech
+      - speech self supervised
+      - ssl speech
 
   - id: separation
     label: 音源分離
@@ -70,6 +121,12 @@ ui_categories:
       - speaker separation
       - vocal separation
       - music demixing
+      - voice separation
+      - target speaker extraction
+      - target speech extraction
+      - target sound extraction
+      - speaker extraction
+      - speech extraction
 
   - id: anomaly
     label: 異音検知
@@ -83,3 +140,7 @@ ui_categories:
       - machine sound anomaly
       - unsupervised anomaly
       - sound event detection
+      - fault detection
+      - anomaly score
+      # Sound event localization and detection (SELD)
+      - sound event localization

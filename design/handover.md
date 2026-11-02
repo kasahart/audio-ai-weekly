@@ -36,7 +36,7 @@
 
 ### 2.2 設定ファイル
 - ✅ `config/keywords.yaml` — フィルタリングキーワード（22 件、追加・削除可能）
-- ✅ `config/settings.yaml` — `max_papers=50`、GitHub Models エンドポイント等
+- ✅ `config/settings.yaml` — `max_papers=80`、GitHub Models エンドポイント等
 
 ### 2.3 バックエンドスクリプト（Python 3.11）
 - ✅ `scripts/fetch_papers.py` — arXiv API 取得・キーワードフィルタ・カテゴリ分類
@@ -137,7 +137,7 @@ https://YOUR_ORG.github.io/audio-ai-weekly/
 | `.devcontainer/devcontainer.json` | Python 3.11 image + features + 初回セットアップ | ✅ 実装済 |
 | `.github/workflows/update.yml` | 4 ジョブの自動実行ワークフロー | ✅ 実装済 |
 | `config/keywords.yaml` | フィルタキーワード（追加・削除はここだけ） | ✅ 実装済 |
-| `config/settings.yaml` | `max_papers=50` 等のシステム設定 | ✅ 実装済 |
+| `config/settings.yaml` | `max_papers=80` 等のシステム設定 | ✅ 実装済 |
 | `data/index.json` | 全週インデックス（初期は空） | ✅ 実装済 |
 | `data/weekly/YYYY-MMDD.json` | 週次論文データ | ☐ Actions 実行後に自動生成 |
 | `scripts/fetch_papers.py` | arXiv 取得・フィルタ・カテゴリ分類 | ✅ 実装済 |

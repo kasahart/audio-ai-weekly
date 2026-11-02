@@ -17,6 +17,7 @@ from fetch_papers import (
     keyword_match,
     assign_category,
     is_within_window,
+    normalize_match_text,
     extract_orgs,
     parse_atom,
 )
@@ -51,6 +52,32 @@ class TestKeywordMatch:
         paper = {"title": "Source Separation", "abstract": ""}
         assert keyword_match(paper, [], self.EXCLUDE) is False
 
+    def test_hyphenated_text_matches_spaced_keyword(self):
+        paper = {"title": "Probing Large Audio-Language Models", "abstract": ""}
+        assert keyword_match(paper, ["audio language model"], []) is True
+
+    def test_double_hyphen_and_dash_variants_match(self):
+        for title in ("Audio--Language Models", "Audio\u2013Language Models", "Audio \u2014 Language Models"):
+            paper = {"title": title, "abstract": ""}
+            assert keyword_match(paper, ["audio language model"], []) is True
+
+    def test_hyphenated_keyword_matches_spaced_text(self):
+        paper = {"title": "", "abstract": "We study audio pre training at scale"}
+        assert keyword_match(paper, ["audio pre-training"], []) is True
+
+    def test_punctuation_is_treated_as_space(self):
+        paper = {"title": "", "abstract": "Self-supervised learning (SSL) speech models"}
+        assert keyword_match(paper, ["ssl speech"], []) is True
+
+    def test_exclude_uses_same_normalization(self):
+        paper = {"title": "Source Separation (Retracted)", "abstract": ""}
+        assert keyword_match(paper, self.INCLUDE, ["retracted"]) is False
+
+
+class TestNormalizeMatchText:
+    def test_lowercases_and_collapses_separators(self):
+        assert normalize_match_text("  Full-Duplex\tSpoken--Dialogue  ") == "full duplex spoken dialogue"
+
 
 # ── assign_category ────────────────────────────────────────────────────
 
@@ -79,6 +106,10 @@ class TestAssignCategory:
 
     def test_first_match_wins(self):
         paper = {"title": "Audio Language Model for Source Separation", "abstract": ""}
+        assert assign_category(paper, self.CATEGORIES) == "foundation"
+
+    def test_hyphenated_text_is_categorized(self):
+        paper = {"title": "Probing Audio-Language Models", "abstract": ""}
         assert assign_category(paper, self.CATEGORIES) == "foundation"
 
 

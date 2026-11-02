@@ -158,7 +158,7 @@ audio-ai-weekly/
 │       └── update.yml          # GitHub Actions ワークフロー
 ├── config/
 │   ├── keywords.yaml           # ★ フィルタキーワード（追加・削除はここだけ）
-│   └── settings.yaml           # max_papers=50 等のシステム設定
+│   └── settings.yaml           # max_papers=80 等のシステム設定
 ├── data/
 │   ├── index.json              # ★ 全週インデックス
 │   └── weekly/
@@ -204,7 +204,7 @@ audio-ai-weekly/
 
 | フィールド | 型 | デフォルト | 説明 |
 |---|---|---|---|
-| `max_papers` | int | `50` | ★ フィルタ後の最大取得件数 |
+| `max_papers` | int | `80` | ★ フィルタ後の最大取得件数 |
 | `lookback_days` | int | `7` | 取得対象期間（日数） |
 | `model` | string | `claude-3-7-sonnet` | ★ GitHub Models で使用するモデル名 |
 | `retry_max` | int | `3` | API エラー時の最大リトライ回数 |
