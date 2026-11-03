@@ -13,8 +13,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -31,6 +32,34 @@ NS = {
 }
 
 
+def submission_cutoff(ref_date: datetime) -> datetime:
+    """Return the last arXiv submission deadline already announced on ref_date.
+
+    arXiv announces each weekday's submissions (up to 14:00 America/New_York)
+    that evening, and holds later Thursday submissions until Sunday. A Friday
+    run therefore sees everything submitted before Thursday 14:00 ET. Cutting
+    the window there, instead of at Friday 00:00 UTC, keeps late-Thursday
+    papers for the next week instead of dropping them.
+    """
+    cfg = SETTINGS["arxiv"]
+    tz = ZoneInfo(cfg.get("submission_deadline_timezone", "America/New_York"))
+    hour, minute = (int(v) for v in cfg.get("submission_deadline", "14:00").split(":"))
+    day = (ref_date.astimezone(timezone.utc) - timedelta(days=1)).date()
+    return datetime.combine(day, dt_time(hour, minute), tzinfo=tz).astimezone(timezone.utc)
+
+
+def window_bounds(ref_date: datetime, lookback_days: int) -> tuple[datetime, datetime]:
+    """Return the [start, end) submission window for a run on ref_date.
+
+    Both ends use submission_cutoff, so consecutive weekly windows stay
+    contiguous even across daylight-saving changes.
+    """
+    return (
+        submission_cutoff(ref_date - timedelta(days=lookback_days)),
+        submission_cutoff(ref_date),
+    )
+
+
 def build_query(
     ref_date: datetime | None = None, lookback_days: int | None = None
 ) -> str:
@@ -40,11 +69,8 @@ def build_query(
     if ref_date is None or lookback_days is None:
         return query
 
-    start_date = ref_date - timedelta(days=lookback_days)
-    date_range = (
-        f"submittedDate:[{start_date.astimezone(timezone.utc):%Y%m%d%H%M}"
-        f" TO {ref_date.astimezone(timezone.utc):%Y%m%d%H%M}]"
-    )
+    start, end = window_bounds(ref_date, lookback_days)
+    date_range = f"submittedDate:[{start:%Y%m%d%H%M} TO {end:%Y%m%d%H%M}]"
     return f"{query} AND {date_range}"
 
 
@@ -213,15 +239,28 @@ def extract_orgs(entry) -> str:
     return ""
 
 
-def is_within_window(
-    published_iso: str, lookback_days: int, ref_date: datetime
-) -> bool:
+def is_within_window(published_iso: str, start: datetime, end: datetime) -> bool:
+    """Return whether a paper was submitted in the half-open window [start, end)."""
     try:
         pub_dt = datetime.fromisoformat(published_iso.replace("Z", "+00:00"))
-        cutoff = ref_date - timedelta(days=lookback_days)
-        return cutoff <= pub_dt <= ref_date
+        return start <= pub_dt < end
     except Exception:
         return True  # Include the paper when parsing fails.
+
+
+def base_arxiv_id(arxiv_id: str) -> str:
+    return re.sub(r"v\d+$", "", arxiv_id.strip())
+
+
+def load_excluded_ids(path: str | Path | None) -> set[str]:
+    """Read arXiv IDs (one per line, versions ignored) that must not be re-collected."""
+    if not path:
+        return set()
+    return {
+        base_arxiv_id(line)
+        for line in Path(path).read_text().splitlines()
+        if line.strip()
+    }
 
 
 _SEPARATOR_RE = re.compile(r"[\W_]+")
@@ -264,6 +303,7 @@ def main(
     date_str: str | None = None,
     lookback_days_override: int | None = None,
     max_papers_override: int | None = None,
+    exclude_ids_path: str | None = None,
 ):
     cfg = SETTINGS["arxiv"]
     max_papers = (
@@ -286,7 +326,9 @@ def main(
     else:
         ref_date = datetime.now(timezone.utc)
 
+    window_start, window_end = window_bounds(ref_date, lookback_days)
     query = build_query(ref_date, lookback_days)
+    excluded_ids = load_excluded_ids(exclude_ids_path)
     include_kws = KEYWORDS["include"]
     exclude_kws = KEYWORDS.get("exclude", [])
     ui_cats = KEYWORDS["ui_categories"]
@@ -295,6 +337,10 @@ def main(
     print(
         f"[fetch] Ref date: {ref_date.date()} / Lookback: {lookback_days} days / "
         f"Max: {max_papers or 'unlimited'} papers"
+    )
+    print(
+        f"[fetch] Submission window: {window_start:%Y-%m-%d %H:%M} to "
+        f"{window_end:%Y-%m-%d %H:%M} UTC / Excluding {len(excluded_ids)} published IDs"
     )
 
     seen_ids: set[str] = set()
@@ -313,18 +359,21 @@ def main(
                 continue
             seen_ids.add(p["id"])
 
-            if not is_within_window(p["published_iso"], lookback_days, ref_date):
-                # Skip papers newer than ref_date and stop once papers are too old.
+            if not is_within_window(p["published_iso"], window_start, window_end):
+                # Skip papers newer than the window and stop once papers are too old.
                 try:
                     pub_dt = datetime.fromisoformat(
                         p["published_iso"].replace("Z", "+00:00")
                     )
-                    if pub_dt < ref_date - timedelta(days=lookback_days):
+                    if pub_dt < window_start:
                         print("[fetch] Out of window, stopping.")
                         papers = []  # force outer break
                         break
                 except Exception:
                     pass
+                continue
+
+            if base_arxiv_id(p["id"]) in excluded_ids:
                 continue
 
             if keyword_match(p, include_kws, exclude_kws):
@@ -366,10 +415,17 @@ if __name__ == "__main__":
         default=None,
         help="Override maximum paper count (0 means unlimited)",
     )
+    parser.add_argument(
+        "--exclude-ids",
+        type=str,
+        default=None,
+        help="File of arXiv IDs already published in earlier weeks (one per line)",
+    )
     args = parser.parse_args()
     main(
         dry_run=args.dry_run,
         date_str=args.date,
         lookback_days_override=args.lookback_days,
         max_papers_override=args.max_papers,
+        exclude_ids_path=args.exclude_ids,
     )

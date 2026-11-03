@@ -64,6 +64,10 @@ jobs:
             --settings config/settings.yaml \
             --date "$REF_DATE" >> "$GITHUB_OUTPUT"
           echo "reference_date=$REF_DATE" >> "$GITHUB_OUTPUT"
+          python scripts/published_ids.py \
+            --git-ref "$PUBLISHED_REF" \
+            --before "$REF_DATE" > /tmp/published_ids.txt
+          echo "Excluding $(wc -l < /tmp/published_ids.txt) IDs published before $REF_DATE"
 
       - name: Fetch papers from arXiv
         id: fetch
@@ -71,7 +75,8 @@ jobs:
           python scripts/fetch_papers.py \
             --date "${{ steps.window.outputs.reference_date }}" \
             --lookback-days "${{ steps.window.outputs.lookback_days }}" \
-            --max-papers "${{ steps.window.outputs.max_papers }}"
+            --max-papers "${{ steps.window.outputs.max_papers }}" \
+            --exclude-ids /tmp/published_ids.txt
           COUNT=$(python -c "import json; print(len(json.load(open('data/raw_papers.json'))))")
           echo "paper_count=$COUNT" >> $GITHUB_OUTPUT
           echo "✅ Fetched $COUNT papers"
