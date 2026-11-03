@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import analyze_papers
 import build_data as build_data_module
 import fetch_papers
+import published_ids
 
 BACKFILL_SETTINGS = fetch_papers.SETTINGS["backfill"]
 
@@ -62,8 +63,13 @@ def main():
             print(f"[backfill] {weekly_path.name} already exists; skipping.")
             continue
 
-        # Retrieve papers.
-        fetch_papers.main(date_str=date_str)
+        # Retrieve papers, skipping ones already published in earlier weeks.
+        exclude_path = ROOT / "data" / "published_ids.txt"
+        ids = published_ids.published_ids_from_dir(
+            ROOT / "data" / "weekly", date.date()
+        )
+        exclude_path.write_text("".join(f"{i}\n" for i in sorted(ids)))
+        fetch_papers.main(date_str=date_str, exclude_ids_path=str(exclude_path))
 
         raw_path = ROOT / "data" / "raw_papers.json"
         if not raw_path.exists():

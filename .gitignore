@@ -5,6 +5,7 @@ __pycache__/
 .env
 data/raw_papers.json
 data/analyzed_papers.json
+data/published_ids.txt
 data/features/*.json
 !data/features/index.json
 

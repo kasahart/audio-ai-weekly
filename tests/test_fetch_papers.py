@@ -17,7 +17,10 @@ from fetch_papers import (
     keyword_match,
     assign_category,
     is_within_window,
+    load_excluded_ids,
     normalize_match_text,
+    submission_cutoff,
+    window_bounds,
     extract_orgs,
     parse_atom,
 )
@@ -116,26 +119,67 @@ class TestAssignCategory:
 # ── is_within_window ───────────────────────────────────────────────────
 
 class TestIsWithinWindow:
-    REF = datetime(2026, 4, 26, tzinfo=timezone.utc)
+    START = datetime(2026, 4, 16, 18, 0, tzinfo=timezone.utc)
+    END = datetime(2026, 4, 23, 18, 0, tzinfo=timezone.utc)
 
     def test_within_window(self):
-        assert is_within_window("2026-04-20T00:00:00Z", 7, self.REF) is True
+        assert is_within_window("2026-04-20T00:00:00Z", self.START, self.END) is True
 
-    def test_on_cutoff_boundary(self):
-        assert is_within_window("2026-04-19T00:00:00Z", 7, self.REF) is True
+    def test_start_is_inclusive(self):
+        assert is_within_window("2026-04-16T18:00:00Z", self.START, self.END) is True
 
     def test_before_window(self):
-        assert is_within_window("2026-04-18T00:00:00Z", 7, self.REF) is False
+        assert is_within_window("2026-04-16T17:59:59Z", self.START, self.END) is False
 
-    def test_on_ref_date(self):
-        assert is_within_window("2026-04-26T00:00:00Z", 7, self.REF) is True
-
-    def test_after_ref_date(self):
-        assert is_within_window("2026-04-27T00:00:00Z", 7, self.REF) is False
+    def test_end_is_exclusive(self):
+        # The next week's window starts here, so a boundary paper is counted once.
+        assert is_within_window("2026-04-23T18:00:00Z", self.START, self.END) is False
 
     def test_invalid_iso_returns_true(self):
         # パース失敗時は含める
-        assert is_within_window("not-a-date", 7, self.REF) is True
+        assert is_within_window("not-a-date", self.START, self.END) is True
+
+
+class TestSubmissionWindow:
+    def test_friday_run_ends_at_thursday_deadline_in_daylight_time(self):
+        # 14:00 EDT on Thursday 2026-10-08 is 18:00 UTC.
+        ref = datetime(2026, 10, 9, tzinfo=timezone.utc)
+        assert submission_cutoff(ref) == datetime(2026, 10, 8, 18, 0, tzinfo=timezone.utc)
+
+    def test_friday_run_ends_at_thursday_deadline_in_standard_time(self):
+        # 14:00 EST on Thursday 2026-11-05 is 19:00 UTC.
+        ref = datetime(2026, 11, 6, tzinfo=timezone.utc)
+        assert submission_cutoff(ref) == datetime(2026, 11, 5, 19, 0, tzinfo=timezone.utc)
+
+    def test_late_thursday_paper_falls_into_next_week(self):
+        # 2610.12693 was submitted Thursday 2026-10-08 20:19 UTC, after the deadline.
+        published = "2026-10-08T20:19:46Z"
+        assert not is_within_window(published, *window_bounds(datetime(2026, 10, 9, tzinfo=timezone.utc), 7))
+        assert is_within_window(published, *window_bounds(datetime(2026, 10, 16, tzinfo=timezone.utc), 7))
+
+    def test_consecutive_windows_are_contiguous_across_dst(self):
+        first = window_bounds(datetime(2026, 10, 30, tzinfo=timezone.utc), 7)
+        second = window_bounds(datetime(2026, 11, 6, tzinfo=timezone.utc), 7)
+        assert first[1] == second[0]
+        assert second == (
+            datetime(2026, 10, 29, 18, 0, tzinfo=timezone.utc),
+            datetime(2026, 11, 5, 19, 0, tzinfo=timezone.utc),
+        )
+
+    def test_catch_up_window_starts_at_previous_cutoff(self):
+        start, end = window_bounds(datetime(2026, 10, 23, tzinfo=timezone.utc), 14)
+        assert start == submission_cutoff(datetime(2026, 10, 9, tzinfo=timezone.utc))
+        assert end == datetime(2026, 10, 22, 18, 0, tzinfo=timezone.utc)
+
+
+class TestExcludedIds:
+    def test_load_strips_versions_and_blank_lines(self, tmp_path):
+        path = tmp_path / "ids.txt"
+        path.write_text("2610.12693v2\n\n2610.40883\n")
+        assert load_excluded_ids(path) == {"2610.12693", "2610.40883"}
+
+    def test_missing_path_means_no_exclusions(self):
+        assert load_excluded_ids(None) == set()
 
 
 # ── extract_orgs ───────────────────────────────────────────────────────
@@ -246,13 +290,14 @@ class TestParseAtom:
 
 class TestBuildQuery:
     def test_includes_submitted_date_range(self):
-        ref = datetime(2026, 4, 26, 12, 34, tzinfo=timezone.utc)
+        ref = datetime(2026, 4, 24, tzinfo=timezone.utc)
 
         query = build_query(ref, 7)
 
         assert "cat:cs.SD" in query
         assert "cat:eess.AS" in query
-        assert "submittedDate:[202604191234 TO 202604261234]" in query
+        # Thursday 14:00 EDT deadlines on 2026-04-16 and 2026-04-23.
+        assert "submittedDate:[202604161800 TO 202604231800]" in query
 
 
 class DummyResponse:
