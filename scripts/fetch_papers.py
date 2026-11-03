@@ -6,6 +6,7 @@ Retrieve papers in target categories from the arXiv API and filter by keyword.
 
 import argparse
 import json
+import re
 import socket
 import time
 import urllib.error
@@ -223,17 +224,37 @@ def is_within_window(
         return True  # Include the paper when parsing fails.
 
 
+_SEPARATOR_RE = re.compile(r"[\W_]+")
+
+
+def normalize_match_text(text: str) -> str:
+    """Lowercase and turn hyphens, dashes and other punctuation into spaces.
+
+    This lets "audio-language model", "Audio--Language Model" and
+    "audio language model" all match the same keyword.
+    """
+    return _SEPARATOR_RE.sub(" ", text.lower()).strip()
+
+
+def _paper_match_text(paper: dict) -> str:
+    return normalize_match_text(paper["title"] + " " + paper["abstract"])
+
+
+def _contains_any(text: str, keywords: list[str]) -> bool:
+    return any(normalize_match_text(kw) in text for kw in keywords)
+
+
 def keyword_match(paper: dict, include: list[str], exclude: list[str]) -> bool:
-    text = (paper["title"] + " " + paper["abstract"]).lower()
-    if any(kw.lower() in text for kw in exclude):
+    text = _paper_match_text(paper)
+    if _contains_any(text, exclude):
         return False
-    return any(kw.lower() in text for kw in include)
+    return _contains_any(text, include)
 
 
 def assign_category(paper: dict, ui_categories: list[dict]) -> str:
-    text = (paper["title"] + " " + paper["abstract"]).lower()
+    text = _paper_match_text(paper)
     for cat in ui_categories:
-        if any(kw.lower() in text for kw in cat["keywords"]):
+        if _contains_any(text, cat["keywords"]):
             return cat["id"]
     return "other"
 

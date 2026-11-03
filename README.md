@@ -168,6 +168,10 @@ Actions, add `GEMINI_API_KEY` under **Settings → Secrets and variables → Act
 ## Adding or Removing Keywords
 
 Edit the `include` list in `config/keywords.yaml`. No code changes are required.
+Also add the keyword to the matching `ui_categories` entry so the paper is
+filed under that category. Matching is case-insensitive and treats hyphens,
+dashes and other punctuation as spaces, so `audio language model` also matches
+"Audio-Language Models".
 
 ## Repository Structure
 

@@ -5,7 +5,7 @@
 # arXiv retrieval settings
 arxiv:
   lookback_days: 7          # Retrieval window in days
-  max_papers: 50            # Maximum papers after filtering
+  max_papers: 80            # Maximum papers after filtering
   catchup_max_days: 28      # Maximum automatic catch-up window; fail if exceeded
   catchup_max_papers: 200   # Maximum papers during automatic catch-up
   request_interval: 3.0     # Interval between API requests in seconds
