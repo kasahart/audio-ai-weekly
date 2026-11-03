@@ -25,8 +25,17 @@ TREND_PROMPT = (ROOT / "config/prompts/trend.txt").read_text().strip().replace(
 )
 
 
-def generate_trend(client: OpenAI, papers: list[dict]) -> tuple[list[str], list[str]]:
-    _, cfg = get_ai_config(SETTINGS)
+def get_trend_providers() -> list[str]:
+    """Return the primary provider followed by the analysis fallback providers."""
+    primary, _ = get_ai_config(SETTINGS)
+    configured = SETTINGS.get("analysis", {}).get("fallback_providers", [])
+    return list(dict.fromkeys([primary, *configured]))
+
+
+def generate_trend(
+    client: OpenAI, papers: list[dict], provider: str | None = None
+) -> tuple[list[str], list[str]]:
+    _, cfg = get_ai_config(SETTINGS, provider)
     summaries = "\n".join(
         f"- {p['title']}: {p.get('whatEn') or p.get('what') or p.get('abstract', '')}"
         for p in papers[: ANALYSIS_SETTINGS["trend_paper_limit"]]
@@ -198,18 +207,24 @@ def main(date_str: str | None = None):
         p["upvotes"] = m.get("upvotes")
         p["projectPage"] = m.get("projectPage")
 
-    # Generate the trend summary with the configured AI provider.
-    provider, cfg = get_ai_config(SETTINGS)
-    try:
-        client = create_client(SETTINGS)
-        trend, trend_en = generate_trend(client, papers)
-        if not trend:
-            trend = empty_trend()
-    except EnvironmentError:
-        print(
-            f"[build] {cfg['api_key_env']} is not set for provider {provider}; "
-            "skipping trend generation."
-        )
+    # Generate the trend summary, falling back to the analysis fallback
+    # providers when the primary model keeps failing.
+    trend, trend_en = [], []
+    for provider in get_trend_providers():
+        _, cfg = get_ai_config(SETTINGS, provider)
+        try:
+            client = create_client(SETTINGS, provider=provider)
+        except EnvironmentError:
+            print(
+                f"[build] {cfg['api_key_env']} is not set for provider {provider}; "
+                "skipping it for trend generation."
+            )
+            continue
+        trend, trend_en = generate_trend(client, papers, provider=provider)
+        if trend:
+            break
+        print(f"[build] trend generation failed with provider {provider}.")
+    if not trend:
         trend = empty_trend()
         trend_en = []
 

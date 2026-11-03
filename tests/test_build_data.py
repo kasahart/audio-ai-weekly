@@ -114,8 +114,8 @@ def test_main_omits_failed_english_trend_for_later_enrichment(monkeypatch, tmp_p
     })
     monkeypatch.setattr(build_data, "KEYWORDS", {"ui_categories": []})
     monkeypatch.setattr(build_data, "fetch_paper_meta", lambda papers: {})
-    monkeypatch.setattr(build_data, "create_client", lambda settings: object())
-    monkeypatch.setattr(build_data, "generate_trend", lambda client, papers: ([], []))
+    monkeypatch.setattr(build_data, "create_client", lambda settings, **kwargs: object())
+    monkeypatch.setattr(build_data, "generate_trend", lambda client, papers, **kwargs: ([], []))
 
     build_data.main(date_str="2026-07-10")
 
@@ -181,3 +181,80 @@ def test_trend_backoff_grows_and_does_not_sleep_after_last_attempt(monkeypatch):
     monkeypatch.setattr(build_data.time, "sleep", sleeps.append)
     assert build_data.generate_trend(client, []) == ([], [])
     assert sleeps == [10,20,25]
+
+
+def _trend_main_setup(monkeypatch, tmp_path, analysis):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "analyzed_papers.json").write_text("[]")
+    monkeypatch.setattr(build_data, "ROOT", tmp_path)
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "analysis": analysis,
+        "gemini": {"api_key_env": "GEMINI_API_KEY"},
+        "gemini_flash_lite": {"api_key_env": "GEMINI_API_KEY"},
+        "data": {"weekly_dir": "data/weekly", "index_file": "data/index.json"},
+    })
+    monkeypatch.setattr(build_data, "KEYWORDS", {"ui_categories": []})
+    monkeypatch.setattr(build_data, "fetch_paper_meta", lambda papers: {})
+    monkeypatch.setattr(build_data, "create_client", lambda settings, provider=None: provider)
+    return data_dir
+
+
+def test_main_falls_back_to_next_provider_for_trend(monkeypatch, tmp_path):
+    data_dir = _trend_main_setup(
+        monkeypatch, tmp_path, {"fallback_providers": ["gemini_flash_lite"], "trend_line_count": 3}
+    )
+    used = []
+
+    def fake_trend(client, papers, provider=None):
+        used.append(provider)
+        if provider == "gemini":
+            return [], []
+        return ["日1", "日2", "日3"], ["E1", "E2", "E3"]
+
+    monkeypatch.setattr(build_data, "generate_trend", fake_trend)
+
+    build_data.main(date_str="2026-10-09")
+
+    weekly = json.loads((data_dir / "weekly/2026-1009.json").read_text())
+    assert used == ["gemini", "gemini_flash_lite"]
+    assert weekly["trend"] == ["日1", "日2", "日3"]
+
+
+def test_main_does_not_call_fallback_when_primary_succeeds(monkeypatch, tmp_path):
+    _trend_main_setup(
+        monkeypatch, tmp_path, {"fallback_providers": ["gemini_flash_lite"], "trend_line_count": 3}
+    )
+    used = []
+
+    def fake_trend(client, papers, provider=None):
+        used.append(provider)
+        return ["a", "b", "c"], ["A", "B", "C"]
+
+    monkeypatch.setattr(build_data, "generate_trend", fake_trend)
+
+    build_data.main(date_str="2026-10-09")
+
+    assert used == ["gemini"]
+
+
+def test_generate_trend_uses_given_provider_model(monkeypatch):
+    calls = []
+
+    class Completions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            message = type("Message", (), {"content": json.dumps(["a", "b", "c"])})()
+            return type("Response", (), {"choices": [type("Choice", (), {"message": message})()]})()
+
+    client = type("Client", (), {"chat": type("Chat", (), {"completions": Completions()})()})()
+    monkeypatch.setattr(build_data, "SETTINGS", {
+        "ai": {"provider": "gemini"},
+        "gemini": {"model": "gemini-3.8-flash", "max_tokens": 100, "retry_max": 1, "retry_interval": 0},
+        "gemini_flash_lite": {"model": "gemini-3.5-flash-lite", "max_tokens": 100, "retry_max": 1, "retry_interval": 0},
+    })
+
+    build_data.generate_trend(client, [{"title": "T", "what": "W"}], provider="gemini_flash_lite")
+
+    assert calls[0]["model"] == "gemini-3.5-flash-lite"
