@@ -160,7 +160,7 @@ Do not configure retired Gemini 1.5 models as fallbacks.
 
 The repository currently selects Gemini. Gemini uses its official
 [OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
-with [`gemini-3.8-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash);
+with [`gemini-3.5-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash);
 the existing `openai` SDK is used for the compatible API. When selecting Gemini in GitHub
 Actions, add `GEMINI_API_KEY` under **Settings → Secrets and variables → Actions
 → New repository secret**. `GITHUB_TOKEN` remains in use for deployment.

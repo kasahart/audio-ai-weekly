@@ -251,7 +251,7 @@ def test_generate_trend_uses_given_provider_model(monkeypatch):
     client = type("Client", (), {"chat": type("Chat", (), {"completions": Completions()})()})()
     monkeypatch.setattr(build_data, "SETTINGS", {
         "ai": {"provider": "gemini"},
-        "gemini": {"model": "gemini-3.8-flash", "max_tokens": 100, "retry_max": 1, "retry_interval": 0},
+        "gemini": {"model": "gemini-3.5-flash", "max_tokens": 100, "retry_max": 1, "retry_interval": 0},
         "gemini_flash_lite": {"model": "gemini-3.5-flash-lite", "max_tokens": 100, "retry_max": 1, "retry_interval": 0},
     })
 
