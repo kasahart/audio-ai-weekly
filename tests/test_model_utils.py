@@ -48,7 +48,7 @@ class TestProviderConfiguration:
         assert settings["gemini"] == {
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
-            "model": "gemini-3.8-flash",
+            "model": "gemini-3.5-flash",
             "request_budget_group": "gemini",
             "request_limit_per_run": 80,
             "feature_max_tokens": 64000,

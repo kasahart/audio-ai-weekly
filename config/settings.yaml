@@ -149,7 +149,7 @@ github_models:
 gemini: &gemini_defaults
   api_key_env: "GEMINI_API_KEY"
   endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/"
-  model: "gemini-3.8-flash"
+  model: "gemini-3.5-flash"
   # 200-paper catch-up / 3-paper analysis batches require up to 67 requests;
   # leave additional budget for transient retries.
   request_budget_group: gemini
