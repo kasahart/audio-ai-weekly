@@ -167,7 +167,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: ${{ steps.slot.outputs.should_run == 'true' && ! inputs.dry_run }}
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
