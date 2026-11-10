@@ -1,0 +1,395 @@
+{
+  "title": "リアルタイム全二重音声言語モデルにおける遅延削減とターン管理の最前線",
+  "titleEn": "Frontiers of Latency Reduction and Turn Management in Real-Time Full-Duplex Speech Language Models",
+  "dek": "リアルタイム全二重音声言語モデルにおける最近の進展は、遅延、割り込み可能性、および多次元評価における重要なボトルネックをターゲットにしています。",
+  "dekEn": "Recent advances in real-time full-duplex speech language models target critical bottlenecks in latency, interruptibility, and multi-dimensional evaluation.",
+  "summaryEn": "Real-time full-duplex speech language models enable simultaneous listening and speaking, presenting unique challenges in computational asymmetry, conversational timing, and turn management. Traditional half-duplex systems rely on explicit turn boundaries, whereas full-duplex architectures must continuously process audio chunks, handle user interruptions, and execute backchannel responses. Recent research addresses these hurdles through diverse innovations. Speculative listening exploits idle compute during listening phases to pre-decode future chunks under assumed inputs, drastically reducing response latency and tool-call delays. For turn management, sophisticated reinforcement learning formulations—such as window likelihood objectives and action space projections—optimize yielding and holding behaviors without inducing conversational collapse or semantic degradation. Furthermore, post-training expert routing mechanisms allow lightweight duplex models to selectively escalate complex queries to stronger reasoning backbones. Comprehensive multi-dimensional benchmarks, including InteractionBench and MTR-DuplexBench, expose critical performance trade-offs across conversational timing, task accuracy, and multi-round consistency. Together, these developments outline a roadmap for robust, low-latency, and grounded voice assistants suitable for real-world deployment.",
+  "keyPointsEn": [
+    "Speculative listening leverages idle compute during listen chunks to pre-decode future responses, reducing decoding delay by up to 73%.",
+    "Window likelihood reinforcement learning and action space projections prevent zero-gradient traps and semantic degradation during interruption and backchannel training.",
+    "Comprehensive benchmarks like InteractionBench and MTR-DuplexBench reveal performance gaps in multi-round consistency, conversational timing, and groundedness between hosted and open full-duplex systems."
+  ],
+  "perspectives": [
+    {
+      "id": "speculative-decoding-and-latency",
+      "label": "推論デコーディングと推論の最適化",
+      "description": "アイドル時間と先読みリスティングを活用して、生成遅延を最小限に抑え、計算効率を向上させることに焦点を当てています。",
+      "labelEn": "Speculative Decoding and Inference Optimization",
+      "descriptionEn": "Focuses on utilizing idle time and speculative listening to minimize generation latency and improve computational efficiency.",
+      "sourceIds": [
+        "S1"
+      ]
+    },
+    {
+      "id": "reinforcement-learning-and-routing",
+      "label": "強化学習とエキスパートルーティング",
+      "description": "ウィンドウ尤度強化学習と事後訓練ルーティングを活用して、割り込み、相槌の決定、および推論のエスカレーションを最適化します。",
+      "labelEn": "Reinforcement Learning and Expert Routing",
+      "descriptionEn": "Leverages window likelihood reinforcement learning and post-training routing to optimize interruption, backchannel determination, and reasoning escalation.",
+      "sourceIds": [
+        "S3",
+        "S4",
+        "S6"
+      ]
+    },
+    {
+      "id": "multidimensional-evaluation-and-deployment",
+      "label": "多次元ベンチマークとシステム統合",
+      "description": "タイミング、タスク精度、およびグラウンディング全体にわたる包括的なパフォーマンス測定と、統合された音声および推論モデルの構築を重視します。",
+      "labelEn": "Multidimensional Benchmarks and System Integration",
+      "descriptionEn": "Emphasizes comprehensive performance measurement across timing, task accuracy, and grounding, alongside the construction of unified speech and reasoning models.",
+      "sourceIds": [
+        "S2",
+        "S5",
+        "S7",
+        "S8"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "why-needed",
+      "heading": "全二重音声における具体的な研究課題",
+      "headingEn": "The Concrete Research Problem in Full-Duplex Speech",
+      "blocks": [
+        {
+          "id": "block-why-needed-1",
+          "text": "リアルタイムの音声対話にはシームレスな双方向通信が求められますが、従来の対話アーキテクチャでは、人間の会話に自然に生じる重なりへの対応に苦慮してきました。全二重音声言語モデルにより、継続的なリスニングとスピーキングが可能になりますが、これらは音声チャンク間で深刻な計算の非対称性とタイミングの制約をもたらします。リスン・チャンクでは、入力音声を待つ間、処理能力がアイドル状態のまま放置される一方、スピーク・チャンクやツールコール・チャンクでは集約的な逐次生成が要求され、応答の開始が遅延します。従来の実践では、半二重のパイプラインや硬直したターン境界に大きく依存してきましたが、これらでは、頻繁な相槌、ユーザーによる割り込み、非同期の知識検索を優雅に処理することができません。その結果、研究者たちは、人間の会話ターンの間にある自然な200ミリ秒の隙間に合わせるために生成の遅延を最小限に抑えるという課題に直面していますが、それは意味的一貫性や事実に基づく根拠を犠牲にすることなく行われなければなりません。",
+          "textEn": "Real-time voice interaction requires seamless bidirectional communication, yet traditional dialogue architectures struggle with the natural overlap of human conversation. Full-duplex speech language models enable continuous listening and speaking, but they introduce severe computational asymmetries and timing constraints across audio chunks. Listen chunks leave processing power idle while awaiting incoming audio, whereas speak and tool-call chunks demand intensive serial generation that delays response onset. Prior practice relied heavily on half-duplex cascades or rigid turn boundaries, which fail to handle rapid backchannels, user interruptions, and asynchronous knowledge retrieval gracefully. Consequently, researchers face the challenge of minimizing generation lag to match the natural 200-millisecond gap between human conversational turns without sacrificing semantic coherence or factual groundedness.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S8"
+          ]
+        },
+        {
+          "id": "block-why-needed-2",
+          "text": "核心にある工学上の課題は、リアルタイム・ストリーミングのハードウェア制約と、大規模言語モデルのバックボーンが持つ重い計算要件とを調和させることにあります。ユーザーが継続的に話すとき、モデルは発話権を譲るべきか、それとも沈黙を維持すべきかを動的に衡量しなければなりませんが、この作業はネットワークのレイテンシや変動するサーバーの応答時間によって複雑化します。従来のパイプライン型システムでは、個別の自動音声認識、テキスト処理、音声合成の各モジュールを連鎖させるため、こうした遅延がさらに悪化し、その過程で極めて重要なパラ言語的手がかりが失われます。完全にエンドツーエンドのモデルはパイプライン型のエラーを軽減するものの、トークン単位の非効率性を悪化させ、素朴な強化学習目標で学習された場合には生成の繰り返しを招きます。こうした基礎的なハードルの理解は、言語的品質を低下させることなく1秒未満の応答性を実現するアーキテクチャを設計する上で不可欠です。",
+          "textEn": "The core engineering challenge lies in reconciling the hardware constraints of real-time streaming with the heavy computational requirements of large language model backbones. When users speak continuously, models must dynamically weigh whether to yield the floor or maintain silence, a task complicated by network latency and variable server response times. Traditional cascading systems compound these delays by chaining discrete automatic speech recognition, text processing, and text-to-speech modules, losing vital paralinguistic cues in the process. Fully end-to-end models alleviate cascading errors but exacerbate token-level inefficiencies and invite generative repetition if trained with naive reinforcement learning objectives. Understanding these foundational hurdles is essential for designing architectures that achieve sub-second responsiveness without degrading linguistic quality.",
+          "sourceIds": [
+            "S2",
+            "S6",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "heading": "音声アーキテクチャにおける技術的変遷の因果的順序",
+      "headingEn": "Causal Sequence of Technical Shifts in Voice Architectures",
+      "blocks": [
+        {
+          "id": "block-history-1",
+          "text": "対話型音声システムの進化は、個別の自動音声認識、テキストベースの大規模言語モデル、音声合成の各コンポーネントを連鎖させた、モジュール式のターンベースのパイプラインから始まりました。これらは柔軟性を備えているものの、累積するレイテンシに悩み、パラ言語的手がかりを失うという欠点がありました。この限界から、生オーディオストリームを直接処理できるエンドツーエンドの全二重音声言語モデルへの移行が促進されました。こうした二重システムの最適化に向けた初期の試みは、ターン取得の動態を管理するために生トークンの強化学習に依存していましたが、これらの手法はしばしば深刻な生成の崩壊と意味的反復を引き起こしました。その後のブレークスルーにより、タイミング制御がトークン選択から切り離され、割り込み処理のための閉形式の尤度目的が導入され、さらにアイドル状態の計算サイクルを活用するための投機的デコーディングが統合されたことで、研究の焦点は効率的で低レイテンシのランタイム実行へと移行しました。",
+          "textEn": "The evolution of conversational voice systems began with modular, turn-based cascades that chained separate automatic speech recognition, text-based large language models, and text-to-speech components. While flexible, these cascades suffered from compounding latency and lost paralinguistic cues. This limitation prompted a shift toward end-to-end full-duplex speech language models capable of processing raw audio streams directly. Early attempts to optimize these duplex systems relied on raw-token reinforcement learning to manage turn-taking dynamics, but these methods frequently induced severe generative collapse and semantic repetition. Subsequent breakthroughs decoupled timing control from token selection, introduced closed-form likelihood objectives for interruption handling, and integrated speculative decoding to exploit idle computational cycles, shifting the research focus toward efficient, low-latency runtime execution.",
+          "sourceIds": [
+            "S1",
+            "S4",
+            "S6"
+          ]
+        },
+        {
+          "id": "block-history-2",
+          "text": "エンドツーエンド型アーキテクチャが成熟するにつれて、研究者らは、長時間の複数ラウンドにわたる会話において、単一構造（モノリス）モデルが事実の正確さや複雑な推論に苦戦することに気づいた。この認識から、ポストトレーニングにおける専門家ルーティングや、MoshiRAGのような非同期型知識検索フレームワークといった、ハイブリッド型およびモジュール型の拡張機能の開発が促進された。モノリスネットワーク全体をスケーリングすることはリアルタイム推論を法外に高価なものにするため、それに続くこうした移行では、軽量なゲーティング機構とモジュール式検索パイプラインが導入された。これらのイノベーションにより、コンパクトな二重通信インターフェースが、自然な時間的間隔の間に外部の知識ソースやより強力な推論モデル動的に活用できるようになり、会話の流暢さと事実の信頼性の間の溝が埋められた。",
+          "textEn": "As end-to-end architectures matured, researchers recognized that monolithic models struggled with factual accuracy and complex reasoning during long, multi-round conversations. This realization spurred the development of hybrid and modular extensions, such as post-training expert routing and asynchronous knowledge retrieval frameworks like MoshiRAG. Instead of scaling entire monolithic networks—which renders real-time inference prohibitively expensive—these subsequent shifts introduced lightweight gating mechanisms and modular retrieval pipelines. These innovations allowed compact duplex interfaces to dynamically tap into external knowledge sources and stronger reasoning models during natural temporal gaps, bridging the gap between conversational fluidity and factual reliability.",
+          "sourceIds": [
+            "S3",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approaches",
+      "heading": "遅延とターン管理におけるメカニズムとトレードオフ",
+      "headingEn": "Mechanisms and Trade-Offs in Latency and Turn Management",
+      "blocks": [
+        {
+          "id": "block-approaches-1",
+          "text": "近年の手法は、独自の技術パラダイムを通じて計算上のボトルネックに対処している。先読みリスニング（スペキュラティブ・リスニング）は、後続の音声チャンクがモデルの出力を変更することはめったにないという観察に着目したもので、システムがアイドル状態のリスニング間隔中に、想定された無音状態で将来のチャンクを事前デコードすることを可能にする。このトレーニング不要のロスレスフレームワークは、発話およびツール呼び出しのチャンクを大幅に加速させるが、チャンク間の仮説プールの管理を必要とする。あるいは、ウィンドウ尤度定式化などの強化学習のイノベーションにより、割り込みやバックチャネルのトレーニング中のバイナリウィンドウ報酬に伴うゼロ勾配の罠とクレジット漏洩が解消される。さらに、行動空間射影により、音声のタイミング決定が意味的トークンの生成から切り離され、インタラクティブなシナリオ全体で応答レイテンシを最適化しながら、退行的な繰り返えし効果的に防止される。",
+          "textEn": "Recent methodologies address computational bottlenecks through distinct technical paradigms. Speculative listening capitalizes on the observation that subsequent audio chunks rarely alter model outputs, allowing systems to pre-decode future chunks under assumed silence during idle listening intervals. This training-free, lossless framework significantly accelerates speak and tool-call chunks but requires managing cross-chunk hypothesis pools. Alternatively, reinforcement learning innovations such as window likelihood formulations resolve the zero-gradient traps and credit leakage associated with binary window rewards during interruption and backchannel training. Furthermore, action space projections decouple speech timing decisions from semantic token generation, effectively preventing degenerative repetition while optimizing response latency across interactive scenarios.",
+          "sourceIds": [
+            "S1",
+            "S4",
+            "S6"
+          ]
+        },
+        {
+          "id": "block-approaches-2",
+          "text": "これと並行して、ポストトレーニングにおける専門家ルーティングは、レイテンシと推論の深さのバランスを取るためのスケーラブルな代替手段を提供する。MiniCPM-oなどのモデルのネイティブな聴取から発話への移行時に利用可能な隠れ状態に対してロジスティック失敗読み取り値を適合させることにより、システムは単純なクエリをローカルで即座にルーティングする一方で、複雑なタスクをより強力な推論バックボーンにエスカレーションすることができる。このゲーティング機構は、追加のモデル生成を必要とせず、基礎となるデュプレックスポリシーの再学習も回避する。同様に、Apriel Voiceなどの統合モデルは、2段階のトレーニング手順とローカル教師サービングを採用して、音声プロジェクターと推論バックボーンを共同で適応させる。これらのアプローチはタスク機能を首尾よく拡張する一方で、実践者はローカル推論速度、メモリオーバーヘッド、および非同期検索パイプラインの管理の複雑さの間のトレードオフに対処しなければならない。",
+          "textEn": "In parallel, post-training expert routing offers a scalable alternative for balancing latency and reasoning depth. By fitting logistic failure readouts on hidden states available at the native listen-to-speak transition of models like MiniCPM-o, systems can instantly route easy queries locally while escalating complex tasks to stronger reasoning backbones. This gating mechanism requires no additional model generation and avoids retraining the underlying duplex policy. Similarly, unified models such as Apriel Voice employ two-stage training procedures and local teacher serving to jointly adapt speech projectors and reasoning backbones. While these approaches successfully expand task capabilities, practitioners must navigate the trade-offs between local inference speed, memory overhead, and the complexity of managing asynchronous retrieval pipelines.",
+          "sourceIds": [
+            "S3",
+            "S5",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perspectives",
+      "heading": "二重モデルの最適化に関する補完的な視点",
+      "headingEn": "Complementary Perspectives on Duplex Model Optimization",
+      "blocks": [
+        {
+          "id": "block-perspectives-1",
+          "text": "現代の全二重音声AIを理解するには、推論先読み（スペキュラティブ・デコーディング）、強化学習によるルーティング、そしてシステム統合という、3つの補完的な次元を検証する必要があります。推論先読みの視点は、アイドルウィンドウ中のハードウェア利用率を最大化し、応答遅延を圧縮することに焦点を当てています。強化学習とルーティングの視点は、隠れ状態に対するロジスティック失敗読み出しなどのポストトレーニング機構を重視し、これによって軽量モデルが、デュプレックスポリシー全体を再トレーニングすることなく、複雑なクエリをより強力な推論バックボーンへと動的にエスカレーションできるようにします。最後に、多次元評価の視点は、これらのコンポーネントをApriel Voiceのような統合された音声推論モデルへと統合し、現実的な運用制約のもとで、直接的な音声処理、ツール呼び出し、および多ラウンドの会話の一貫性をバランスさせます。",
+          "textEn": "Understanding modern full-duplex speech AI requires examining three complementary dimensions: speculative decoding, reinforcement learning routing, and system integration. The speculative decoding perspective focuses on maximizing hardware utilization during idle windows to compress response delays. The reinforcement learning and routing perspective emphasizes post-training mechanisms, such as logistic failure readouts on hidden states, which enable lightweight models to dynamically escalate complex queries to stronger reasoning backbones without retraining the entire duplex policy. Finally, the multidimensional evaluation perspective integrates these components into unified speech-reasoning models like Apriel Voice, balancing direct audio processing, tool invocation, and multi-round conversational consistency under realistic operational constraints.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S5"
+          ]
+        },
+        {
+          "id": "block-perspectives-2",
+          "text": "それぞれの視点は最適化問題の異なる側面を浮き彫りにし、単一の技術ではすべての運用上の課題を解決できない理由を示しています。推論先読みはチャンクレベルの時間的非対称性をターゲットにする一方、強化学習技術は重なり合う発話やユーザーの中断中における行動制御に焦点を当てます。一方、システム統合の視点は、現実世界での展開が、複数の会話ターン、パラ言語的変動、および根拠に基づく知識検索にわたる頑健なベンチマークに大きく依存していることを強調します。これらの方針は総じて、研究者に対し、次世代音声アシスタントにおけるアーキテクチャのトレードオフを評価するための包括的な分類法を提供します。",
+          "textEn": "Each perspective highlights a different facet of the optimization problem, illustrating why no single technique solves all operational challenges. Speculative decoding targets temporal asymmetry at the chunk level, whereas reinforcement learning techniques focus on behavioral control during overlapping speech and user interruptions. Meanwhile, system integration perspectives emphasize that real-world deployment depends heavily on robust benchmarking across multiple conversational turns, paralinguistic variations, and grounded knowledge retrieval. Together, these viewpoints provide researchers with a comprehensive taxonomy for evaluating architectural trade-offs in next-generation voice assistants.",
+          "sourceIds": [
+            "S2",
+            "S4",
+            "S7",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "heading": "評価の課題とシステムの制限",
+      "headingEn": "Evaluation Challenges and System Limitations",
+      "blocks": [
+        {
+          "id": "block-limits-1",
+          "text": "アルゴリズムの大幅な進歩にもかかわらず、厳格な評価を行うことで、現在の全二重システムにおける根強い限界が明らかになります。InteractionBenchやMTR-DuplexBenchなどのベンチマークは、オープンな全二重モデルが、ホステッド型の対応モデルと比較して、より低い根拠性成功率を示し、マルチラウンドの会話全体で一貫したパフォーマンスを維持するのに苦労していることを実証しています。さらに、タイミングの測定値は、サーバー実装全体にわたるネットワーク遅延やプロトコルの違いによって大きく影響を受けます。ポストトレーニングによる専門家ルーティングやMoshiRAGのような非同期検索フレームワークは事実性や応答速度を向上させる一方で、オープンモデルは依然として、計算効率、パラ言語制御、およびマルチターン安定性の間のトレードオフに直面しています。研究者は、展開に向けた堅牢な音声アシスタントを設計する際、これらの評価の格差を考慮に入れなければなりません。",
+          "textEn": "Despite significant algorithmic progress, rigorous evaluation uncovers persistent limitations in current full-duplex systems. Benchmarks like InteractionBench and MTR-DuplexBench demonstrate that open full-duplex models achieve lower groundedness success rates and struggle to maintain consistent performance across multi-round conversations compared to hosted counterparts. Furthermore, timing measurements are heavily influenced by network delays and protocol differences across server implementations. While post-training expert routing and asynchronous retrieval frameworks like MoshiRAG improve factuality and response speed, open models still face trade-offs between computational efficiency, paralinguistic control, and multi-turn stability. Researchers must account for these evaluation disparities when designing robust voice assistants for deployment.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S7",
+            "S8"
+          ]
+        },
+        {
+          "id": "block-limits-2",
+          "text": "既存の評価プロトコルにおける重大な限界は、多くのベンチマークが単一ターンのインタラクションに厳格に焦点を当てているため、複数ターンにわたる会話の動態が軽視されている点にある。複数ターンの設定では、ターンの境界の曖昧化やコンテキストのドリフトが、モデルの信頼性を深刻に損なう。さらに、評価指標では、ネットワーク伝送の遅延と内部モデルの推論時間が混同されることが多く、ホスト型システムとローカル展開されたシステムの真の計算上のボトルネックが分かりにくくなっている。オープンソースモデルは現在、ささやき声や正確な音量調整といった、厳格な根拠付けやパラ言語的適応を必要とするタスクにおいて、商業的なホスト型ソリューションに遅れをとっている。これらの乖離は、オープンモデルと独自仕様の音声モデルの間で同等性を達成するには、標準化された複数ターンベンチマークと、実行時プロトコルのより厳格な監査が必要であることを示している。",
+          "textEn": "A critical limitation in existing evaluation protocols is the neglect of multi-round conversational dynamics, as many benchmarks focus strictly on single-turn interactions. In multi-round settings, blurred turn boundaries and context drift severely impair model reliability. Additionally, evaluation metrics often conflate network transmission latency with internal model inference time, obscuring the true computational bottlenecks of hosted versus locally deployed systems. Open-source models currently lag behind commercial hosted solutions in tasks requiring strict groundedness and paralinguistic adaptation, such as whispering or precise volume control. These gaps indicate that achieving parity between open and proprietary voice models requires standardized multi-round benchmarks and more rigorous auditing of runtime protocols.",
+          "sourceIds": [
+            "S2",
+            "S7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outlook",
+      "heading": "実用的な影響と将来の方向性",
+      "headingEn": "Practical Implications and Future Directions",
+      "blocks": [
+        {
+          "id": "block-outlook-1",
+          "text": "実務者や研究者にとって、これらの知見は、応答性が高く信頼性の高い音声アプリケーションを構築するための明確な道筋を提供する。推測デコーディングや学習後ルーティングを実装することで、開発者は、簡単なターンには即座に対応しつつ、複雑なクエリには深い推論を割り当てる効率的な二重通信モデルを展開できるようになる。しかし、ネットワークのオーバーヘッドを考慮するため、実務者はサーバーが報告する時計ではなく、クライアント側の音声タイムスタンプに対してレイテンシ指標を慎重に検証する必要がある。今後の研究は、複数ターン評価プロトコルの洗練、オープンな統合音声推論バックボーンの拡張、そしてオープンソースアーキテクチャとホスト型商業システムの間の性能差を埋めるための全二重プロトコルの標準化に焦点を当てる可能性が高い。",
+          "textEn": "For practitioners and researchers, these findings offer clear pathways for building responsive, reliable voice applications. Implementing speculative decoding and post-training routing enables developers to deploy efficient duplex models that handle easy turns instantly while reserving deep reasoning for complex queries. However, practitioners must carefully validate latency metrics against client-side audio timestamps rather than server-reported clocks to account for network overhead. Future research will likely focus on refining multi-round evaluation protocols, scaling open unified speech-reasoning backbones, and standardizing full-duplex protocols to bridge the performance gap between open-source architectures and hosted commercial systems.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S3",
+            "S5",
+            "S7"
+          ]
+        },
+        {
+          "id": "block-outlook-2",
+          "text": "最終的に、完全に統合された音声言語アーキテクチャへの移行は、現在のハードウェアおよび評価の障壁を克服できるかどうかにかかっている。開発者は、事実に基づく根拠の改善による利点と、プラグアンドプレイ型検索モジュールのメモリおよびレイテンシのオーバーヘッドを慎重に比較検討しなければならない。MTR-DuplexBenchやInteractionBenchのようなフレームワークが標準的な診断ツールとなるにつれて、コミュニティは複数ターンの劣化やパラ言語の不整合に対処できるようになる。研究者にとって、トレーニング不要の加速手法や、閉形式の強化学習目的を模索することは、本番環境において人間のような会話の流暢さと信頼性に向けて全二重モデルを拡張するために引き続き極めて重要である。",
+          "textEn": "Ultimately, the transition toward fully integrated speech-language architectures depends on overcoming current hardware and evaluation barriers. Developers must carefully weigh the memory and latency overhead of plug-and-play retrieval modules against the benefits of improved factual grounding. As frameworks like MTR-DuplexBench and InteractionBench become standard diagnostic tools, the community can systematically address multi-turn degradation and paralinguistic inconsistencies. For researchers, exploring training-free acceleration methods and closed-form reinforcement learning objectives will remain crucial for scaling full-duplex models toward human-like conversational fluency and reliability in production environments.",
+          "sourceIds": [
+            "S4",
+            "S7",
+            "S8"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-11-10T03:06:57.108998+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-11-10-primer-real-time-full-duplex-speech-models",
+  "type": "primer",
+  "date": "2026-11-10",
+  "generatedAt": "2026-11-10T03:06:57.108998+00:00",
+  "topicKey": "real-time-full-duplex-speech-models",
+  "searchTerms": [
+    "full-duplex speech language models",
+    "real-time voice systems",
+    "full-duplex models"
+  ],
+  "sources": [
+    {
+      "arxivId": "2611.06982",
+      "title": "Decode Before You Hear: Speculative Listening for Chunk-Interleaved Full-Duplex Speech Language Models",
+      "abstract": "Chunk-interleaved full-duplex speech language models listen and speak in fixed time chunks, and each chunk must be processed before the next one arrives. Their workload is asymmetric across chunks: listen chunks leave compute idle while awaiting audio, and speak and tool-call chunks require serial generation, which delays responses and tool calls. Using the idle compute for the next chunk requires decoding it before its audio arrives, under an assumed input. Taking silence as the assumed input and comparing the output with the output under real audio on four models, we observe two properties. First, the next audio chunk does not change the output in 95.3% of chunks. Second, 88% of changes begin at the first output token. Building on these properties, we propose Speculative Listening, a training-free, lossless framework for input-time self-speculative decoding. During idle time, the model drafts the next chunk under silence and, for changes at the first token, a second branch from the runner-up first token. It keeps all drafts in a cross-chunk hypothesis pool and verifies them when the audio arrives. On our eight-task benchmark TickTock-Bench, Speculative Listening speeds up speak chunks by 2.6-2.8x and tool-call chunks by up to 23.4x. On average, it reduces the decoding delay before a response starts by 73%, to 74-241 ms, close to the 200 ms gap between human turns, and the maximum lag behind real time by 94.4%.",
+      "authors": [
+        "Yutong Bian",
+        "Yanglin Zhang",
+        "Yuxiang Wang",
+        "Luoyuan Zhang",
+        "Rongshen He"
+      ],
+      "publishedAt": "2026-11-06",
+      "url": "https://arxiv.org/abs/2611.06982",
+      "origin": "archive",
+      "archiveDate": "2026-11-06",
+      "primaryLinks": [],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2611.02430",
+      "title": "InteractionBench: Measuring Timing, Task Accuracy, Whisper and Volume, and Grounding in Real-Time Voice Systems",
+      "abstract": "Most benchmarks for real-time voice systems focus on one aspect, such as turn-taking, instruction following, paralinguistic control, or conversational memory, each with its own data and set of systems. We present InteractionBench, a benchmark and evaluation harness that measures four dimensions on the same systems from the same recorded user audio: conversational timing, spoken-task accuracy, whisper and volume, and groundedness in conversations of more than twenty turns. The benchmark contains 221 items per system in thirteen scenarios. Before any system runs, we fix the expected floor-control actions for spoken tasks by rule and take the expected answers from scripted dialogues. We score whispering from the audio signal. We evaluate GPT-Live, GPT-Realtime, Gemini Live, Moshi, PersonaPlex, Freeze-Omni, and a turn-based cascade in 1,519 graded runs. Among the six full-duplex systems, timing and spoken-task accuracy are rank-correlated ($ρ= 0.83$), while the cascade has the highest spoken-task score (38/50) and the second-lowest timing score. No system corrects a user's grammar within the required window. Only Gemini Live whispers on most requests (8/10). Hosted systems pass 67-88% of groundedness probes, compared with 14-35% for open full-duplex models. Timing is measured where the client hears each system, so the timing of hosted systems includes network delay: for GPT-Live, whose server reports its own clock, removing a delay of about 1.5 s lowers its timing score from 86% to 56%. We also document where the protocol differs across systems, including the text instructions.",
+      "authors": [
+        "Richard Yucheng He",
+        "Chen Xu",
+        "Yihang Liu",
+        "Tairan Chen",
+        "Baodong Cao"
+      ],
+      "publishedAt": "2026-11-06",
+      "url": "https://arxiv.org/abs/2611.02430",
+      "origin": "archive",
+      "archiveDate": "2026-11-06",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2611.01639",
+      "title": "Local or Escalate? Post-Training Expert Routing for Real-Time Duplex Speech Models",
+      "abstract": "A full-duplex model should answer easy questions immediately, but hard questions often need stronger reasoning, which may require waiting. The challenge is to choose between these paths at the moment the model begins to speak. Recent systems learn related mode decisions through special-token generation inside the dialogue model, coupling routing to turn-taking and temporally annotated full-duplex training. We study a post-training alternative. We freeze MiniCPM-o 4.5, using only its speech input and output, and fit a logistic failure readout on hidden states already available at its native listen-to-speak transition. The resulting gate requires no additional model generation and exposes thresholds that can be retuned without changing the duplex policy. A probe fitted on text-input states also reads the states of spoken questions, including unseen human recordings. On the internal benchmark, selective handoff improves answer accuracy by 27.1 points. Compared with always using the expert, it reduces mean server time to first answer audio by 31.5 percent. It also outperforms matched random routing across external speech question-answering pools, as well as a zero-shot GPT-5.4 mini router that rates the transcribed question. The training recipe also transfers to a second duplex model family. These results show that an existing duplex model can be equipped to answer easy turns immediately and wait for stronger reasoning or fresher knowledge on the turns that need it, without further duplex training.",
+      "authors": [
+        "Ruoyu He",
+        "Jisen Li",
+        "Anthony Ji",
+        "Changyi Yang",
+        "Zetian Li"
+      ],
+      "publishedAt": "2026-11-06",
+      "url": "https://arxiv.org/abs/2611.01639",
+      "origin": "archive",
+      "archiveDate": "2026-11-06",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2610.35581",
+      "title": "Integrate the Reward, Don't Sample It: Window Likelihood for Interruptions and Backchannels in Full-Duplex Speech Models",
+      "abstract": "A full-duplex spoken dialogue model must yield when the user cuts in and hold when the user merely backchannels. Sequence-level RL with a timing reward (GRPO) is the usual recipe; we test its whole-rollout form on four open models and find two failures. A binary window reward gives zero advantage on exactly the windows that most need learning (a zero-gradient trap), and the one score per rollout is spread over listening-state decisions the reward is not written in terms of (credit leakage), so the model talks into silence or stops answering. Both come from sampling a reward that is a known function of a few binary control decisions. We propose \\emph{window likelihood} (\\WL): sample a continuation per window, but integrate in closed form over the stop decisions it visits and maximise the log-probability of acting correctly---a noisy-OR for yielding, a survival product for holding. On HumDial-FDBench, \\WL\\ gives the best yield/hold F1 on all six structurally different open models we post-train, exceeds Kyutai's released GRPO checkpoints (trained on different data), and adds no re-opening of the floor on any model.",
+      "authors": [
+        "Guoqiang Hu",
+        "Lichao Zhang",
+        "Yizhou Peng",
+        "Yuhao Luo",
+        "Haifeng Hu"
+      ],
+      "publishedAt": "2026-10-30",
+      "url": "https://arxiv.org/abs/2610.35581",
+      "origin": "archive",
+      "archiveDate": "2026-10-30",
+      "primaryLinks": [],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2610.40738",
+      "title": "Apriel Voice 27B Preview: An Open Model for Speech, Reasoning, and Tool Use",
+      "abstract": "A capable voice assistant must do more than recognize words; it must understand requests, reason over context, sustain conversations, and act through tools. We present Apriel Voice 27B Preview, an open speech-language model that unifies these capabilities within a shared reasoning backbone while retaining text and image input modalities. Built on the post-trained Gemma 4 26B-A4B checkpoint, Apriel Voice directly processes speech and generates both responses and tool calls without requiring a separate dialogue model. We introduce a two-stage training procedure to adapt the model to speech. The first stage establishes the speech interface, while the second jointly adapts the projector and backbone through supervised fine-tuning, text replay, and source-dependent cross-entropy and forward Kullback--Leibler divergence supervision. Automatically constructed speech-conditioned dialogues provide conversational training data, while local teacher serving, overlapping teacher and student computation, and fused full-vocabulary losses enable efficient online distillation. In thinking mode, Apriel Voice achieves a score of 98.90 on Big Bench Audio, 81.13 on Speech-BFCL, and a task success rate of 65.51% on $τ$-Voice, with a mean latency of 1.91 seconds. It also achieves 51.27% English EVA accuracy and 74.13% experience pass@1. Finally, we deploy Apriel Voice 27B Preview on a custom serving platform to support interactive voice interactions.",
+      "authors": [
+        "Aman Tiwari",
+        "Akshay Kalkunte",
+        "Akintunde Oladipo",
+        "Jash Shah",
+        "Tara Bogavelli"
+      ],
+      "publishedAt": "2026-10-30",
+      "url": "https://arxiv.org/abs/2610.40738",
+      "origin": "archive",
+      "archiveDate": "2026-10-30",
+      "primaryLinks": [
+        {
+          "label": "Project",
+          "url": "https://servicenow-ai-apriel.hf.space/home"
+        }
+      ],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2604.10065",
+      "title": "ASPIRin: Action Space Projection for Interactivity-Optimized Reinforcement Learning in Full-Duplex Speech Language Models",
+      "abstract": "End-to-end full-duplex Speech Language Models (SLMs) require precise turn-taking for natural interaction. However, optimizing temporal dynamics via standard raw-token reinforcement learning (RL) degrades semantic quality, causing severe generative collapse and repetition. We propose ASPIRin, an interactivity-optimized RL framework that explicitly decouples when to speak from what to say. Using Action Space Projection, ASPIRin maps the text vocabulary into a coarse-grained binary state (active speech vs. inactive silence). By applying Group Relative Policy Optimization (GRPO) with rule-based rewards, it balances user interruption and response latency. Empirical evaluations show ASPIRin optimizes interactivity across turn-taking, backchanneling, and pause handling. Crucially, isolating timing from token selection preserves semantic coherence and reduces the portion of duplicate n-grams by over 50% compared to standard GRPO, effectively eliminating degenerative repetition.",
+      "authors": [
+        "Chi-Yuan Hsiao",
+        "Ke-Han Lu",
+        "Yu-Kuan Fu",
+        "Guan-Ting Lin",
+        "Hsiao-Tsung Hung",
+        "Hung-yi Lee"
+      ],
+      "publishedAt": "2026-04-11T07:07:08Z",
+      "url": "https://arxiv.org/abs/2604.10065",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2511.10262",
+      "title": "MTR-DuplexBench: Towards a Comprehensive Evaluation of Multi-Round Conversations for Full-Duplex Speech Language Models",
+      "abstract": "Full-Duplex Speech Language Models (FD-SLMs) enable real-time, overlapping conversational interactions, offering a more dynamic user experience compared to traditional half-duplex models. However, existing benchmarks primarily focus on evaluating single-round interactions, neglecting the complexities of multi-round communication. Evaluating FD-SLMs in multi-round settings poses significant challenges, including blurred turn boundaries in communication and context inconsistency during model inference. Also, existing benchmarks often focus solely on evaluating conversational features, neglecting other critical aspects. To address these gaps, we introduce MTR-DuplexBench, a novel benchmark designed for a comprehensive multi-round evaluation of FD-SLMs. MTR-DuplexBench not only segments continuous full-duplex dialogues into discrete turns for turn-by-turn assessment but also incorporates various evaluation aspects, including conversational features, dialogue quality, instruction following, and safety. Experimental results reveal that current FD-SLMs face difficulties in maintaining consistent performance across multiple rounds and evaluation dimensions, highlighting the necessity and effectiveness of our benchmark. Code and data are available at: https://github.com/ZhangHe0918/MTR-DuplexBench",
+      "authors": [
+        "He Zhang",
+        "Wenqian Cui",
+        "Haoning Xu",
+        "Xiaohui Li",
+        "Lei Zhu",
+        "Haoli Bai",
+        "Shaohua Ma",
+        "Irwin King"
+      ],
+      "publishedAt": "2025-11-13T12:50:04Z",
+      "url": "https://arxiv.org/abs/2511.10262",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2604.12928",
+      "title": "MoshiRAG: Asynchronous Knowledge Retrieval for Full-Duplex Speech Language Models",
+      "abstract": "Speech-to-speech language models have recently emerged to enhance the naturalness of conversational AI. In particular, full-duplex models are distinguished by their real-time interactivity, including handling of pauses, interruptions, and backchannels. However, improving their factuality remains an open challenge. While scaling the model size could address this gap, it would make real-time inference prohibitively expensive. In this work, we propose MoshiRAG, a modular approach that combines a compact full-duplex interface with selective retrieval to access more powerful knowledge sources. Our asynchronous framework enables the model to identify knowledge-demanding queries and ground its responses in external information. By leveraging the natural temporal gap between response onset and the delivery of core information, the retrieval process can be completed while maintaining a natural conversation flow. With this approach, MoshiRAG achieves factuality comparable to the best publicly released non-duplex speech language models while preserving the interactivity inherent to full-duplex systems. Moreover, our flexible design supports plug-and-play retrieval methods without retraining and demonstrates strong performance on out-of-domain mathematical reasoning tasks.",
+      "authors": [
+        "Chung-Ming Chien",
+        "Manu Orsini",
+        "Eugene Kharitonov",
+        "Neil Zeghidour",
+        "Karen Livescu",
+        "Alexandre Défossez"
+      ],
+      "publishedAt": "2026-04-14T16:17:52Z",
+      "url": "https://arxiv.org/abs/2604.12928",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 11,
+  "readTimeMinutesEn": 6,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-11-10T03:06:57.108998+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 0
+  }
+}

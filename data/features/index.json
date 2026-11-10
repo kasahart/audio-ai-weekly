@@ -1,6 +1,36 @@
 {
   "features": [
     {
+      "slug": "2026-11-10-primer-real-time-full-duplex-speech-models",
+      "type": "primer",
+      "date": "2026-11-10",
+      "readTimeMinutes": 11,
+      "readTimeMinutesEn": 6,
+      "sourceCount": 8,
+      "title": "リアルタイム全二重音声言語モデルにおける遅延削減とターン管理の最前線",
+      "titleEn": "Frontiers of Latency Reduction and Turn Management in Real-Time Full-Duplex Speech Language Models",
+      "dek": "リアルタイム全二重音声言語モデルにおける最近の進展は、遅延、割り込み可能性、および多次元評価における重要なボトルネックをターゲットにしています。",
+      "dekEn": "Recent advances in real-time full-duplex speech language models target critical bottlenecks in latency, interruptibility, and multi-dimensional evaluation.",
+      "file": "2026-11-10-primer-real-time-full-duplex-speech-models.json",
+      "topicKey": "real-time-full-duplex-speech-models",
+      "searchTerms": [
+        "full-duplex speech language models",
+        "real-time voice systems",
+        "full-duplex models"
+      ],
+      "sourcePaperIds": [
+        "2611.06982",
+        "2611.02430",
+        "2611.01639",
+        "2610.35581",
+        "2610.40738",
+        "2604.10065",
+        "2511.10262",
+        "2604.12928"
+      ],
+      "generatedAt": "2026-11-10T03:06:57.108998+00:00"
+    },
+    {
       "slug": "2026-10-27-debate-speech-separation-paradigms-generative-adaptive-efficient",
       "type": "debate",
       "date": "2026-10-27",
@@ -245,5 +275,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-10-27T03:10:32.309354+00:00"
+  "generatedAt": "2026-11-10T03:06:57.108998+00:00"
 }
