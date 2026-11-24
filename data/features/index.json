@@ -1,6 +1,37 @@
 {
   "features": [
     {
+      "slug": "2026-11-24-debate-audio-llm-evidence-grounding-and-faithfulness",
+      "type": "debate",
+      "date": "2026-11-24",
+      "readTimeMinutes": 10,
+      "readTimeMinutesEn": 6,
+      "sourceCount": 8,
+      "title": "大規模音声言語モデルにおける音響エビデンスのアース接続と忠実性",
+      "titleEn": "Acoustic Evidence Grounding and Faithfulness in Large Audio-Language Models",
+      "dek": "音声LLMが入力音声を真に聴き取っているかを検証するため、内部アテンションの読み出し、テスト時潜在最適化、反実仮想的因果監査を比較検討する。",
+      "dekEn": "A examination of whether audio LLMs truly hear their inputs, comparing internal attention readouts, test-time latent optimizations, and counterfactual causal auditing.",
+      "file": "2026-11-24-debate-audio-llm-evidence-grounding-and-faithfulness.json",
+      "topicKey": "audio-llm-evidence-grounding-and-faithfulness",
+      "searchTerms": [
+        "large audio-language models",
+        "head-guided decoding",
+        "acoustic backtracking",
+        "counterfactual auditing"
+      ],
+      "sourcePaperIds": [
+        "2611.25960",
+        "2611.15463",
+        "2611.15439",
+        "2611.18112",
+        "2611.25789",
+        "2506.07233",
+        "2603.17231",
+        "2604.17248"
+      ],
+      "generatedAt": "2026-11-24T03:05:51.791231+00:00"
+    },
+    {
       "slug": "2026-11-10-primer-real-time-full-duplex-speech-models",
       "type": "primer",
       "date": "2026-11-10",
@@ -275,5 +306,5 @@
       "generatedAt": "2026-07-16T03:02:00.739750+00:00"
     }
   ],
-  "generatedAt": "2026-11-10T03:06:57.108998+00:00"
+  "generatedAt": "2026-11-24T03:05:51.791231+00:00"
 }

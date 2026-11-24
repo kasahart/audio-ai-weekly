@@ -1,0 +1,384 @@
+{
+  "title": "大規模音声言語モデルにおける音響エビデンスのアース接続と忠実性",
+  "titleEn": "Acoustic Evidence Grounding and Faithfulness in Large Audio-Language Models",
+  "dek": "音声LLMが入力音声を真に聴き取っているかを検証するため、内部アテンションの読み出し、テスト時潜在最適化、反実仮想的因果監査を比較検討する。",
+  "dekEn": "A examination of whether audio LLMs truly hear their inputs, comparing internal attention readouts, test-time latent optimizations, and counterfactual causal auditing.",
+  "summaryEn": "Large Audio-Language Models (LALMs) show impressive competence on standard audio and speech benchmarks, but their textual outputs frequently diverge from their internal acoustic processing. This research feature examines three distinct technical paradigms addressing this gap: internal attention extraction and decoding, test-time latent optimization via backtracking, and rigorous counterfactual auditing. While internal readout methods exploit existing neural pathways without retraining to improve temporal event alignment and suppress hallucinations, test-time optimization dynamically engages audio latents to resolve complex reasoning tracks. Conversely, counterfactual auditing paradigms expose severe inconsistencies between model accuracy and true causal grounding, proving that high benchmark scores do not guarantee faithful audio reliance. Together, these frameworks reveal that bridging the gap between perceptual attention and textual synthesis requires moving beyond conventional accuracy metrics toward causally verified, spatially aware, and semantically grounded acoustic decoding.",
+  "keyPointsEn": [
+    "Audio LLMs often internalize accurate temporal and acoustic information within specific attention heads or latent states even when their generated text omits or hallucinates events.",
+    "Test-time dynamic optimization frameworks allow models to actively backtrack to crucial acoustic patches, resolving multi-step reasoning failures without introducing offline distribution drift.",
+    "Counterfactual auditing demonstrates that standard accuracy benchmarks mask widespread causal unfaithfulness, where target-absent audio inputs outscore target-present inputs."
+  ],
+  "perspectives": [
+    {
+      "id": "internal-head-decoding",
+      "label": "内部表現と直接的アテンション読み出し",
+      "description": "凍結された内部アテンションヘッドやニューロン活性化から音響・時間・意味の整合性を直接抽出し、計算コストのかかる再学習を伴わずにゼロショットでのハルシネーション軽減と正確なタイムスタンプ付与を実現することを支持する立場。",
+      "labelEn": "Internal Representation and Direct Attention Readout",
+      "descriptionEn": "Advocates for extracting acoustic, temporal, and semantic alignment directly from frozen internal attention heads or neuron activations, enabling zero-shot hallucination mitigation and precise timestamping without computational re-training.",
+      "sourceIds": [
+        "S1",
+        "S5",
+        "S6",
+        "S7"
+      ]
+    },
+    {
+      "id": "testtime-latent-optimization",
+      "label": "テスト時の音響バックトラッキングと能動的潜在最適化",
+      "description": "推論時の能動的介入に焦点を当て、実行中に特定の音声スパンに対して思考ベクトルを動的に最適化することで、キャリブレーションと多段階推論性能を最大化する手法。",
+      "labelEn": "Test-Time Acoustic Backtracking and Active Latent Optimization",
+      "descriptionEn": "Focuses on active inference-time intervention, dynamically optimizing thought vectors against specific audio spans to maximize calibration and multi-step reasoning performance during execution.",
+      "sourceIds": [
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "id": "counterfactual-causal-auditing",
+      "label": "反実仮想的検証と因果エビデンス監査",
+      "description": "ベンチマーク精度や確率低下だけではエビデンスへの根拠付けを保証できないと主張し、真の聴覚依存性を検証するために厳密な音源削除や反実仮想的介入を求める立場。",
+      "labelEn": "Counterfactual Verification and Causal Evidence Auditing",
+      "descriptionEn": "Maintains that benchmark accuracy and probability drops fail to guarantee evidence grounding, requiring rigorous sound-source deletion and counterfactual intervention to verify genuine auditory dependence.",
+      "sourceIds": [
+        "S2",
+        "S8"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "current-signal",
+      "heading": "音声言語モデルにおける表面的な精度のパラドックス",
+      "headingEn": "The Surface Accuracy Paradox in Audio Language Models",
+      "blocks": [
+        {
+          "id": "cs-b1",
+          "text": "大規模音声言語モデル（LALM）は、音声認識、オーディオキャプション生成、音響イベント検出において最先端の能力を示しています。しかし、近年の実証評価により構造的なパラドックスが明らかになりました。正しいテキスト出力の裏に、音響的根拠付けの深刻な破綻が隠れていることが少なくありません。システムは、偽相関や言語の事前分布、誤った音声アテンションに依存しながら、正確な回答を生成することが常態化しています。この乖離は時間的ローカライゼーション、音源特定、空間マルチチャネル処理に現れます。標準的な精度指標は表面的な正確性を評価するものの、モデルの生成が生の音響入力に因果的に定着しているかは検証できません。その結果、高リスク環境での運用では根拠のないハルシネーションやバイアスのある生成、信頼度キャリブレーションの低下というリスクが生じます。",
+          "textEn": "Large Audio-Language Models (LALMs) demonstrate state-of-the-art capabilities across speech recognition, audio captioning, and sound event detection. However, recent empirical evaluations reveal a structural paradox: correct textual outputs often mask severe underlying failures in acoustic grounding. Systems routinely produce accurate answers while relying on spurious correlations, language priors, or misaligned audio attention mass. This divergence manifests across temporal localization, sound source identification, and spatial multi-channel processing. Standard accuracy metrics evaluate surface correctness but fail to verify whether a model's generation is causally anchored in the raw acoustic input. Consequently, deployments in high-stakes environments risk ungrounded hallucinations, biased generations, and degraded confidence calibration.",
+          "sourceIds": [
+            "S1",
+            "S2",
+            "S5",
+            "S8"
+          ]
+        },
+        {
+          "id": "cs-b2",
+          "text": "こうしたグラウンディングの失敗に対し、研究は3つの手法へ分化しています。非侵襲的な内部読み出し機構、アクティブなテスト時潜在最適化、反事実的な因果監査です。内部読み出し手法は、隠れアテンションマップや活性化状態を調べることで、トークンのデコーディングを知覚的根拠と直接一致させます。テスト時最適化アルゴリズムにより、フリーズされたモデルは複雑な推論チェーンの途中で音響スパンを動的にバックトラックし再検証できます。一方、因果監査プロトコルは生音声を操作してモデルが音源を正しく処理しているかを検証する厳格な反事実テストを確立します。信頼性の高い音声知能の構築には、これらパラダイム間のダイナミクス理解が不可欠です。",
+          "textEn": "In response to these grounding failures, research has split into three distinct methodology vectors: non-invasive internal readout mechanisms, active test-time latent optimization, and counterfactual causal auditing. Internal readout techniques inspect hidden attention maps and activation states to align token decoding directly with perceptual evidence. Test-time optimization algorithms allow frozen models to dynamically backtrack and re-examine acoustic spans during complex reasoning chains. Meanwhile, causal auditing protocols establish strict counterfactual tests by manipulating raw audio streams to verify whether models process sound sources correctly. Understanding the dynamics between these paradigms is essential for building reliable audio intelligence.",
+          "sourceIds": [
+            "S1",
+            "S3",
+            "S5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "positions",
+      "heading": "忠実な音声推論に向けた3つの手法論的アプローチ",
+      "headingEn": "Three Methodological Trajectories for Faithful Audio Reasoning",
+      "blocks": [
+        {
+          "id": "pos-b1",
+          "text": "内部表現メカニズムの擁護者は、LALMが隠れ層内で詳細な音響イベントを追跡しているものの、最終的なテキストトークン生成で失敗していると主張します。全パラメーターを再学習するのではなく、このパラダイムでは内部の神経経路からタイミング、感情、存在信号を直接抽出します。Wooらは特定のアテンションヘッドが音響イベント区間を動的に追跡していることを示し、推論時にヘッド誘導デコーディングでトークン候補をスコア再計算することで追加学習なしにタイムスタンプを大幅に改善しました。同様にSunらはLatentLensで文脈化テキスト表現をプローブし、アテンション領域内の意味的裏付けに基づいて実際のイベントとハルシネーションを区別できることを示しました。Hsuらは対照的なAudio-Aware Decodingを用いて文脈依存ロジットを分離し、Zhaoらは因果作用を持つ感情感応ニューロンへの介入により音声生成を制御しています。",
+          "textEn": "Proponents of internal representation mechanisms argue that LALMs already track detailed acoustic events within their hidden layers, but fail during final textual token generation. Rather than retraining entire parameter bases, this paradigm extracts timing, emotion, or presence signals directly from internal neural pathways. Woo et al. demonstrate that specific attention heads track sound event intervals dynamically; using head-guided decoding at inference time rescores token candidates and dramatically improves event timestamps without additional model training. Similarly, Sun et al. show that probing contextualized text representations via LatentLens distinguishes real events from hallucinated ones based on semantic support within attended audio regions. Hsu et al. use contrastive Audio-Aware Decoding to isolate context-dependent logits, while Zhao et al. steer speech generation by intervening on causally actionable emotion-sensitive neurons.",
+          "sourceIds": [
+            "S1",
+            "S5",
+            "S6",
+            "S7"
+          ]
+        },
+        {
+          "id": "pos-b2",
+          "text": "テスト時潜在最適化の推進派は、単一パスによる静的なエンコードでは複雑な複数ステップの推論が制限されると主張する。フレームレベルの音響情報は、言語主導の空間へマッピングされる際に薄れてしまう。これに対処するため、Heらは分離型オーディオ潜在推論（DeALR）を導入し、スパンレベルの音響バックトラッキングを介して、学習可能な思考トークンと特定の音響セグメントとの間に動的な相互作用ループを確立した。バックトラッキングと分離型オーディオ潜在最適化を組み合わせることで、モデルは分布ドリフトを引き起こさずにテキスト合成前に潜在軌跡を能動的に洗練させる。さらに能動的知覚を空間次元へ拡張し、YouらはSpheraAudioを提案して、空間マルチモーダルRoPEと多段階アライメントにより多領域の空間オーディオを単一のトークンストリームへマッピングした。この構造戦略により、空間シーンの幾何構造に対する明示的で段階的な空間思考チェーン推論が可能となる。",
+          "textEn": "Advocates of test-time latent optimization argue that static single-pass encoding limits complex multi-step reasoning. Frame-level acoustic information gets diluted when mapped into language-dominated spaces. To address this, He et al. introduce Decoupled Audio Latent Reasoning (DeALR), establishing a dynamic interaction loop between learnable thought tokens and targeted acoustic segments via span-level acoustic backtracking. By pairing backtracking with Decoupled Audio-Latent Optimization, the model actively refines latent trajectories before text synthesis without introducing distribution drift. Extending active perception to spatial dimensions, You et al. propose SpheraAudio, mapping multi-channel spatial audio into unified token streams via Spatial Multimodal RoPE and multi-stage alignment. This architectural strategy enables explicit step-by-step spatial chain-of-thought reasoning over spatial scene geometry.",
+          "sourceIds": [
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "id": "pos-b3",
+          "text": "一方で、反事実的検証の立場からは、厳密な因果介入を行わない限り、内部の活性化や確信度の高まりだけで実際の音響依存を証明することはできないと主張される。ZhangらはTRACE検証フレームワークを定式化し、制御された音響混合物からターゲット音源と競合する音イベントを選択的に削除した。その結果、標準的な確率チェックでは、ターゲットが存在しない音声入力がターゲットが存在する入力と同等以上のモデルスコアを獲得する体系的な順序付けの破綻を見落とすことが示された。LinらはVIBEを用いて因果検証を自由形式の音声出力へと拡張し、現実世界の音声入力が属性グループ間でどのように自由形式の生成バイアスを引き起こすかを評価している。この学派は、あらゆる運用保証の前に検証主導の確認を行わなければならないと主張する。",
+          "textEn": "Conversely, the counterfactual auditing perspective asserts that internal activations and confidence gains cannot prove actual auditory reliance without strict causal interventions. Zhang et al. formulate the TRACE auditing framework, which selectively deletes target sound sources and competing sound events from controlled acoustic mixtures. Their findings indicate that standard probability checks miss systematic ordering failures where a target-absent audio input yields equal or higher model scores than a target-present input. Lin et al. extend causal auditing to open-ended speech outputs with VIBE, evaluating how real-world voice inputs trigger open-ended generative biases across demographics. This school contends that audit-driven verification must precede any deployment guarantees.",
+          "sourceIds": [
+            "S2",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "heading": "アテンション、最適化、監査に関する実証的知見",
+      "headingEn": "Empirical Findings Across Attention, Optimization, and Auditing",
+      "blocks": [
+        {
+          "id": "ev-b1",
+          "text": "実証結果は内部デコーディング戦略の主張を裏付けている。Wooらは、ヘッド誘導型デコーディングにより、新しく録音された評価セットにおける音イベントタイミングの平均積集合（mIoU）スコアが、ベースラインの0.07〜0.36から0.48〜0.56へと向上することを実証した。Sunらは、生成された音トークンと局所化された音声表現との間の意味的整合性を分析することで差分オーディオマスキングが可能となり、実際の音響内容を維持しながらハルシネーションを効果的に抑制できることを示した。Hsuらは、Audio-Aware Decodingが物体ハルシネーションデータセットにおいて0.046から0.428という大幅なF1スコア改善を達成し、全般的な音声質問応答精度を最大10.3%向上させることを示している。さらにZhaoらは、特定の感情感受性ニューロンへ介入することで、言語出力を損なうことなく未知の話し手に対して確実な感情制御を実現できることを証明した。",
+          "textEn": "Empirical results validate the claims of internal decoding strategies. Woo et al. establish that head-guided decoding raises mean Intersection over Union (mIoU) scores for sound event timing from baseline ranges of 0.07-0.36 up to 0.48-0.56 on newly recorded evaluation sets. Sun et al. demonstrate that analyzing semantic alignment between generated sound tokens and localized audio representations enables differential audio masking, effectively suppressing hallucinations while preserving real acoustic content. Hsu et al. show that Audio-Aware Decoding achieves substantial F1 improvements between 0.046 and 0.428 across object hallucination datasets while enhancing general audio question-answering accuracy by up to 10.3%. Furthermore, Zhao et al. prove that intervening on targeted emotion-sensitive neurons achieves reliable emotion steering across unseen speakers without degrading linguistic output.",
+          "sourceIds": [
+            "S1",
+            "S5",
+            "S6",
+            "S7"
+          ]
+        },
+        {
+          "id": "ev-b2",
+          "text": "能動的な最適化パラダイムは、マルチステップの音響推論とキャリブレーションにおいて顕著な向上を示しています。DeALRは、軌道探索をテキスト生成から切り離すことで、思考ベクトルの最適化中に分布シフトを軽減し、従来のテスト時最適化ベンチマークを継続的に上回っています。空間ドメインにおいては、SpheraAudioとSpheraQAベンチマークの組み合わせが、モノラル、ステレオ、および1次アンビソニックス形式にわたって、SOTA（最高水準）の定位、トラッキング、および幾何学的推論性能を達成しています。しかし、TRACE反事実監査により、主要な8つのLALMに潜む不誠実性が明らかになりました。正解となったターゲット識別の6.3%が厳格な音源順序チェックに失敗しており、低SN比（S/N比）のノイズ環境下では失敗率が8.4%に上昇します。さらにVIBEは、人間の声のバリエーションが、オープンエンドな生成応答において統計的に有意な分布シフトを引き起こすことを示しています。",
+          "textEn": "Active optimization paradigms demonstrate marked gains in multi-step acoustic reasoning and calibration. DeALR consistently outperforms conventional test-time optimization benchmarks by decoupling trajectory search from textual generation, mitigating distribution shift while optimizing thought vectors. In spatial domains, SpheraAudio paired with the SpheraQA benchmark achieves state-of-the-art localization, tracking, and geometric reasoning performance across mono, stereo, and First-Order Ambisonics formats. However, TRACE counterfactual auditing reveals latent unfaithfulness across 8 prominent LALMs: 6.3% of correct target identifications fail strict source-ordering checks, with failure rates rising to 8.4% under noisy low Signal-to-Noise Ratio (SNR) conditions. In addition, VIBE shows that human voice variations trigger statistically significant distributional shifts in open-ended generative responses.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S4",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "heading": "評価前提の分析的比較",
+      "headingEn": "Analytical Comparison of Evaluation Assumptions",
+      "blocks": [
+        {
+          "id": "eval-b1",
+          "text": "これらの手法を比較すると、音声言語モデルにおける妥当性を何が構成するかに関して根本的な意見の相違が浮き彫りになります。内部読み出しフレームワークは、標準的な自己回帰テキスト生成では表面化できない潜在的な知覚的認識をニューラルネットワークが備えているという前提の下で機能します。その成功の主な指標は、基盤となるモデル重みを修正することなく既存の活性化を活用する、潜在的アライメントの抽出効率です。しかし、この前提は、内部アテンションマップが真の音響意味論を正確に反映していることに依存しており、Sunらは、幻覚された音イベントと本物の音イベントが、意味的文脈においては大きく異なるにもかかわらず、しばしば同一の視覚的または音響的アテンション質量を吸収していると指摘して、この前提に疑問を投げかけています。",
+          "textEn": "Comparing these methodologies reveals fundamental disagreements regarding what constitutes validity in an audio-language model. Internal readout frameworks operate under the premise that neural networks possess implicit perceptual awareness that standard autoregressive text generation fails to surface. Their primary metric of success is the extraction efficiency of latent alignment, leveraging existing activations without modifying underlying model weights. However, this assumption relies on internal attention maps accurately reflecting true acoustic semantics, a premise challenged by Sun et al., who observe that hallucinated and authentic sound events often absorb identical visual or acoustic attention mass while differing significantly in semantic context.",
+          "sourceIds": [
+            "S1",
+            "S5",
+            "S6"
+          ]
+        },
+        {
+          "id": "eval-b2",
+          "text": "動的潜在最適化は、凍結されたシングルパスエンコーダが言語優位の生成ダイナミクスによってボトルネックになっていると仮定し、テスト時に明示的な逆伝播パスや方策勾配の更新を要求します。このアプローチは効果的である一方で、推論時の計算オーバーヘッドを増大させます。対照的に、反事実監査パラダイムは、アテンション質量とタスク精度の双方を、モデルの誠実性を評価するための十分な指標としては否定します。TRACEは、複雑な混合音から音響源を体系的に削除することで、誤った因果的理由に基づいて正しい解答が頻繁に導き出されていることを実証しています。監査指標は、最高精度ではなく構造的不変性と単調順序付けを評価するため、従来のベンチマーク評価では隠されてしまう、根拠のないヒューリスティックなショートカットを露出させます。",
+          "textEn": "Dynamic latent optimization assumes that frozen single-pass encoders are bottlenecked by language-dominated generation dynamics, requiring explicit backpropagation paths or policy gradient updates at test time. While effective, this approach increases computational overhead during inference. In contrast, counterfactual auditing paradigms reject both attention mass and task accuracy as sufficient metrics for model faithfulness. By systematically deleting acoustic sources from complex mixtures, TRACE demonstrates that correct answers frequently occur for incorrect causal reasons. Auditing metrics evaluate structural invariance and monotonic ordering rather than peak accuracy, exposing ungrounded heuristic shortcuts that conventional benchmark evaluations obscure.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implications",
+      "heading": "実践者向けの実務的選択肢と実装上の制約",
+      "headingEn": "Practical Choices and Implementation Constraints for Practitioners",
+      "blocks": [
+        {
+          "id": "imp-b1",
+          "text": "音声LLMのデプロイ戦略を選択するシステムアーキテクトや研究者にとって、計算オーバーヘッド、レイテンシ、出力信頼性の間のトレードオフは極めて重要です。低レイテンシ環境やリソース制約のあるエッジシステムでは、ヘッド誘導デコーディングやAudio-Aware Decodingといった内部読み出し手法により、パラメータ微調整や推論時最適化ループを必要とせず、即座にハルシネーション軽減とイベント特定向上が実現します。これらの学習不要な推論技術は、標準的な自動回帰生成パイプラインに対する費用対効果の高い強化策となります。",
+          "textEn": "For system architects and researchers selecting audio LLM deployment strategies, trade-offs between computational overhead, latency, and output reliability are critical. In low-latency environments or resource-constrained edge systems, internal readout techniques such as head-guided decoding or Audio-Aware Decoding provide immediate hallucination mitigation and improved event localization without requiring parameter fine-tuning or inference-time optimization loops. These training-free inference techniques offer a cost-effective upgrade to standard autoregressive generation pipelines.",
+          "sourceIds": [
+            "S1",
+            "S5",
+            "S6"
+          ]
+        },
+        {
+          "id": "imp-b2",
+          "text": "複雑な診断、空間処理、多段階の音響ワークフローにおいては、追加の動的計算サイクルを許容できる場合に限り、DeALRなどのフレームワークによるテスト時潜在最適化が優れた推論キャリブレーションを提供します。マルチチャンネル空間音声アプリを構築する際、SpheraAudioのような専用トークンエンコーダを統合することで詳細な幾何学的思考チェーン分析が可能になります。重要な点として、エンジニアリングチームはTRACEのような反事実監査スイートをCI/CDパイプラインに組み込み、運用モデルがデータセットの作為的傾向に依存せず、ノイズの多い現実環境下で真の因果的根拠を維持できるようにする必要があります。",
+          "textEn": "For complex diagnostic, spatial, and multi-step acoustic workflows, test-time latent optimization via frameworks like DeALR offers superior reasoning calibration, provided systems can tolerate the extra dynamic compute cycles. When building multi-channel spatial audio applications, integrating specialized token encoders like SpheraAudio enables detailed geometric chain-of-thought analysis. Crucially, engineering teams must incorporate counterfactual auditing suites like TRACE into CI/CD pipelines to ensure that deployed models maintain genuine causal grounding under noisy real-world conditions rather than relying on dataset artifacts.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "watch",
+      "heading": "根拠に基づいた音声インテリジェンスの今後の方向性",
+      "headingEn": "Future Trajectories in Grounded Audio Intelligence",
+      "blocks": [
+        {
+          "id": "w-b1",
+          "text": "大規模音声言語モデルの研究の最前線は、単一の精度ベンチマークを超え、内部アテンション抽出、動的テスト時最適化、厳密な因果検証を融合した統合フレームワークへと移行しています。注目すべき主要分野には、時空間RoPE構造とリアルタイム潜在バックトラッキングの統合が含まれ、これにより多チャンネル空間推論が複雑な音響シーン全体で因果的に根拠付けられ続けることが担保されます。さらに、反事実監査指標を標準検証ステップとして標準化することで、今後のモデルアーキテクチャは言語生成を監査済み音響エビデンスと直接調和させることが求められるようになります。",
+          "textEn": "The frontier of research in Large Audio-Language Models is moving beyond isolated accuracy benchmarks toward unified frameworks that combine internal attention extraction, dynamic test-time optimization, and rigorous causal verification. Key areas to monitor include the integration of spatial-temporal RoPE structures with real-time latent backtracking, ensuring that multi-channel spatial reasoning remains causally grounded across complex acoustic scenes. Furthermore, standardizing counterfactual auditing metrics as standard validation steps will force future model architectures to harmonize language generation directly with audited acoustic evidence.",
+          "sourceIds": [
+            "S2",
+            "S3",
+            "S4",
+            "S5"
+          ]
+        }
+      ]
+    }
+  ],
+  "translation": {
+    "targetLanguage": "ja",
+    "status": "passed",
+    "revisionCount": 1,
+    "verifiedAt": "2026-11-24T03:05:51.791231+00:00"
+  },
+  "schemaVersion": 1,
+  "sourceLanguage": "en",
+  "slug": "2026-11-24-debate-audio-llm-evidence-grounding-and-faithfulness",
+  "type": "debate",
+  "date": "2026-11-24",
+  "generatedAt": "2026-11-24T03:05:51.791231+00:00",
+  "topicKey": "audio-llm-evidence-grounding-and-faithfulness",
+  "searchTerms": [
+    "large audio-language models",
+    "head-guided decoding",
+    "acoustic backtracking",
+    "counterfactual auditing"
+  ],
+  "sources": [
+    {
+      "arxivId": "2611.25960",
+      "title": "When Sounds Turn Heads: Recovering Event Timing That Audio LLMs Fail to Say",
+      "abstract": "Audio LLMs can know when a queried sound occurs but fail to say it. We find a few attention heads that track the queried sound: they shift when the query changes, follow the sound when it moves, and removing or blocking them often hurts the model's timestamps. Yet the answer does not express what they track. Intervals read directly from these heads outperform the model's original answer and recover events that its timestamps miss. To bring this timing into the answer, we introduce head-guided decoding, which needs no training. It keeps the model's decision on whether the sound is present and rescores its candidate timestamps with a prior from these heads. Heads selected on development data transfer unchanged to new recordings and free-text queries, where head-guided decoding improves the timestamps of three audio LLMs, scores above their head readout on every benchmark, and, in most settings, outperforms random-head guidance. On recordings released after the models were trained, head-guided decoding raises mIoU from 0.07-0.36 to 0.48-0.56. These results suggest that poor temporal answers in audio LLMs partly reflect a failure to say rather than to hear, and that the model's own attention can close part of this gap.",
+      "authors": [
+        "Jongbhin Woo",
+        "Jaewook Jeong",
+        "Joon Son Chung"
+      ],
+      "publishedAt": "2026-11-20",
+      "url": "https://arxiv.org/abs/2611.25960",
+      "origin": "archive",
+      "archiveDate": "2026-11-20",
+      "primaryLinks": [],
+      "sourceId": "S1"
+    },
+    {
+      "arxivId": "2611.15463",
+      "title": "Right Answers, Inconsistent Evidence: Source-Level Counterfactual Auditing of Large Audio-Language Models",
+      "abstract": "A large audio-language model (LALM) can answer \"is a cat present?\" about a mixture correctly, and its confidence can drop when the cat is removed, yet this does not show that it can tell the cat's presence from its absence. We introduce TRACE. It deletes the queried source and each rival in turn and asks whether every view still containing that sound outscores the view with it removed. Across 8 LALMs and 3,456 controlled mixtures, 6.3% of correct answers fail this ordering: the target-absent view scores at or above some target-present view, a conflict no shared threshold repairs. A target-only score check misses 42.5% of them. The share rises from 4.9% to 8.4% as target SNR falls from +5 to -5 dB, even on units correct at every level, and survives loudness and re-pairing controls. Accuracy certifies the answer; TRACE audits whether it orders presence above absence. Code and data: https://github.com/yikise/TRACE.",
+      "authors": [
+        "Yi Zhang",
+        "Yi Li",
+        "Hongwei Du"
+      ],
+      "publishedAt": "2026-11-13",
+      "url": "https://arxiv.org/abs/2611.15463",
+      "origin": "archive",
+      "archiveDate": "2026-11-13",
+      "primaryLinks": [],
+      "sourceId": "S2"
+    },
+    {
+      "arxivId": "2611.15439",
+      "title": "DeALR: Decoupled Audio-Latent Optimization with Acoustic Backtracking for Test-Time Reasoning",
+      "abstract": "Large audio-language models (LALMs) typically encode audio once and conduct subsequent multi-step reasoning in a language-dominated space, weakening access to fine-grained acoustic evidence. Although recent multimodal approaches have explored re-engaging perceptual inputs during reasoning, whether a frozen LALM can actively revisit crucial acoustic evidence in the latent space at test time remains underexplored. To bridge this gap, we introduce Decoupled Audio Latent Reasoning (DeALR), a novel test-time latent reasoning framework that shifts the paradigm from text-dominated deliberation to active audio-latent interaction. Inspired by the human cognitive process of \"backtracking\" to specific acoustic cues during complex listening tasks, DeALR establishes a dynamic interaction between learnable thought tokens and acoustic segments. Specifically, we introduce Span-Level Acoustic Backtracking, which traces initial attention distributions to dynamically isolate contiguous, key acoustic spans. Furthermore, we propose Decoupled Audio-Latent Optimization (DALO), a test-time reinforcement learning algorithm that jointly refines thought vectors and acoustic patches via confidence-guided policy gradients. Crucially, DALO explicitly decouples trajectory search from response generation by reinstating uncorrupted, high-fidelity audio embeddings prior to text synthesis, entirely eliminating optimization-induced distribution drift while retaining the navigation of the refined thoughts. Comprehensive experiments on benchmarks demonstrate that DeALR consistently outperforms prior test-time optimization approaches, delivering substantial improvements in both confidence calibration and reasoning accuracy.",
+      "authors": [
+        "Haoyu He",
+        "Yan Rong",
+        "Li Liu"
+      ],
+      "publishedAt": "2026-11-13",
+      "url": "https://arxiv.org/abs/2611.15439",
+      "origin": "archive",
+      "archiveDate": "2026-11-13",
+      "primaryLinks": [],
+      "sourceId": "S3"
+    },
+    {
+      "arxivId": "2611.18112",
+      "title": "Any Channel Count, One Token Stream: Incorporating Spatial Audio Understanding and Reasoning into Large Audio-Language Models",
+      "abstract": "Audio phase relations encode source locations, yet existing large audio-language models (LALM) reduce audio to single-channel content to stabilise general audio understanding, leaving spatial information for direction, distance, and source-relation questions unused. We present SpheraAudio, which accepts recordings with any channel count -- mono, stereo, First-Order Ambisonics (FOA), or higher -- and maps them into a single token stream. A spatial encoder turns complex multichannel spectra into spatial tokens interleaved with audio tokens at corresponding temporal positions. Spatial Multimodal RoPE (SMRoPE) makes each token's modality identity and temporal slot visible to rotary attention without altering the language model's original RoPE. Training runs in three stages -- spatial-encoder pretraining, projector alignment, and joint supervised-and-reinforcement learning -- progressing from geometric supervision to language-based spatial decisions, with answers trained as explicit spatial chain-of-thought: step-by-step geometric reasoning over the heard scene. Current benchmarks tie questions to a fixed channel-count format and score answers without spatial reasoning evidence. We introduce SpheraQA, which spans mono, stereo, and FOA recordings and organises questions hierarchically from single-attribute perception through cross-source relations to multi-step reasoning, scored programmatically against simulated scene geometry and real-recording annotations with step-by-step solution references. Across SpheraQA and public spatial-audio benchmarks, SpheraAudio sets a new performance standard for spatial audio understanding. It supports high-precision localisation, tracking, and reasoning over static and moving sound sources while preserving strong general-audio capabilities. We will release code, SpheraQA, and evaluation metrics to support reproducibility.",
+      "authors": [
+        "Yuhuan You",
+        "Wenxiang Guo",
+        "Zhifang Guo",
+        "Yuxuan Wang",
+        "Jin Xu"
+      ],
+      "publishedAt": "2026-11-20",
+      "url": "https://arxiv.org/abs/2611.18112",
+      "origin": "archive",
+      "archiveDate": "2026-11-20",
+      "primaryLinks": [
+        {
+          "label": "Code",
+          "url": "https://github.com/Konoyo-014/SpheraQA"
+        }
+      ],
+      "sourceId": "S4"
+    },
+    {
+      "arxivId": "2611.25789",
+      "title": "From Attention to Semantics: Detecting and Mitigating Sound Event Hallucinations in Large Audio-Language Models",
+      "abstract": "Large Audio-Language Models (LALMs) excel at diverse audio tasks, yet remain prone to hallucinating sound events absent from the input. Prior work links such hallucinations to insufficient audio attention. However, we find that real and hallucinated events can receive comparable audio attention mass while attending to different audio positions. To examine whether the attended representations support the generated events, we adapt LatentLens to retrieve neighboring contextualized text representations. The retrieved contexts reveal semantic support for real events, but a semantic mismatch between hallucinated events and their attended audio representations. Directly masking the corresponding audio regions can suppress hallucinated events at the cost of real content. We are motivated by these findings to introduce an explainable and training-free detect-then-mitigate framework for effectively hallucination detection and mitigation that aggregates semantic support and applies differential audio masking to protect regions associated with events predicted to be supported. Extensive experiments on three LALMs and two datasets demonstrate that our method significantly improves hallucination detection and hallucination mitigation performance.",
+      "authors": [
+        "Tianyi Sun",
+        "Minghao Lv",
+        "Chunyang Yu",
+        "Shenyue Wang",
+        "Mengyue Wu"
+      ],
+      "publishedAt": "2026-11-20",
+      "url": "https://arxiv.org/abs/2611.25789",
+      "origin": "archive",
+      "archiveDate": "2026-11-20",
+      "primaryLinks": [],
+      "sourceId": "S5"
+    },
+    {
+      "arxivId": "2506.07233",
+      "title": "Reducing Object Hallucination in Large Audio-Language Models via Audio-Aware Decoding",
+      "abstract": "Large Audio-Language Models (LALMs) can take audio and text as the inputs and answer questions about the audio. While prior LALMs have shown strong performance on standard benchmarks, there has been alarming evidence that LALMs can hallucinate what is presented in the audio. To mitigate the hallucination of LALMs, we introduce Audio-Aware Decoding (AAD), a lightweight inference-time strategy that uses contrastive decoding to compare the token prediction logits with and without the audio context. By contrastive decoding, AAD promotes the tokens whose probability increases when the audio is present. We conduct our experiment on object hallucination datasets with three LALMs and show that AAD improves the F1 score by 0.046 to 0.428. We also show that AAD can improve the accuracy on general audio QA datasets like Clotho-AQA by 5.4% to 10.3%. We conduct thorough ablation studies to understand the effectiveness of each component in AAD.",
+      "authors": [
+        "Tzu-wen Hsu",
+        "Ke-Han Lu",
+        "Cheng-Han Chiang",
+        "Hung-yi Lee"
+      ],
+      "publishedAt": "2025-06-08T17:36:50Z",
+      "url": "https://arxiv.org/abs/2506.07233",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S6"
+    },
+    {
+      "arxivId": "2603.17231",
+      "title": "Neuron-Level Emotion Control in Speech-Generative Large Audio-Language Models",
+      "abstract": "Large audio-language models (LALMs) can produce expressive speech, yet reliable emotion control remains elusive: conversions often miss the target affect and may degrade linguistic fidelity through refusals, hallucinations, or paraphrase. We present, to our knowledge, the first neuron-level study of emotion control in speech-generative LALMs and demonstrate that compact emotion-sensitive neurons (ESNs) are causally actionable, enabling training-free emotion steering at inference time. ESNs are identified via success-filtered activation aggregation enforcing both emotion realization and content preservation. Across three LALMs (Qwen2.5-Omni-7B, MiniCPM-o 4.5, Kimi-Audio), ESN interventions yield emotion-specific gains that generalize to unseen speakers and are supported by automatic and human evaluation. Controllability depends on selector design, mask sparsity, filtering, and intervention strength. Our results establish a mechanistic framework for training-free emotion control in speech generation.",
+      "authors": [
+        "Xiutian Zhao",
+        "Ismail Rasim Ulgen",
+        "Philipp Koehn",
+        "Björn Schuller",
+        "Berrak Sisman"
+      ],
+      "publishedAt": "2026-03-18T00:32:47Z",
+      "url": "https://arxiv.org/abs/2603.17231",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S7"
+    },
+    {
+      "arxivId": "2604.17248",
+      "title": "VIBE: Voice-Induced open-ended Bias Evaluation for Large Audio-Language Models via Real-World Speech",
+      "abstract": "Large Audio-Language Models (LALMs) are increasingly integrated into daily applications, yet their generative biases remain underexplored. Existing speech fairness benchmarks rely on synthetic speech and Multiple-Choice Questions (MCQs), both offering a fragmented view of fairness. We propose VIBE, a framework that evaluates generative bias through open-ended tasks such as personalized recommendations, using human-recorded speech. Unlike MCQs, our method allows stereotypical associations to manifest organically without predefined options, making it easily extensible to new tasks. Evaluating 12 state-of-the-art LALMs reveals systematic biases in realistic scenarios. Both gender and accent cues trigger statistically significant distributional shifts, and bias magnitude is strongly task-dependent.",
+      "authors": [
+        "Yi-Cheng Lin",
+        "Yusuke Hirota",
+        "Sung-Feng Huang",
+        "Hung-yi Lee"
+      ],
+      "publishedAt": "2026-04-19T04:22:47Z",
+      "url": "https://arxiv.org/abs/2604.17248",
+      "origin": "external",
+      "primaryLinks": [],
+      "sourceId": "S8"
+    }
+  ],
+  "readTimeMinutes": 10,
+  "readTimeMinutesEn": 6,
+  "verification": {
+    "status": "passed",
+    "revisionCount": 0,
+    "verifiedAt": "2026-11-24T03:05:51.791231+00:00",
+    "canonicalLanguage": "en",
+    "translationRevisionCount": 1
+  }
+}
