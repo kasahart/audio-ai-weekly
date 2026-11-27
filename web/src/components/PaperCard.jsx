@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { buildShareText, buildXShareUrl, copyToClipboard, stripPrefix } from '../utils.js'
+import { abstractFor, buildShareText, buildXShareUrl, copyToClipboard, stripPrefix } from '../utils.js'
 import { localized, t } from '../i18n.js'
 
 const SECTIONS = [
@@ -183,14 +183,14 @@ export default function PaperCard({ paper, cat, lang = 'ja', animDelay = 0, cita
             </div>
           ))}
 
-          {(lang === 'ja' ? (paper.abstractJa || paper.abstract) : (paper.abstract || paper.abstractJa)) && (
+          {abstractFor(paper, lang) && (
             <div style={{ borderTop: `1px solid ${cat.color}10`, padding: '11px 18px' }}>
               <div style={{ fontSize: 11, color: '#475569', fontWeight: 600, letterSpacing: 1.5, marginBottom: 6 }}>
                 {copy.abstract}
               </div>
               <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.9,
                 paddingLeft: 8, borderLeft: '2px solid #38bdf840' }}>
-                {lang === 'ja' ? (paper.abstractJa || paper.abstract) : (paper.abstract || paper.abstractJa)}
+                {abstractFor(paper, lang)}
               </div>
             </div>
           )}

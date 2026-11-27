@@ -28,7 +28,7 @@ const messages = {
     sections: ['概要（抄録ベース）', '著者が主張する新規性・差分（抄録ベース）', '抄録で説明される技術・手法', '抄録に記載された検証', '抄録から読み取れる注意点（推定を含む）', '検証済みの関連論文候補'],
     pageTitle: '音響AI週報',
     shareX: 'Xでポスト', copy: 'コピー', copied: 'コピー済', copyFailed: '失敗',
-    copyTitle: 'タイトルとURLをコピー',
+    copyTitle: 'タイトル・URL・解説・抄録をコピー',
   },
   en: {
     siteTitle: 'Audio AI Weekly',
@@ -55,7 +55,7 @@ const messages = {
     sections: ['Overview (abstract-based)', 'Author-claimed novelty and differences (abstract-based)', 'Method described in the abstract', 'Validation reported in the abstract', 'Cautions inferred from the abstract', 'Verified related-paper candidates'],
     pageTitle: 'Audio AI Weekly',
     shareX: 'Post on X', copy: 'Copy', copied: 'Copied', copyFailed: 'Failed',
-    copyTitle: 'Copy title and URL',
+    copyTitle: 'Copy title, URL, analysis and abstract',
   },
 }
 

@@ -54,13 +54,17 @@ describe('PaperCard sharing', () => {
     expect(u.searchParams.get('url')).toBe('https://arxiv.org/abs/2601.00001')
   })
 
-  it('copies the title and URL to the clipboard without expanding the card', async () => {
+  it('copies the title, URL, analysis and abstract without expanding the card', async () => {
     const writeText = vi.fn().mockResolvedValue()
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     render(<PaperCard paper={paper} cat={cat} lang="en" />)
-    fireEvent.click(screen.getByRole('button', { name: 'Copy title and URL' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy title, URL, analysis and abstract' }))
     await waitFor(() => expect(screen.getByText('Copied')).toBeInTheDocument())
-    expect(writeText).toHaveBeenCalledWith('Original English Title\nhttps://arxiv.org/abs/2601.00001')
+    expect(writeText).toHaveBeenCalledWith([
+      'Original English Title\nhttps://arxiv.org/abs/2601.00001',
+      '1. Overview (abstract-based)\nEnglish explanation.',
+      'Original abstract\nOriginal English abstract.',
+    ].join('\n\n'))
     expect(screen.queryByText('Original English abstract.')).not.toBeInTheDocument()
   })
 })

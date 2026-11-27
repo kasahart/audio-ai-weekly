@@ -31,12 +31,34 @@ export function buildUrlSearch({ lang, toDate, fromDate, activeCat, search, sort
   if (showFavoritesOnly)   p.set('fav',  '1')
   return p.toString() ? `?${p}` : ''
 }
-import { LANGUAGE_STORAGE_KEY, resolveLanguage } from './i18n.js'
+import { LANGUAGE_STORAGE_KEY, localized, resolveLanguage, t } from './i18n.js'
 
-/** Build the text used when sharing a paper (title line + arXiv URL). */
+/** Analysis section keys, in display order (headings come from t(lang).sections). */
+export const ANALYSIS_KEYS = ['what', 'novel', 'method', 'validation', 'discussion', 'nextReads']
+
+/** Pick the abstract shown for the language, falling back to the other one. */
+export function abstractFor(paper, lang = 'ja') {
+  return lang === 'ja' ? (paper.abstractJa || paper.abstract) : (paper.abstract || paper.abstractJa)
+}
+
+/**
+ * Build the text copied when sharing a paper: title, arXiv URL, then each
+ * non-empty analysis section and the abstract, with the same headings as the card.
+ */
 export function buildShareText(paper, lang = 'ja') {
+  const copy = t(lang)
   const title = lang === 'ja' && paper.titleJa ? `${paper.titleJa}\n${paper.title}` : paper.title
-  return [title, paper.url].filter(Boolean).join('\n')
+  const blocks = [[title, paper.url].filter(Boolean).join('\n')]
+  ANALYSIS_KEYS.forEach((key, i) => {
+    const body = key === 'nextReads'
+      ? (paper.nextReads ?? []).filter(r => r?.verified === true && r.label)
+          .map(r => `- ${r.label}${r.url ? ` ${r.url}` : ''}`).join('\n')
+      : stripPrefix(localized(paper, key, lang))
+    if (body) blocks.push(`${i + 1}. ${copy.sections[i]}\n${body}`)
+  })
+  const abstract = abstractFor(paper, lang)
+  if (abstract) blocks.push(`${copy.abstract}\n${abstract}`)
+  return blocks.join('\n\n')
 }
 
 /** Build an X (Twitter) post intent URL for a paper. */
