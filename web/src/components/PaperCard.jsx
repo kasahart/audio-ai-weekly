@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { stripPrefix } from '../utils.js'
+import { useEffect, useRef, useState } from 'react'
+import { buildShareText, buildXShareUrl, copyToClipboard, stripPrefix } from '../utils.js'
 import { localized, t } from '../i18n.js'
 
 const SECTIONS = [
@@ -22,7 +22,19 @@ function Badge({ href, onClick, color, bg, children }) {
 
 export default function PaperCard({ paper, cat, lang = 'ja', animDelay = 0, citationCount, githubUrl, isFavorite, onToggleFavorite, isRead, onToggleRead }) {
   const [expanded, setExpanded] = useState(false)
+  const [copyState, setCopyState] = useState(null) // null | 'ok' | 'fail'
+  const copyTimer = useRef(null)
   const copy = t(lang)
+
+  useEffect(() => () => clearTimeout(copyTimer.current), [])
+
+  async function handleCopy(e) {
+    e.stopPropagation()
+    const ok = await copyToClipboard(buildShareText(paper, lang))
+    setCopyState(ok ? 'ok' : 'fail')
+    clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setCopyState(null), 1500)
+  }
 
   // Prefer the frontend-fetched githubUrl, then fall back to githubRepo from JSON.
   const codeUrl = githubUrl || paper.githubRepo
@@ -86,6 +98,17 @@ export default function PaperCard({ paper, cat, lang = 'ja', animDelay = 0, cita
                 transition: 'color 0.15s' }}
               title={isFavorite ? copy.removeFavorite : copy.addFavorite}
             >{isFavorite ? '★' : '☆'}</button>
+            <a href={buildXShareUrl(paper, lang)} target="_blank" rel="noreferrer"
+              onClick={e => e.stopPropagation()}
+              title={copy.shareX} aria-label={copy.shareX}
+              style={{ fontSize: 12, color: '#94a3b8', textDecoration: 'none', fontWeight: 700 }}>𝕏</a>
+            <button
+              onClick={handleCopy}
+              title={copy.copyTitle} aria-label={copy.copyTitle}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                fontSize: 11, lineHeight: 1, fontFamily: 'inherit',
+                color: copyState === 'ok' ? '#4ade80' : copyState === 'fail' ? '#f87171' : '#475569' }}
+            >{copyState === 'ok' ? copy.copied : copyState === 'fail' ? copy.copyFailed : copy.copy}</button>
             <a href={paper.url} target="_blank" rel="noreferrer"
               onClick={e => e.stopPropagation()}
               style={{ fontSize: 11, color: '#475569', textDecoration: 'none' }}>arXiv</a>

@@ -32,3 +32,42 @@ export function buildUrlSearch({ lang, toDate, fromDate, activeCat, search, sort
   return p.toString() ? `?${p}` : ''
 }
 import { LANGUAGE_STORAGE_KEY, resolveLanguage } from './i18n.js'
+
+/** Build the text used when sharing a paper (title line + arXiv URL). */
+export function buildShareText(paper, lang = 'ja') {
+  const title = lang === 'ja' && paper.titleJa ? `${paper.titleJa}\n${paper.title}` : paper.title
+  return [title, paper.url].filter(Boolean).join('\n')
+}
+
+/** Build an X (Twitter) post intent URL for a paper. */
+export function buildXShareUrl(paper, lang = 'ja') {
+  const title = lang === 'ja' && paper.titleJa ? paper.titleJa : paper.title
+  const p = new URLSearchParams()
+  if (title) p.set('text', title)
+  if (paper.url) p.set('url', paper.url)
+  return `https://x.com/intent/post?${p}`
+}
+
+/** Copy text to the clipboard, falling back to execCommand where the async API is unavailable. */
+export async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {}
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
+}
