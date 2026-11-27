@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PaperCard from '../components/PaperCard'
 
 const cat = { id: 'foundation', label: '音の基盤モデル', labelEn: 'Audio Foundation Models', color: '#38bdf8' }
@@ -41,5 +41,26 @@ describe('PaperCard localization', () => {
     expect(screen.queryByText('Untrusted legacy value')).not.toBeInTheDocument()
     expect(screen.queryByText('Legacy candidate')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Verified candidate' })).toBeInTheDocument()
+  })
+})
+
+describe('PaperCard sharing', () => {
+  it('links to an X post intent with the title and arXiv URL', () => {
+    render(<PaperCard paper={paper} cat={cat} lang="ja" />)
+    const href = screen.getByRole('link', { name: 'Xでポスト' }).getAttribute('href')
+    const u = new URL(href)
+    expect(u.origin + u.pathname).toBe('https://x.com/intent/post')
+    expect(u.searchParams.get('text')).toBe('日本語の論文名訳')
+    expect(u.searchParams.get('url')).toBe('https://arxiv.org/abs/2601.00001')
+  })
+
+  it('copies the title and URL to the clipboard without expanding the card', async () => {
+    const writeText = vi.fn().mockResolvedValue()
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    render(<PaperCard paper={paper} cat={cat} lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy title and URL' }))
+    await waitFor(() => expect(screen.getByText('Copied')).toBeInTheDocument())
+    expect(writeText).toHaveBeenCalledWith('Original English Title\nhttps://arxiv.org/abs/2601.00001')
+    expect(screen.queryByText('Original English abstract.')).not.toBeInTheDocument()
   })
 })

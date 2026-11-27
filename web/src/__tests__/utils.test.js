@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { stripPrefix, readUrlState, buildUrlSearch } from '../utils.js'
+import { stripPrefix, readUrlState, buildUrlSearch, buildShareText, buildXShareUrl } from '../utils.js'
 import { browserLanguage, resolveLanguage } from '../i18n.js'
 
 describe('language resolution', () => {
@@ -117,5 +117,18 @@ describe('buildUrlSearch', () => {
     expect(restored.search).toBe(original.search)
     expect(restored.sortByCitations).toBe(original.sortByCitations)
     expect(restored.lang).toBe(original.lang)
+  })
+})
+
+describe('share helpers', () => {
+  const p = { title: 'T', titleJa: '訳', url: 'https://arxiv.org/abs/1' }
+  it('builds share text per language', () => {
+    expect(buildShareText(p, 'ja')).toBe('訳\nT\nhttps://arxiv.org/abs/1')
+    expect(buildShareText(p, 'en')).toBe('T\nhttps://arxiv.org/abs/1')
+  })
+  it('builds an X intent URL', () => {
+    const u = new URL(buildXShareUrl(p, 'en'))
+    expect(u.searchParams.get('text')).toBe('T')
+    expect(u.searchParams.get('url')).toBe('https://arxiv.org/abs/1')
   })
 })
