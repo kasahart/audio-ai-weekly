@@ -1,0 +1,817 @@
+{
+  "date": "2026-1127",
+  "generated_at": "2026-11-27T00:00:00+00:00",
+  "total": 15,
+  "categories": [
+    {
+      "id": "foundation",
+      "label": "音の基盤モデル",
+      "labelEn": "Audio Foundation Models",
+      "color": "#38bdf8",
+      "papers": [
+        {
+          "id": "2611.34426v1",
+          "date": "Nov 25",
+          "title": "A Head-Level Investigative Study of Self-Supervised Backbones for Synthetic Speech Detection",
+          "titleJa": "合成音声検出のための自己教師ありバックボーンに対するアテンションヘッドレベルの調査研究",
+          "authors": [
+            "Mohamed Mallat",
+            "Michele Panariello",
+            "Massimiliano Todisco",
+            "Anthony Larcher",
+            "Nicholas Evans"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Self-supervised learning (SSL) speech backbones are the standard frontend for synthetic-speech detection, and layer-wise probing has established which layers carry the most signal. But analysis stops there: which of a layer's twelve attention heads compute the spoof decision is unknown. We present the first head-level study of two frozen backbones, WavLM-base and Wav2Vec2-base, on ASVspoof 5. Per-head ablation shows that only a few heads carry the decision while others actively oppose it; removing those heads lowers equal error rate (EER) with no retraining, by 13% relative in WavLM and 22% in Wav2Vec2. We also find a probe-free signature: spoofed speech draws more focused attention than genuine speech, and this gap alone separates the two almost as well as the full representation, peaking at each backbone's most discriminative layer. Finally, attack identity is decodable from every head, yet heads differ in what they do, not in what they know.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.LG"
+          ],
+          "url": "https://arxiv.org/abs/2611.34426v1",
+          "category": "foundation",
+          "task": "合成音声検出",
+          "taskEn": "Synthetic Speech Detection",
+          "proposedMethod": null,
+          "datasets": [
+            "ASVspoof 5"
+          ],
+          "what": "ASVspoof 5において、自己教師あり学習（SSL）音声バックボーンのどの層のどのアテンションヘッドがスプーフィング判定に寄与しているかを探索したヘッドレベルの分析研究。",
+          "whatEn": "A head-level investigation on ASVspoof 5 exploring which specific attention heads in self-supervised speech backbones compute the spoof decision.",
+          "novel": "アテンションヘッドのアブレーションを通じて、特定のヘッドのみが判定に寄与し、他のヘッドは判定を積極的に妨害していることを明らかにし、これらを除去することで再学習なしにEERを向上させられることを実証した点。",
+          "novelEn": "The authors show through per-head ablation that only a few heads carry the spoof decision while others actively oppose it, and removing interfering heads lowers EER without any retraining.",
+          "method": "凍結されたWavLM-baseおよびWav2Vec2-baseバックボーンに対し、ヘッドごとのアブレーション実験とアテンションパターンの解析を実施。また、検出プローブを用いないアテンション集中度のギャップ指標を抽出した。",
+          "methodEn": "The authors conducted per-head ablation and attention pattern analysis on frozen WavLM-base and Wav2Vec2-base backbones, and identified a probe-free signature based on attention focus gaps.",
+          "validation": "ASVspoof 5データセットにて評価し、干渉ヘッドの除去により等エラー率（EER）がWavLMで相対13%、Wav2Vec2で22%削減されることを確認した。",
+          "validationEn": "Evaluated on ASVspoof 5, head removal reduced equal error rate (EER) by 13% relative in WavLM and 22% in Wav2Vec2.",
+          "discussion": "各ヘッドは攻撃手法の情報を解読可能であるものの、知識の有無ではなくその動作役割に違いがあることが限界・特徴として指摘されている。",
+          "discussionEn": "The study notes that while attack identity is decodable from all heads, the heads differ in their operational roles rather than their underlying knowledge.",
+          "abstractJa": "自己教師あり学習（SSL）音声バックボーンは合成音声検出の標準的なフロントエンドであり、層ごとのプロービングによってどの層が最もシグナルを保持しているかが確立されている。しかし分析はそこで止まっており、ある層の12個のアテンションヘッドのうちどれがスプーフィングの判定を計算しているかは不明である。本論文では、ASVspoof 5において、2つの凍結バックボーン（WavLM-baseおよびWav2Vec2-base）に対する初のヘッドレベルの研究を提示する。ヘッドごとのアブレーションにより、わずかなヘッドのみが判定を担い、他のヘッドはアクティブに判定を阻害していることが示された。これらのヘッドを除去することで、再学習なしで等エラー率（EER）がWavLMで相対13%、Wav2Vec2で22%低下する。また、プローブ不要の署名を発見した。偽造音声は真正音声よりも集中したアテンションを引き付け、このギャップ単独で完全な表現とほぼ同等に両者を分離でき、各バックボーンの最も識別力のある層でピークに達する。最後に、攻撃識別情報はすべてのヘッドから復号可能であるが、ヘッドは「何を知っているか」ではなく「何をするか」において異なる。",
+          "nextReads": [
+            {
+              "label": "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing (2021)",
+              "arxivId": "2110.13900",
+              "url": "https://arxiv.org/abs/2110.13900",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations (2020)",
+              "arxivId": "2006.11477",
+              "url": "https://arxiv.org/abs/2006.11477",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.33059v1",
+          "date": "Nov 24",
+          "title": "ClusterVAD: Threshold-Free Unsupervised Voice Activity Detection with Pre-Trained Neural Representations",
+          "titleJa": "ClusterVAD：事前学習済みニューラル表現を用いた閾値フリーの非教師あり音声区間検出",
+          "authors": [
+            "Karl El Hajal",
+            "Mathew Magimai. -Doss"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Voice activity detection (VAD) is one of the first steps in speech processing pipelines, from transcription and diarization to speech language models. Supervised detectors need labelled data and inherit the domain and annotation conventions of their training corpora. Existing unsupervised detectors rely on hand-crafted acoustic features which cannot benefit from data and degrade in far-field, noisy or atypical speech. We propose ClusterVAD, an unsupervised VAD built on frozen speech foundation model representations. Fitted once on a small set of untranscribed speech, it clusters the representations and labels each cluster as speech or non-speech with sonority, an acoustic measure. At inference, a frame-level speech probability is computed from the cluster assignments, and a two-state hidden Markov model fitted to each recording enables threshold-free detection. Across benchmarks covering meetings, far-field and noisy recordings, Mandarin and dysarthric speech, ClusterVAD obtains the lowest detection error on pause-level references and is competitive on speaker turn-level references. These results indicate that speech foundation models inherently capture the distinction between speech and non-speech, which can be leveraged without training a detector.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.AI",
+            "cs.SD",
+            "eess.SP"
+          ],
+          "url": "https://arxiv.org/abs/2611.33059v1",
+          "category": "foundation",
+          "task": "音声区間検出",
+          "taskEn": "Voice Activity Detection",
+          "proposedMethod": "ClusterVAD",
+          "datasets": [],
+          "what": "事前学習済み音声基盤モデルの内部表現を活用し、閾値調整を必要としない非教師ありの音声区間検出（VAD）手法。",
+          "whatEn": "An unsupervised voice activity detection (VAD) framework built on pre-trained speech foundation model representations that operates without score thresholds.",
+          "novel": "音響指標であるSonorityを用いたクラスタラベル付けと、録音ごとに適合させた2状態隠れマルコフモデル（HMM）を組み合わせることで、教師なし・閾値フリーでの高精度検出を実現した点。",
+          "novelEn": "The authors propose combining sonority-based cluster labeling of speech foundation model features with per-recording two-state HMMs to achieve threshold-free unsupervised detection.",
+          "method": "少数の未文字化音声データで表現をクラスタリングし、Sonorityを用いて音声/非音声のラベルを自動付与。推論時はクラスタ割当に基づくフレーム級確率と2状態HMMを組み合わせて判定する。",
+          "methodEn": "Representations from frozen speech foundation models are clustered and labeled using sonority; inference combines cluster assignment probabilities with a fitted two-state HMM.",
+          "validation": "会議、遠隔場、ノイズ環境、中国語、構音障害音声を含むベンチマークで評価し、ポーズレベル参照で最小の検出エラー率を達成した。",
+          "validationEn": "Evaluated across diverse benchmarks (meetings, far-field, noisy, Mandarin, dysarthric speech), ClusterVAD achieved the lowest detection error on pause-level references.",
+          "discussion": "話者ターンレベルの参照評価においては競争力にとどまり、参照基準の粒度によって相対的な性能差が生じることが示唆される。",
+          "discussionEn": "While achieving top results on pause-level references, the method is competitive rather than state-of-the-art on broader speaker turn-level references.",
+          "abstractJa": "音声区間検出（VAD）は、書き起こしやダイアライゼーションから音声言語モデルに至るまで、音声処理パイプラインにおける最初のステップの1つである。教師あり検出器はラベル付きデータを必要とし、訓練コーパスのドメインやアノテーション規則を継承してしまう。既存の非教師あり検出器は、データから恩恵を受けられず、遠隔場、ノイズ環境、あるいは非典型的な音声で劣化する手作業の音響特徴量に依存している。本論文では、凍結された音声基盤モデル表現の上に構築された非教師ありVADであるClusterVADを提案する。少数の未文字化音声データで一度フィットさせることで、表現をクラスタリングし、音響尺度であるSonority（可聴度）を用いて各クラスタに音声または非音声のラベルを付与する。推論時には、クラスタ割当からフレームレベルの音声確率が計算され、各録音に適合させた2状態隠れマルコフモデルにより、閾値フリーの検出が可能になる。会議、遠隔場、ノイズ環境の録音、中国語、および構音障害音声を含むベンチマーク全体にわたって、ClusterVADはポーズレベルの参照において最小の検出エラーを獲得し、話者ターンレベルの参照においても競争力を示した。これらの結果は、音声基盤モデルが本質的に音声と非音声の区別を捉えており、検出器を訓練することなく活用できることを示している。",
+          "nextReads": [
+            {
+              "label": "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing (2021)",
+              "arxivId": "2110.13900",
+              "url": "https://arxiv.org/abs/2110.13900",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.32455v1",
+          "date": "Nov 24",
+          "title": "Phoneme-identity depth profiles do not reliably predict LoRA placement for dysarthric ASR",
+          "titleJa": "音素同一性深度プロファイルは構音障害音声ASRのためのLoRA挿入層を確実に予測しない",
+          "authors": [
+            "Bernard Muller",
+            "LaVonne Roberts"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Parameter-efficient adaptation of a speech foundation model to dysarthric speech requires a rarely justified choice: which encoder layers to adapt. A recently proposed strategy is to probe the encoder, find where phonetic information becomes most decodable, and put the adapters there. We test that inference across two ASR models (Qwen3-ASR, Whisper-small) and two dysarthric corpora (Mandarin CDSD, English UASpeech), holding recipe and seed discipline constant.   The inference fails. Measured under one pipeline rather than inherited from published figures, all four phoneme-error curves minimise between 83% and 92% of relative depth, each model's minimising layer moving no further between corpora than between probe seeds. The best adaptation band is not similarly constant: none of three natural mappings from the curve to a band -- steepest improvement, lowest band-mean error, or knee location -- recovers the best tested configuration. We do not claim no statistic of the curve could work, only that these three do not.   Placement still matters, but is model- and corpus-specific. On CDSD the models disagree -- Qwen3-ASR prefers its upper third (29.88% CER, three-seed mean), Whisper-small all-block LoRA (53.56%) -- while on UASpeech neither favours the upper band. At three seeds, upper-versus-all is resolved (-1.31 pp, CI [-2.16, -0.25]) but upper-versus-middle is not (-0.83 pp, CI [-2.06, +1.86]). The two models' preferences differ as a directly tested interaction (-4.71 pp, CI [-6.17, -2.89]); we designate this the primary claim, and record that the designation was made post hoc. On Qwen3-ASR x UASpeech, adapting near the input is reliably worse than not adapting at all (+9.90 pp CER). We recommend choosing the band by a short adaptation sweep on the model and corpus in hand, not by reading it off a probe.",
+          "comment": "54 pages, 4 figures",
+          "journalRef": null,
+          "categories": [
+            "cs.CL",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.32455v1",
+          "category": "foundation",
+          "task": "音声認識",
+          "taskEn": "Speech Recognition",
+          "proposedMethod": null,
+          "datasets": [
+            "CDSD",
+            "UASpeech"
+          ],
+          "what": "音素情報の解読可能性に基づくプログラミングプローブが、構音障害音声認識における最適層なLoRA挿入位置を予測できるか検証した研究。",
+          "whatEn": "A study examining whether probing phoneme decodability across network depth reliably predicts the optimal LoRA adaptation placement for dysarthric speech recognition.",
+          "novel": "プローブ曲線から得られる自然なマッピング（最も急激な改善、最も低い平均エラー、ニー位置）では最適なLoRA構成を再現できず、深さプロファイルから直接層を決定できないことを示した。",
+          "novelEn": "The authors show that natural mappings from probing decodability curves fail to recover the best LoRA configuration, demonstrating that depth profiles do not reliably predict optimal placement.",
+          "method": "Qwen3-ASRとWhisper-smallの2つの音声基盤モデルと中国語CDSDおよび英語UASpeechの2つの構音障害コーパスを用いて、一貫した実験レシピのもとで層選択手法および適応帯域の影響を直接比較した。",
+          "methodEn": "Using two speech foundation models (Qwen3-ASR, Whisper-small) and two dysarthric corpora (CDSD, UASpeech), the authors evaluated layer placement strategies under a unified pipeline.",
+          "validation": "最適なLoRAの帯域はモデルおよびコーパス依存であり、プローブ予測ではなく対象のモデルとデータに対する短い適応スウィープによって層を選択すべきであることを実験的に示している。",
+          "validationEn": "Validation shows that optimal adaptation bands are model- and corpus-specific, recommending short hyperparameter sweeps on the target setup over probing-based placement.",
+          "discussion": "プローブ曲線のあらゆる統計量が失敗すると主張しているわけではなく、評価した3つの特定マッピングが機能しなかったという点に限られること、およびモデル嗜好差の分析が事後解析である点。",
+          "discussionEn": "The study does not claim no curve statistic could work, only that the three tested mappings fail, and notes that the primary model preference claim was formulated post hoc.",
+          "abstractJa": "音声基盤モデルを構音障害音声に適応させるパラメータ効率の良い手法（LoRAなど）では、どのエンコーダ層を適応させるかという十分な根拠のない選択が必要となります。最近提案された戦略として、エンコーダをプローブして音素情報が最も解読可能となる層を特定し、そこにアダプタを配置する手法があります。本研究では、Qwen3-ASRとWhisper-smallの2つのASRモデル、および中国語CDSDと英語UASpeechの2つの構音障害コーパスを用い、レシピとシードの一貫性を保った上でこの推論をテストしました。実験の結果、この推論は機能しませんでした。公表数値の踏襲ではなく単一のパイプラインで測定した結果、4つの音素エラー曲線はいずれも相対的深度の83%から92%の間で最小化され、モデルごとの最小化層の移動幅はプロローブシード間の移動幅と同程度でした。最も優れた適応帯域も同様には固定されず、曲線から帯域への3つの自然なマッピング（最も急激な改善、最も低い帯域平均エラー、ニー位置）のいずれも、最良のテスト構成を復元することはできませんでした。著者らは曲線の統計量が一切機能しないと主張しているわけではなく、試行したこれら3つが機能しないことを示しています。配置自体は重要であるものの、モデルおよびコーパスに依存します。CDSDではモデル間で選好が分かれ（Qwen3-ASRは上位3分の1を好み平均CER 29.88%、Whisper-smallは全ブロックLoRAを好み53.56%）、UASpeechではどちらのモデルも上位帯域を好むことはありませんでした。短時間の適応スウィープを行って手元のモデルとコーパスに適合する帯域を選択することを推奨します。",
+          "nextReads": [
+            {
+              "label": "LoRA: Low-Rank Adaptation of Large Language Models (2021)",
+              "arxivId": "2106.09685",
+              "url": "https://arxiv.org/abs/2106.09685",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.30723v2",
+          "date": "Nov 23",
+          "title": "BiSAT: Bidirectionally Aligned Semantic-Acoustic Tokenization for Speech Language Models",
+          "titleJa": "BiSAT: 音声言語モデルのための双方向アラインメント言語・音響トークナイゼーション",
+          "authors": [
+            "Y. Lu",
+            "L. Wang",
+            "S. Okada"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Speech language models (LMs) generate speech as sequences of discrete tokens, requiring tokenizers that preserve both acoustic detail and linguistic content at a low bitrate. Semanticenhanced tokenizers may discard acoustic detail, whereas acousticoriented tokenizers retain acoustic variation that hinders language modeling. Unified tokenizers combine both, but encoding them within a single feature space can cause interference, and existing methods typically align acoustic features to fixed targets from a frozen semantic teacher. We propose Bidirectionally Aligned Semantic-Acoustic Tokenization (BiSAT), a unified framework with separate acoustic and semantic branches coupled by a shared-index mechanism. During training, each branch has its own encoder, codebook, and decoder, and at every frame a shared index minimizes the combined quantization error across both branches. BiSAT thus learns acoustic and semantic representations in separate continuous spaces while producing a single discrete code stream, jointly optimizing both encoders without fixed semantic teachers. Built on BiSAT, BiSAT-TTS pairs an autoregressive text-speech LM with a conditional flow-matching acoustic decoder for zero-shot text-to-speech. Reconstruction, frozen-code understanding, and diagnostic analyses show that BiSAT preserves accessible linguistic and acoustic structure in a low-bitrate single stream, generalizes strongly to in-thewild and out-of-domain speech, and learns complementary paired codebooks. BiSAT-TTS matches or surpasses state-of-the-art speech LM-based TTS baselines with less training data, demonstrating that accessible code structure, not reconstruction quality alone, benefits autoregressive speech modeling. The audio demos are available at https://seekmind-lab.github.io/bisat-demo.",
+          "comment": "13 pages, 4 figures, Y. Lu and L. Wang are co-first authors",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2611.30723v2",
+          "category": "foundation",
+          "task": "音声トークナイゼーション",
+          "taskEn": "Speech Tokenization",
+          "proposedMethod": "BiSAT",
+          "datasets": [],
+          "what": "低ビットレートかつ単一のトークン系列で、音声の言語情報と音響情報の両方を整合して量子化する双方向アラインメントフレームワークを提案した研究。",
+          "whatEn": "A framework proposed for unified speech tokenization that forms a single discrete code stream by bidirectionally aligning separate acoustic and semantic representation branches.",
+          "novel": "固定された言語モデル教師を用いず、独立した音響・言語エンコーダを単一の共有インデックスメカニズムによって同時に最適化する点。",
+          "novelEn": "The authors introduce a shared-index mechanism that couples separate acoustic and semantic branches without requiring a frozen semantic teacher.",
+          "method": "訓練時、各ブランチに専用のエンコーダ、コードブック、デコーダを持たせ、全フレームで複合量子化誤差を最小化する共通インデックスを選択する仕組みを導入し、autoregressive言語モデルと flow-matching 音響デコーダを組み合わせたBiSAT-TTSを構築した。",
+          "methodEn": "BiSAT employs independent encoders, codebooks, and decoders per branch while selecting a shared index per frame, and combines an autoregressive text-speech LM with a conditional flow-matching acoustic decoder in BiSAT-TTS.",
+          "validation": "再構成、コード理解度、ゼロショットTTS評価において、より少ない学習データ量で従来レベルと同等以上の性能を維持できることを確認した。",
+          "validationEn": "Evaluations on reconstruction, frozen-code understanding, and zero-shot TTS show BiSAT matches or surpasses state-of-the-art baselines with less training data.",
+          "discussion": "再構成品質そのものだけでなく、言語モデルにとってアクセスしやすいコード構造が重要であると結論付けているが、極端な低ビットレート下での限界については抽象文に具体的な数値の言及がない。",
+          "discussionEn": "The paper concludes accessible code structure matters more than reconstruction quality alone, though exact quantitative capacity limits under extreme low bitrates are not detailed in the abstract.",
+          "abstractJa": "音声言語モデル（LM）は離散トークンの系列として音声を生成するため、低ビットレートでありながら音響的な細部と言語的内容の両方を保持するトークナイザを必要とします。意味強調型トークナイザは音響的詳細を捨てがちであり、音響指向型トークナイザは言語モデル構築を阻害する音響変動を保持します。既存の統合型トークナイザは両者を単一の特徴空間でエンコードするため干渉が生じやすく、凍結された意味教師からの固定ターゲットに音響特徴を合わせるのが一般的でした。本論文では、共有インデックスメカニズムによって接続された独立した音響・意味ブランチを持つ統合フレームワーク「BiSAT (Bidirectionally Aligned Semantic-Acoustic Tokenization)」を提案します。訓練中、各ブランチは独自のエンコーダ、コードブック、デコーダを持ち、毎フレームにおいて共有インデックスが両ブランチにわたる複合量子化誤差を最小化します。これにより、BiSATは単一の離散コードストリームを生成しつつ、固定の意味教師なしに両エンコーダを共同最適化します。BiSATを基盤としたBiSAT-TTSは、自己回帰型テキスト音声LMと条件付きフローマッチング音響デコーダを組み合わせてゼロショットテキスト読み上げを実現します。実験により、BiSATが野生環境やドメイン外の音声に対して強力に一般化し、少ないデータ量で最先端のTTSベースラインと同等以上の性能を示すことを確認しました。",
+          "nextReads": [
+            {
+              "label": "Flow Matching for Generative Modeling (2022)",
+              "arxivId": "2210.02747",
+              "url": "https://arxiv.org/abs/2210.02747",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "SoundStream: An End-to-End Neural Audio Codec (2021)",
+              "arxivId": "2107.03312",
+              "url": "https://arxiv.org/abs/2107.03312",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        },
+        {
+          "id": "2611.29871v1",
+          "date": "Nov 23",
+          "title": "Which Layer to Trust? Layer Selection in Frozen Speech Encoders for Singing-Voice Deepfake Detection under Signal Corruption",
+          "titleJa": "どの層を信頼すべきか？信号劣化下での歌声ディープフェイク検出における凍結音声エンコーダの層選択",
+          "authors": [
+            "Benjamin Hurt",
+            "Yefei Yang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Frozen self-supervised speech encoders have been frequently used for audio deepfake detection. However, the layers are usually chosen from a development set. We examine this choice for singing-voice deepfake detection on CtrSVDD. We train one detection head per layer, plus a learned layer mix, on frozen XEUS (3-4 seeds) and XLS-R (2 seeds). We test on clean audio and under noise, reverberation and lossy coding. On clean audio, the middle layers beat the last layer in both encoders and the learned mix does not beat the best single layer. The layer chosen on the development set is 2.3 (XEUS) and 4.1 (XLS-R) percentage points of EER worse than the best test layer. Under noise and coding, XEUS's best layers stay in the middle, while under reverberation its upper layers catch up, whereas XLS-R's best layer moves shallower. In an exploratory analysis, XEUS detects a commercial synthesis attack best with an earlier layer, especially under noise. The layer therefore cannot be chosen reliably on an in-domain development set and clean audio alone.",
+          "comment": "5 pages, 3 figures, 1 table. Under review at C4AI4C @ ICASSP 2027. Hurt and Yang equal contributors",
+          "journalRef": null,
+          "categories": [
+            "eess.AS",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.29871v1",
+          "category": "foundation",
+          "task": "ディープフェイク検出",
+          "taskEn": "Deepfake Detection",
+          "proposedMethod": null,
+          "datasets": [
+            "CtrSVDD"
+          ],
+          "what": "本研究は、CtrSVDDデータセットにおける歌声ディープフェイク検出を対象に、凍結された自己教師あり学習音声エンコーダ（XEUSおよびXLS-R）の層選択と信号劣化の影響を評価した論文である。",
+          "whatEn": "This paper evaluates layer selection in frozen self-supervised speech encoders (XEUS and XLS-R) for singing-voice deepfake detection on the CtrSVDD dataset under signal corruptions.",
+          "novel": "著者らは、開発セットで選択された層がテストセットの最良層に比べてEERを低下させること、およびクリーンな音声や開発セットのみに依存した層選択が信頼できないことを明らかにしたと主張している。",
+          "novelEn": "The authors claim that choosing encoder layers based solely on an in-domain development set and clean audio is unreliable, as development-selected layers performed up to several percentage points worse in EER than the best test layers under various signal corruptions.",
+          "method": "凍結されたXEUSおよびXLS-Rの各層に対して個別の検出ヘッドと学習可能な層混合を訓練し、クリーン環境のほかノイズ、残響、不可逆符号化処理の下で性能を比較・検証した。",
+          "methodEn": "They trained one detection head per layer alongside a learned layer mix on frozen XEUS and XLS-R models, testing performance on clean audio as well as under noise, reverberation, and lossy audio coding.",
+          "validation": "CtrSVDDにおいて、クリーン環境では中間層が最終層を上回り、開発セットで選択した層は最良のテスト層と比較してXEUSで2.3ポイント、XLS-Rで4.1ポイントEERが悪化することを確認した。",
+          "validationEn": "On CtrSVDD, middle layers outperformed the last layer on clean audio, and layers selected on the development set were 2.3 (XEUS) and 4.1 (XLS-R) percentage points worse in EER than the best test layer.",
+          "discussion": "アブストラクトからは特定されたモデルや歪み条件以外の一般化可能性に関する制限は十分に明示されていない。",
+          "discussionEn": "The abstract does not provide sufficient details regarding potential limitations beyond the evaluated models and specific distortion conditions.",
+          "abstractJa": "凍結された自己教師あり学習音声エンコーダは、オーディオディープフェイク検出によく使用される。しかし、その層は通常、開発セットから選択される。本論文では、CtrSVDDを用いた歌声ディープフェイク検出においてこの選択を検証する。凍結されたXEUS（3〜4シード）およびXLS-R（2シード）上で、層ごとに1つの検出ヘッドと学習による層混合を訓練する。クリーンなオーディオに加え、ノイズ、残響、不可逆符号化の条件下でテストを行う。クリーンなオーディオでは、両エンコーダにおいて中間層が最終層を上回り、学習による混合は最良の単一層を上回らなかった。開発セットで選択された層は、最良のテスト層よりもEERがXEUSで2.3ポイント、XLS-Rで4.1ポイント悪化した。ノイズや符号化の下ではXEUSの最良層は中間にとどまる一方、残響下では上位層が追いつき、XLS-Rの最良層はより浅い層へ移動した。探索的分析において、XEUSは特にノイズ下で、より初期の層において商用合成攻撃を最もよく検出した。したがって、ドメイン内の開発セットとクリーンなオーディオのみから層を信頼性高く選択することはできない。",
+          "nextReads": [
+            {
+              "label": "XLS-R: Self-supervised Cross-lingual Speech Representation Learning at Scale (2021)",
+              "arxivId": "2111.09296",
+              "url": "https://arxiv.org/abs/2111.09296",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.29465v1",
+          "date": "Nov 22",
+          "title": "Voice Agents: From Auditory Intelligence to Auditory Agency",
+          "titleJa": "ボイスエージェント：聴覚的知能から聴覚的主体性へ",
+          "authors": [
+            "Kele Xu",
+            "Qisheng Xu",
+            "Xinwang Liu",
+            "Huaimin Wang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Voice systems increasingly combine streaming speech, persistent state, reasoning, tool use, and embodied control. Once these functions share a runtime, spoken input can change digital or physical state, and recognition or response quality alone no longer characterizes the system. This article studies the interfaces through which spoken evidence becomes consequential. \\emph{Auditory intelligence} denotes the capabilities required to perceive, understand, coordinate, and generate spoken interaction; \\emph{auditory agency} denotes the causal path from that interaction to stateful decisions and observable consequences. The \\emph{commitment boundary} marks where revisable auditory evidence becomes persistent state, a plan, or an executable request. \\emph{Agency closure} then follows an authorized action through observation, verification, recovery or compensation, and communication of the outcome. Evidence from full-duplex interaction, reasoning, memory, tools, embodiment, and human control shows a consistent systems-level mismatch: integration is advancing faster than end-to-end observation of what the integrated system actually does. The resulting design problem is to preserve a trace from spoken evidence to consequence while keeping commitment, execution, and verification attributable.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2611.29465v1",
+          "category": "foundation",
+          "task": "ボイスエージェントの理論フレームワーク",
+          "taskEn": "Voice Agent Conceptual Framework",
+          "proposedMethod": null,
+          "datasets": [],
+          "what": "本論文は、ストリーミング音声処理、推論、ツール利用、身体的制御が単一の実行環境を共有する近代的なボイスエージェントについて、聴覚的証拠が状態変更や行動へ繋がるシステムレベルのインタフェースと枠組みを論じた視点論文である。",
+          "whatEn": "This perspective article conceptualizes modern voice agents, proposing a framework for analyzing how spoken input transitions into stateful digital/physical actions through auditory intelligence and auditory agency.",
+          "novel": "音声証拠が変更不可な状態に確定する「コミットメント境界（commitment boundary）」と、検証・回復に至る「主体性の完結（agency closure）」というシステムレベルの概念枠組みを提示した点。",
+          "novelEn": "The authors introduce a systems-level conceptual framework defining the 'commitment boundary' for spoken evidence and 'agency closure' to structure attributable execution and verification in integrated voice agents.",
+          "method": "全複信（フルデュプレックス）相互作用、推論、メモリ、身体性、人間による制御などのシステム統合における課題を総合的に分析し、システムレベルの不整合と追跡可能性の要件を定義した。",
+          "methodEn": "The paper synthesizes evidence across full-duplex interaction, reasoning, tools, and embodiment to identify integration mismatches and formulate architectural requirements for trace preservation.",
+          "validation": "本論文は概念的論考であり、実験データやベンチマークによる数値的検証は要約に含まれていない。",
+          "validationEn": "The paper is a conceptual synthesis article; explicit benchmark metrics or quantitative empirical validations are not reported in the abstract.",
+          "discussion": "統合システムの進展に対し、エージェントの実際の動作をエンドツーエンドで観察する手法が追いついていないというシステム上の不整合が指摘されている。",
+          "discussionEn": "The abstract highlights a current systems-level limitation: system integration is advancing faster than the capabilities to observe and attribute end-to-end multi-step agent actions.",
+          "abstractJa": "音声システムは、ストリーミング音声、永続的状態、推論、ツール利用、身体的制御をますます統合しつつある。これらの機能が単一の実行環境を共有すると、発話入力がデジタルまたは物理的状態を変更できるようになり、認識や応答の品質だけではシステムを評価できなくなる。本記事は、発話による証拠が結果を生み出すインタフェースを研究する。「聴覚的知能（auditory intelligence）」は発話相互作用を知覚、理解、調整、生成するために必要な能力を指し、「聴覚的主体性（auditory agency）」はその相互作用から状態を持つ決定や観察可能な結果に至る因果関係の経路を指す。「コミットメント境界（commitment boundary）」は、変更可能な聴覚的証拠が永続的状態、計画、または実行可能な要求に確定する地点を示す。そして「主体性の完結（agency closure）」は、承認された行動を観察、検証、回復または補償、結果の伝達を通じて追跡する。フルデュプレックス相互作用、推論、メモリ、ツール、身体性、人間による制御からの証拠は、整合したシステムレベルの不整合を示している。すなわち、統合が、統合されたシステムが実際に何を行っているかのエンドツーエンドの観察よりも速く進んでいる点である。その結果生じる設計上の課題は、コミットメント、実行、検証の帰属可能性を維持しながら、発話証拠から結果までの追跡を保存することである。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.29375v1",
+          "date": "Nov 22",
+          "title": "MusicListenBench: Can Audio LLMs Hear the Difference Yet?",
+          "titleJa": "MusicListenBench: Audio LLMはまだ差異を聞き分けられるか？",
+          "authors": [
+            "Abhinaba Roy",
+            "Ambuj Mehrish",
+            "Dorien Herremans"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio large language models (LLMs) are typically evaluated on song genre, mood, and instrumentation. A more basic skill is telling whether two short clips play the same melody, chord or instrument. We introduce MusicListenBench, a benchmark of paired listening tests for melody, harmony, timbre, and tempo. Each test item comes with two variants. A FLIP variant changes the music, so the answer must change. A STAY variant changes only the sound, such as room echo or hiss, so the answer must stay the same. The two variants have opposite answers, so a model that ignores the audio scores 50%, whatever letter it prefers. The benchmark has a training split and two test sets, one rendered from symbolic music with exact labels and one built from real recordings. On the rendered test, seven of eight open audio LLMs score within 4 points of this floor. Of four commercial models, both GPT-Audio models are at chance, and the best, Gemini 2.5 Pro, reaches 74.2%, 12.8 points below human listeners (87.0%). Post-training with GRPO on 10k rendered clean pairs raises Qwen2.5-Omni from 61.2% to 99.0% on held-out clean pairs, and the gain transfers to a task left out of training. On FLIP/STAY, however, it only reaches the level of our listeners (86.0%). It now misses almost no change (1.9%, against 24.7% for Gemini 2.5 Pro), yet when only the sound changes, it turns a correct answer into a wrong one 25.7\\% of the time. More than half of its false flips come from a quiet background hiss. Models learn to hear a difference much faster than they learn which differences matter. On real recordings, open models again stay near chance, and the trained model calls 27 of 42 pairs of two strums of the same chord different. Adding sound-only pairs to training lowers false flips on both test sets, but no training run teaches relative pitch. We release the data, code, and an open leaderboard.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.AI"
+          ],
+          "url": "https://arxiv.org/abs/2611.29375v1",
+          "category": "foundation",
+          "task": "ベンチマークと音響評価",
+          "taskEn": "Benchmark and Audio Evaluation",
+          "proposedMethod": "MusicListenBench",
+          "datasets": [
+            "MusicListenBench"
+          ],
+          "what": "本論文では、音響LLM（Audio LLM）が旋律、和声、音色、テンポなどの音楽的要素の違いを聞き分けられるかを評価するためのベンチマークであるMusicListenBenchを提案している。",
+          "whatEn": "This paper introduces MusicListenBench, a benchmark designed to evaluate whether audio LLMs can hear differences in basic musical elements like melody, harmony, timbre, and tempo.",
+          "novel": "音楽的変化（FLIP）と音響的変化のみ（STAY）の対照ペアを用意することで、音声入力を無視したモデルの正解率が50%になる難易度の高い評価フレームワークを構築した点。",
+          "novelEn": "The authors introduce a paired test framework with FLIP (musical change) and STAY (acoustic sound change only) variants, forcing a baseline chance performance of 50% for models that ignore audio.",
+          "method": "シンセサイズされた楽曲と実用録音の2つのテストセットを構築し、オープンモデル・商用LLMの評価およびGRPOを用いた事後学習による耐性と問題点の分析を行った。",
+          "methodEn": "The authors created test sets from both symbolic rendered music and real recordings, evaluated multiple open and commercial audio LLMs, and analyzed post-training effects using GRPO.",
+          "validation": "商用モデルではGemini 2.5 Proが74.2%を達成したが人間（87.0%）に及ばず、GRPO学習モデルは正解率が大幅向上したものの背景ノイズ等の非音楽的変化に対する過剰反応（偽FLIP）が発生することを検証した。",
+          "validationEn": "Gemini 2.5 Pro reached 74.2% compared to human performance of 87.0%, and while post-training with GRPO improved task accuracy, it introduced high false flip rates (25.7%) triggered by subtle background noise.",
+          "discussion": "事後学習により音の違いを検知する能力は急速に向上するものの、どの差異が本質的であるかの識別や相対音感の獲得には至っていないことが挙げられる。",
+          "discussionEn": "While models quickly learn to detect difference, training does not effectively teach relative pitch or how to distinguish meaningful musical changes from irrelevant acoustic variations.",
+          "abstractJa": "音響大規模言語モデル（Audio LLM）は通常、楽曲のジャンル、ムード、使用楽器などで評価される。しかし、より基本的なスキルは、2つの短いクリップが同じ旋律、コード、または楽器を演奏しているかを判別することである。本論文では、メロディ、ハーモニー、音色、テンポに関する対照リスニングテストのベンチマークであるMusicListenBenchを提案する。各テスト項目には2つのバリエーションがある。FLIPバリエーションは音楽を変更するため回答が変わる必要がある。STAYバリエーションは部屋のエコーやヒスノイズなど音のみを変更するため回答は維持される必要がある。これら2つのバリエーションは相反する回答を持つため、オーディオを無視するモデルはどの文字を好むかにかかわらずスコアが50%となる。ベンチマークにはトレーニング分割と2つのテストセット（正確なラベルを持つシンボリック音楽からレンダリングされたものと実際の録音から構築されたもの）が含まれる。レンダリングされたテストでは、8つのオープンAudio LLMのうち7つがこの基準値の4ポイント以内に収まった。4つの商用モデルのうち、両方のGPT-Audioモデルはランダムレベルであり、最高のGemini 2.5 Proは74.2%に達したが人間のリスナー（87.0%）より12.8ポイント低かった。1万件のクリーンペアによるGRPOでの事後学習により、Qwen2.5-Omniは保持されたクリーンペアで61.2%から99.0%に向上し、その獲得能力は学習から除外されたタスクにも転移した。しかしFLIP/STAYにおいて、正解率は人間のレベル（86.0%）にとどまった。変更の完全な見落としはほぼ無くなったが（Gemini 2.5 Proの24.7%に対して1.9%）、音のみが変化した場合、25.7%の確率で正解を誤りに変えてしまった。偽のFLIPの半数以上は小さな背景ヒスノイズによるものであった。モデルは、どの違いが重要であるかを学習するよりもはるかに早く違いを聞き分けることを学習する。実際の録音では、オープンモデルは再びランダムレベルにとどまり、学習済みモデルは同じコードの2回のストローク42ペアのうち27ペアを異なると判定した。音のみのペアを訓練に追加すると両方のテストセットで偽FLIPは減少したが、どの訓練実験も相対音感を教えてはいない。我々はデータ、コード、およびオープンリーダーボードを公開する。",
+          "nextReads": [
+            {
+              "label": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models (2024)",
+              "arxivId": "2402.03300",
+              "url": "https://arxiv.org/abs/2402.03300",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        },
+        {
+          "id": "2611.29012v1",
+          "date": "Nov 21",
+          "title": "From Spatial Perception to Speech Recovery: Binaural Semantic Adaptation for Spatially Grounded Multi-Talker Transcription",
+          "titleJa": "空間知覚から音声回復へ：空間グラウンディングされた複数話者書き起こしのための両耳セマンティック順応",
+          "authors": [
+            "Wenxuan He",
+            "Shan Liang"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Spatial audio large language models increasingly combine general audio understanding with spatial perception. Yet overlapping conversations require more than locating speakers. A model must also recover what each person says and match the words to their positions. We examine this challenge in MiDashengLM-Spatial, a binaural model designed for both spatial reasoning and general audio understanding. To test these abilities, we introduce BiCP-Bench, a benchmark of overlapping two-speaker binaural recordings that contrasts candidate-based recognition, position-guided transcription, and joint transcription with spatial attribution. The model can identify a target utterance among candidates but struggles to transcribe it without them. Its semantic encoder uses only one ear. Changing that ear shifts which side's speech is recovered more accurately, despite unchanged binaural input to the spatial branch. We therefore propose Binaural Semantic Adaptation (BiSA), which combines shared encoding of both ears with cross-ear differential interactions. With the backbone frozen and 0.027% trainable parameters, BiSA raises correctly attributed joint transcription success from 0% to 57.81% for simultaneous onsets. For staggered onsets, later-speaker word error rate falls from 109.47% to 29.58%. On full-length Clarity CEC1 mixtures, word error rate falls from 59.33% to 39.60%. Spatial reasoning on MMAU-Pro improves by 9.54 percentage points without updating the spatial encoder, and general audio performance remains largely intact.",
+          "comment": "15 pages, 2 figures, 8 tables",
+          "journalRef": null,
+          "categories": [
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.29012v1",
+          "category": "foundation",
+          "task": "音声認識",
+          "taskEn": "Speech Recognition",
+          "proposedMethod": "BiSA (Binaural Semantic Adaptation)",
+          "datasets": [
+            "BiCP-Bench",
+            "Clarity CEC1",
+            "MMAU-Pro"
+          ],
+          "what": "重なり合う複数話者のバイノーラル音響入力から、各話者の発話を正確に復元し位置情報と結びつけるための両耳セマンティック順応手法「BiSA」を提案している。",
+          "whatEn": "This paper proposes Binaural Semantic Adaptation (BiSA), a method to recover and correctly attribute speech from overlapping multi-talker binaural audio.",
+          "novel": "既存の両耳モデルにおける片耳偏重のセマンティック符号化問題を特定し、わずか0.027%の学習可能パラメータで両耳の共有符号化と耳間差分相互作用を実現した点。",
+          "novelEn": "The authors identify single-ear bias in existing binaural encoders and introduce a lightweight adaptation mechanism (0.027% trainable parameters) combining shared encoding and cross-ear differential interactions.",
+          "method": "バックボーンと空間エンコーダを固定したまま、共有エンコーダと耳間差分ブロックからなるBiSAモジュールを追加して微調整を行う。",
+          "methodEn": "With the backbone and spatial encoder frozen, BiSA is integrated to optimize shared binaural representations and cross-ear differential features with minimal trainable parameters.",
+          "validation": "構築したBiCP-Bench、Clarity CEC1、MMAU-Proにて評価を行い、重なり発話における書き起こし成功率の向上や単語誤り率（WER）の大幅削減を実証した。",
+          "validationEn": "Evaluated on BiCP-Bench, Clarity CEC1, and MMAU-Pro, BiSA improved spatially attributed transcription success from 0% to 57.81% and significantly reduced WER on overlapping speech.",
+          "discussion": "空間エンコーダを更新せずとも能力が向上するが、さらに複雑な音響環境や多数話者環境への拡張性については詳細な検証が必要とされる。",
+          "discussionEn": "While effective without retraining spatial components, performance in even more complex acoustic environments or higher numbers of simultaneous speakers requires further study.",
+          "abstractJa": "空間音響大規模言語モデルは、一般的な音響理解と空間知覚を急速に統合しつつある。しかし、重複する会話の処理には、話者の位置特定以上の能力が求められる。モデルは各個人が発言した内容を復元し、単語をその位置に対応付ける必要がある。我々は、空間推論と一般的音響理解の両方を目的として設計されたバイノーラルモデルであるMiDashengLM-Spatialにおいてこの課題を検証する。これらの能力をテストするため、候補ベースの認識、位置ガイド付き書き起こし、および空間属性付きの結合書き起こしを対比する、重複する2話者バイノーラル録音のベンチマークであるBiCP-Benchを導入する。モデルは候補の中からターゲット発話を特定できるものの、候補なしでそれを書き起こすことに苦戦する。そのセマンティックエンコーダは片耳のみを使用している。空間ブランチへのバイノーラル入力が変更されていないにもかかわらず、その耳を変更すると、どちらの側の音声がより正確に復元されるかが変化する。そこで我々は、両耳の共有符号化と耳間差分相互作用を組み合わせた両耳セマンティック順応（BiSA: Binaural Semantic Adaptation）を提案する。バックボーンを固定し、0.027%の学習可能パラメータを使用することで、BiSAは同時開始発話における正しい空間属性付き結合書き起こしの成功率を0%から57.81%に引き上げた。時間をずらした開始の場合、後発話者の単語誤り率は109.47%から29.58%に低下した。フルレングスのClarity CEC1混合データでは、単語誤り率が59.33%から39.60%に低下した。MMAU-Proでの空間推論は空間エンコーダを更新することなく9.54ポイント向上し、一般的な音響性能も概ね維持された。",
+          "nextReads": [
+            {
+              "label": "SALMONN: Towards Generic Hearing Abilities for Large Language Models (2023)",
+              "arxivId": "2310.13289",
+              "url": "https://arxiv.org/abs/2310.13289",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.28823v1",
+          "date": "Nov 21",
+          "title": "When Being Wrong Is Right: Reverse-Capability Audio CAPTCHAs through Psychoacoustic Design",
+          "titleJa": "間違いが正しい時：心理音響設計による逆能力音声CAPTCHA",
+          "authors": [
+            "Mingjie Bao",
+            "Yu Dai",
+            "Guangke Chen",
+            "Guozhu Meng"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Large audio-language models (LALMs) have recently been shown to bypass audio CAPTCHAs designed around limitations of automatic speech recognition. To address this threat, we introduce reverse-capability verification, a general CAPTCHA framework that reverses the conventional human-easy, machine-hard relationship with respect to the physical ground truth. It selects challenges in which stable human perceptual limitations cause the human-reference answer to differ from the physical ground truth, while machine analysis tends toward that truth. Because the verifier accepts the human-reference answer, advanced solver capabilities and resulting improved recovery of the physical ground truth may instead strengthen the human-machine separation.   We instantiate the framework through psychoacoustics and design two audio CAPTCHAs: HIPI, a classification task, and YINGCHEN, a counting task, together with their conjunctive composition. Across seven LALMs and eight attack strategies, the maximum observed machine acceptance rates are 19%, 17%, and 3% for HIPI, YINGCHEN, and their composition, respectively, compared with 45-100% for nine prior schemes. A multidimensional human usability study yields corresponding human acceptance rates of 78%, 90%, and 76%, while maintaining competitive efficiency and satisfaction. Further analysis demonstrates that advanced LALMs tend toward physical ground truth. These results show that reverse-capability verification substantially reduces machine acceptance while retaining high human acceptance through an approach different from conventional CAPTCHAs.",
+          "comment": "18 pages",
+          "journalRef": null,
+          "categories": [
+            "cs.CR",
+            "cs.AI",
+            "cs.HC",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.28823v1",
+          "category": "foundation",
+          "task": "音声CAPTCHA",
+          "taskEn": "Audio CAPTCHA",
+          "proposedMethod": "HIPI, YINGCHEN",
+          "datasets": [],
+          "what": "人間と機械の能力関係を逆転させ、物理的真値ではなく心理音響的な人間の知覚特性に基づいた回答を正解とする新しい音声CAPTCHAフレームワークを提案している。",
+          "whatEn": "This paper proposes a reverse-capability verification framework for audio CAPTCHAs that leverages human perceptual limitations, making advanced machine capability toward physical ground truth work against solvers.",
+          "novel": "高度な音響言語モデル（LALM）が物理的真値の解読に優れる点に着目し、「物理的真値に近づくほど不合格になる」という心理音響学に基づいた逆能力検証メカニズムを構築した点。",
+          "novelEn": "The authors introduce reverse-capability verification based on psychoacoustics, where machines fail precisely because they accurately recover physical ground truth that humans perceive differently.",
+          "method": "分類タスクのHIPIとカウントタスクのYINGCHEN、およびそれらの複合結合タスクを設計し、人間および7つのLALMと8つの攻撃手法を用いて通過率を評価・比較した。",
+          "methodEn": "The authors designed a classification task (HIPI) and a counting task (YINGCHEN) based on psychoacoustic principles, evaluating them against seven LALMs and eight attack strategies alongside human usability tests.",
+          "validation": "従来手法のモデル通過率（45-100%）に対し、提案手法は最大でも19%（HIPI）、17%（YINGCHEN）、3%（複合）に抑えつつ、人間の通過率76-90%を達成した。",
+          "validationEn": "The proposed schemes constrained maximum machine acceptance rates to 19%, 17%, and 3% across attacks, while maintaining high human acceptance rates between 76% and 90%.",
+          "discussion": "人間の心理音響的錯覚の個体差や聴覚特性の違いによる通過率の変動、および特定の提示条件下での使いやすさ維持に関する更なる検討が推測される。",
+          "discussionEn": "Performance relies on consistent human perceptual illusions, meaning individual differences in hearing acuity or ambient conditions might affect human pass rates.",
+          "abstractJa": "音声言語大規模モデル（LALM）は近年、自動音声認識の限界に基づいて設計された音声CAPTCHAを突破できることが示されている。この脅威に対処するため、我々は物理的なグラウンドトゥルース（真値）に対する従来の「人間には容易、機械には困難」という関係を逆転させる一般的なCAPTCHAフレームワークである逆能力検証（reverse-capability verification）を導入する。本手法は、人間の安定した知覚的制限により人間参照の回答が物理的グラウンドトゥルースと異なる一方で、機械の分析はその真値に向かう傾向がある課題を選択する。検証器は人間参照の回答を受け入れるため、高度なソルバーの能力向上とそれに伴う物理的グラウンドトゥルースの復元精度の向上は、かえって人間と機械の分離を強化することになる。我々は心理音響学を通じてこのフレームワークを具現化し、分類タスクであるHIPIとカウントタスクであるYINGCHENの2つの音声CAPTCHA、およびそれらの合体構成を設計した。7つのLALMと8つの攻撃戦略にわたり、観察された最大の機械通過率はHIPI、YINGCHEN、およびそれらの複合でそれぞれ19%、17%、3%であった（従来の9つのスキームでは45〜100%）。多次元の人間使いやすさ調査では、競合力のある効率性と満足度を維持しながら、対応する人間の通過率は78%、90%、76%となった。さらなる分析により、高度なLALMほど物理的グラウンドトゥルースに近づく傾向があることが示された。これらの結果は、逆能力検証が従来のCAPTCHAとは異なるアプローチにより、高い人間通過率を維持しながら機械の通過率を大幅に低減させることを示している。",
+          "nextReads": [
+            {
+              "label": "SALMONN: Towards Generic Hearing Abilities for Large Language Models (2023)",
+              "arxivId": "2310.13289",
+              "url": "https://arxiv.org/abs/2310.13289",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.28248v1",
+          "date": "Nov 20",
+          "title": "Granary-v2: Scalable Multilingual Speech Data Curation for Predictable and Controllable Model Outputs",
+          "titleJa": "Granary-v2：予測可能で制御可能なモデル出力を実現する拡張可能な多言語音声データキュレーション",
+          "authors": [
+            "Nithin Rao Koluguri",
+            "Meline Mkrtchyan",
+            "Nune Tadevosyan",
+            "Aaftab V",
+            "Sushmitha Deva"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Speech-language models that follow instructions need training data that connects the same recording to different output forms and tasks. We present Granary-v2, a multilingual speech dataset and reusable curation system that provides a data foundation for these models. Granary-v2 extends Granary-v1 with aligned transcript variants and instruction-target pairs for multi-task speech-language training. Language coverage increases from 25 to 48 languages. Built with NeMo Curator, the system combines language-dependent ASR labeling, transcript improvement, and text label generation. It produces aligned targets for speech-faithful transcription, written forms with and without disfluencies, and code-switched transcription. Additional targets include transcript-derived captions and question-answer pairs, with context and translations for selected records. The full processed collection contains approximately 843,600 unique audio hours, with translations covering about 142,800 hours into English and about 55k hours of English audio into 31 target languages. We evaluate label-quality filtering with two English Transformer-TDT models under the same training-step budget. Filtering reduces the unweighted mean word error rate across nine benchmarks from 4.91% to 4.67%, with improvements on six benchmarks. We also report curation throughput and downstream ASR and speech translation results from Nemotron-3.5-Transcribe, which uses Granary-v2 as part of its training data. We release the Granary-v2 pipeline, built with NeMo Curator, and model training recipes as open source. We release a public subset of the generated labels and instruction-target pairs through Hugging Face.",
+          "comment": "The first three authors contributed equally. Dataset: https://huggingface.co/datasets/nvidia/Granary-v2",
+          "journalRef": null,
+          "categories": [
+            "eess.AS"
+          ],
+          "url": "https://arxiv.org/abs/2611.28248v1",
+          "category": "foundation",
+          "task": "データキュレーション",
+          "taskEn": "Data Curation",
+          "proposedMethod": "Granary-v2",
+          "datasets": [
+            "Granary-v2"
+          ],
+          "what": "指示追従型音声言語モデル向けの多言語音声データセットおよび再利用可能なキュレーションシステム「Granary-v2」を提案する。",
+          "whatEn": "We present Granary-v2, a multilingual speech dataset and reusable curation system for instruction-following speech-language models.",
+          "novel": "Granary-v1を拡張し、48言語への言語カバレッジの拡大、音声忠実な書き起こしやコードスイッチングなどの多種多様なアライメント済みターゲットの生成を実現した点である。",
+          "novelEn": "The authors claim novelty in extending Granary-v1 to 48 languages and generating diverse aligned targets including speech-faithful transcriptions and code-switching.",
+          "method": "NeMo Curatorを活用し、言語依存のASRラベリング、書き起こし改善、テキストラベル生成を組み合わせて多様な指示ターゲットを作成する。",
+          "methodEn": "Built with NeMo Curator, the system combines language-dependent ASR labeling, transcript improvement, and text label generation to create diverse instruction targets.",
+          "validation": "2つの英語Transformer-TDTモデルを用いてラベル品質フィルタリングを評価し、9つのベンチマークにわたる平均単語誤り率を4.91%から4.67%に削減したことを報告している。",
+          "validationEn": "The authors evaluate label-quality filtering with two English Transformer-TDT models, reporting a reduction in unweighted mean word error rate across nine benchmarks from 4.91% to 4.67%.",
+          "discussion": "抽象文には具体的な限界についての言及はないが、公開されたデータセットはサブセットであり、さらなる大規模検証の余地があると考えられる。",
+          "discussionEn": "The abstract does not explicitly discuss limitations, though the released data is a subset, leaving room for further large-scale validation.",
+          "abstractJa": "指示に従う音声言語モデルには、同じ録音を異なる出力形式やタスクに結びつける訓練データが必要である。本研究では、これらのモデルにデータ基盤を提供する多言語音声データセットおよび再利用可能なキュレーションシステムであるGranary-v2を提案する。Granary-v2は、マルチタスク音声言語訓練向けのアライメント済み書き起こしバリアントや指示-ターゲットペアによってGranary-v1を拡張する。言語カバレッジは25言語から48言語へと拡大した。NeMo Curatorを用いて構築された本システムは、言語依存のASRラベリング、書き起こしの改善、テキストラベル生成を組み合わせる。これにより、音声に忠実な書き起こし、非流暢性の有無による表記形式、コードスイッチングされた書き起こしのアライメント済みターゲットが生成される。追加のターゲットには、書き起こし由来のキャプションや質問応答ペアが含まれ、選択されたレコードには文脈と翻訳が付与される。処理された全コレクションには約84,3600時間のユニークな音声が含まれており、約142,800時間の英語への翻訳、および約5万5千時間の英語音声の31のターゲット言語への翻訳が含まれる。同一の訓練ステップ予算の下で、2つの英語Transformer-TDTモデルを使用してラベル品質フィルタリングを評価する。フィルタリングにより、9つのベンチマークにおける非加重平均単語誤り率は4.91%から4.67%に低下し、6つのベンチマークで改善が見られた。また、訓練データの一部としてGranary-v2を使用するNemotron-3.5-Transcribeからのキュレーションスループットおよび下流のASRと音声翻訳の結果についても報告する。NeMo Curatorで構築されたGranary-v2パイプラインとモデル訓練レシピをオープンソースとして公開し、生成されたラベルと指示-ターゲットペアのパブリックサブセットをHugging Faceを通じて公開する。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.27810v1",
+          "date": "Nov 20",
+          "title": "SLP-Bench: Evaluating and Improving Acoustic Claims of Reasoning Audio Language Models on Clinical Speech",
+          "titleJa": "SLP-Bench：臨床音声における推論型音声言語モデルの音響的主張の評価と改善",
+          "authors": [
+            "Côme Hosxe",
+            "Rachid Riad",
+            "Quentin Spinat"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Audio language models (ALMs) can answer clinical questions from speech, outperforming baselines built on handcrafted acoustic features. Reasoning ALMs generate a chain of thought that refers to properties of the speaker's voice before predicting. Each statement the model makes about the voice needs to be checked against clinicians' perceptual ratings of the same recording. On clinical speech, existing evaluations score only the final answer. We introduce Speech Language Pathologist Bench (SLP-Bench), a benchmark grading each acoustic claim in the chain of thought against clinicians' perceptual ratings of the same recording. It covers five clinician-rated datasets and 25 perceptual dimensions, and assesses claims for factuality, stability under resampling, and consistency across reworded and different questions. Across ten open-weight reasoning ALMs evaluated zero-shot, claim balanced accuracy ranges from 0.52 to 0.58, claims change under resampling and rewording, and the most consistent models are not the most factual. Fine-tuning a 7B ALM with GRPO on a reward for claims that agree with clinicians raises its claim balanced accuracy from 0.54 to 0.60 and its mean kappa from 0.39 to 0.61, while preserving answer accuracy on per-dimension questions. SLP-Bench is available upon request, subject to approval by the providers of each dataset.",
+          "comment": "5 pages, 4 figures, 2 tables, submitted to ICASSP 2027 workshop \"Explainability, Robustness, and Controllability of Language Modeling for Speech and Audio\"",
+          "journalRef": null,
+          "categories": [
+            "cs.AI",
+            "cs.CL",
+            "cs.LG",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.27810v1",
+          "category": "foundation",
+          "task": "音声評価",
+          "taskEn": "Speech Evaluation",
+          "proposedMethod": "SLP-Bench",
+          "datasets": [
+            "SLP-Bench"
+          ],
+          "what": "臨床音声に対する推論型音声言語モデルの思考プロセスに含まれる音響的主張を評価・改善するためのベンチマーク「SLP-Bench」を提案する。",
+          "whatEn": "We introduce Speech Language Pathologist Bench (SLP-Bench), a benchmark grading each acoustic claim in the chain of thought of reasoning audio language models on clinical speech.",
+          "novel": "従来の最終回答のみの評価から脱却し、推論の連鎖における各音響的主張を臨床医の知覚評価と突き合わせて厳格に評価・改善する点である。",
+          "novelEn": "The authors claim novelty in moving beyond evaluating only final answers by grading each acoustic claim in the chain of thought against clinicians' perceptual ratings.",
+          "method": "5つの臨床医による評価済みデータセットと25の知覚次元を網羅し、事実性、リサンプリングに対する安定性、言い換えに対する一貫性を評価する。また、GRPOを用いた強化学習による微調整を行う。",
+          "methodEn": "The benchmark covers five clinician-rated datasets and 25 perceptual dimensions, assessing claim factuality, stability, and consistency, and employs fine-tuning with GRPO.",
+          "validation": "10個のオープンウェイト推論音声言語モデルのゼロショット評価を実施し、GRPOによる微調整によってバランス正解率が0.54から0.60に向上したことを示した。",
+          "validationEn": "Evaluating ten open-weight reasoning audio language models zero-shot, the authors show that fine-tuning with GRPO raises claim balanced accuracy from 0.54 to 0.60.",
+          "discussion": "ベンチマークは各データセット提供者の承認を条件としたリクエストベースの提供となっており、データアクセスの制限が課題となり得る。",
+          "discussionEn": "The benchmark is available upon request subject to dataset provider approval, indicating potential access restrictions as a limitation.",
+          "abstractJa": "音声言語モデル（ALM）は音声から臨床的な質問に答えることができ、手作りの音響特徴量に基づくベースラインを凌駕する。推論型ALMは、予測を行う前に話者の声の特性に言及する思考の連鎖（チェーン・オブ・ソート）を生成する。モデルが声に関して行う各主張は、同じ録音に対する臨床医の知覚評価と照らし合わせて検証される必要がある。臨床音声において、既存の評価は最終的な回答のみをスコア化している。我々は、同じ録音に対する臨床医の知覚評価と照らし合わせて、思考の連鎖における各音響的主張を採点するSpeech Language Pathologist Bench（SLP-Bench）を導入する。これは5つの臨床医による評価済みデータセットと25の知覚次元を網羅し、主張の事実性、リサンプリングに対する安定性、言い換えられた質問や異なる質問間での一貫性を評価する。ゼロショットで評価された10のオープンウェイト推論型ALMにおいて、主張のバランス正解率は0.52から0.58の範囲であり、主張はリサンプリングや言い換えによって変化し、最も一貫性のあるモデルが最も事実に基づいているわけではないことが示された。臨床医と一致する主張に対する報酬を用いてGRPOで7BのALMを微調整することにより、次元ごとの質問における回答の正解率を維持しつつ、主張のバランス正解率を0.54から0.60へ、平均カッパ係数を0.39から0.61へ向上させた。SLP-Benchは、各データセットの提供者の承認を条件として、リクエストに応じて利用可能である。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.26759v1",
+          "date": "Nov 19",
+          "title": "Windchime: an Audiovisual Installation with Audio-Language Model implementations",
+          "titleJa": "Windchime：音声言語モデルの実装による音響映像インスタレーション",
+          "authors": [
+            "Trent Eriksen",
+            "Celeste Betancur Gutierrez"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Windchime is an audiovisual installation in which spoken language retrieves music and interactive animations from an artist authored corpus. A local Automatic Speech Recognition (ASR) model transcribes each prompt while an audio-language model (ALM) embeds it and retrieval over 406 audio stems returns a soundscape with live coded Strudel fragments that layer into audio output. Simultaneously each spoken input results in retrieval of interactive Three.js animation scenes each containing unique tactile control via monome grid and arc hardware. Windchime distributes agency in three distinct directions; across the artist who authored the possible outputs, the ALM that influences what areas of the corpus can be retrieved, and the visitor whose spoken inputs result in multimodal embodied interaction.",
+          "comment": "Accepted to the NeurIPS 2026 Creative AI Track (artwork). 4 pages (3 pages plus references), 2 figures. Video: https://youtu.be/j3XyW2ynH5Y OpenReview: https://openreview.net/forum?id=KKLTKVVHkM NeurIPS: https://neurips.cc/virtual/2026/loc/sydney/160685",
+          "journalRef": null,
+          "categories": [
+            "cs.MM",
+            "cs.AI",
+            "cs.HC",
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.26759v1",
+          "category": "foundation",
+          "task": "音響映像インスタレーション",
+          "taskEn": "Audiovisual Installation",
+          "proposedMethod": "Windchime",
+          "datasets": [],
+          "what": "音声言語モデルを用いて、話された言葉から音楽やインタラクティブなアニメーションを検索・生成する音響映像インスタレーション「Windchime」を提案する。",
+          "whatEn": "Windchime is an audiovisual installation in which spoken language retrieves music and interactive animations from an artist authored corpus using audio-language models.",
+          "novel": "アーティスト、音声言語モデル、来場者の間でエージェンシー（主体性）を分散させ、マルチモーダルな身体的インタラクションを実現した点である。",
+          "novelEn": "The authors claim novelty in distributing agency across the artist, the audio-language model, and the visitor to achieve multimodal embodied interaction.",
+          "method": "ローカルのASRモデルでプロンプトを書き起こし、音声言語モデルで埋め込みを行って406のオーディオステムからサウンドスケープを検索し、StrudelフラグメントやThree.jsアニメーションを生成する。",
+          "methodEn": "A local ASR model transcribes prompts while an audio-language model embeds them to retrieve from 406 audio stems, generating soundscapes with Strudel fragments and Three.js animations.",
+          "validation": "具体的な性能評価や定量的検証は抽象文において報告されていない。",
+          "validationEn": "The abstract does not report specific performance evaluations or quantitative validation.",
+          "discussion": "抽象文ではシステムの具体的な制限については議論されていない。",
+          "discussionEn": "The abstract does not discuss specific limitations of the system.",
+          "abstractJa": "Windchimeは、アーティストが作成したコーパスから、話し言葉によって音楽やインタラクティブなアニメーションを検索する音響映像インスタレーションである。ローカルの自動音声認識（ASR）モデルが各プロンプトを書き起こす一方、音声言語モデル（ALM）がそれを埋め込み、406のオーディオステムに対する検索を通じて、音声出力へと層状に重なるライブコーディングされたStrudelフラグメントを含むサウンドスケープを返す。同時に、各音声入力により、モノメグリッドおよびアークハードウェアによる独自の触覚制御を含む、インタラクティブなThree.jsアニメーションシーンがそれぞれ検索される。Windchimeは、可能な出力を制作したアーティスト、検索できるコーパスの領域に影響を与えるALM、そして音声入力がマルチモーダルな身体的インタラクションをもたらす来場者の3つの異なる方向に主体性を分散させる。",
+          "nextReads": [],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "separation",
+      "label": "音源分離",
+      "labelEn": "Source Separation",
+      "color": "#4ade80",
+      "papers": [
+        {
+          "id": "2611.33247v1",
+          "date": "Nov 24",
+          "title": "Line-Level Singer Diarization in Multi-Member Pop Songs: A Benchmark, Lead-Vocal Isolation, and Song-Level Decoding",
+          "titleJa": "大人数ポップソングにおける行レベルの歌手ダイアライゼーション：ベンチマーク、主ボーカル単離、および楽曲レベルのデコーディング",
+          "authors": [
+            "Allen Ng"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Fans of multi-member pop groups annotate songs line by line with the member who sings each line, but speech diarization does not transfer to this setting: a commercial diarizer finds one or two speakers in songs by groups of four to eight. We study line-level singer diarization: given a song and its lyric-line timings, group the lines by singer with no prior knowledge of the group. We release ColorCoded-SD, a benchmark of 43 K-pop songs (1,740 lines, 3-8 singers per song) built from crowd annotations verified by independent annotators, together with alignment and scoring tools, and we derive line labels for the IdolSongsJp corpus from its per-singer solo renditions for evaluation on unseen singers. Combining lead-vocal isolation with a karaoke separator, singing-adapted speaker embeddings, and two training-free song-level decoders (a sticky Viterbi pass over line order and unsupervised linking of a group's songs) improves B-cubed F1 over the standard pipeline (vocal separation, speaker embeddings, per-song clustering) by +0.058 on ColorCoded-SD (p=0.001) and by +0.066 on IdolSongsJp (p=0.003). Isolating the lead is the largest single factor wherever the separator leaves a lead voice (+0.04 to +0.06 on the same lines), and with the singers' dry studio takes two different encoders become indistinguishable; the remaining errors concentrate on short lines that carry too little audio for a voiceprint. We also report negative results (more or cleaner training data, weight editing, a song-context model, and target-singer extraction) that bound where further gains can come from.",
+          "comment": "7 pages, 6 figures, 4 tables. Benchmark: https://huggingface.co/datasets/nagiflow/colorcoded-sd",
+          "journalRef": null,
+          "categories": [
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.33247v1",
+          "category": "separation",
+          "task": "歌手ダイアライゼーション",
+          "taskEn": "Singer Diarization",
+          "proposedMethod": null,
+          "datasets": [
+            "ColorCoded-SD",
+            "IdolSongsJp"
+          ],
+          "what": "複数メンバーからなるポップソングにおいて歌詞行タイミング情報をもとに歌手ごとの行分離を行う行レベル歌手ダイアライゼーション手法とベンチマークの提案。",
+          "whatEn": "A framework and benchmark for line-level singer diarization in multi-member pop songs using lyrics timing and novel song-level decoders.",
+          "novel": "リードボーカル単離、歌唱に適合させた話者埋め込み、および訓練不要な2種類の楽曲レベルデコーダ（Sticky Viterbiと非教師あり楽曲間リンク）を組み合わせて従来パイプラインを大幅に上回った点。",
+          "novelEn": "The author introduced lead-vocal isolation combined with singing-adapted speaker embeddings and two training-free song-level decoders, significantly outperforming standard diarization pipelines.",
+          "method": "カラオケ音源分離とリードボーカル単離を組み合わせ、歌唱適合話者埋め込みを抽出。行順序に対するSticky Viterbiパスとグループ楽曲の非教師ありクラスタリングを統合して楽曲レベルで推論。",
+          "methodEn": "Combines karaoke separation with lead-vocal isolation, extracts singing-adapted speaker embeddings, and decodes using a sticky Viterbi pass over line order alongside unsupervised song linking.",
+          "validation": "独自構築のColorCoded-SD（K-pop 43曲）とIdolSongsJpで評価し、標準パイプラインに対しB-cubed F1でそれぞれ+0.058、+0.066の向上を確認した。",
+          "validationEn": "Evaluated on ColorCoded-SD and IdolSongsJp, improving B-cubed F1 over the standard pipeline by +0.058 (p=0.001) and +0.066 (p=0.003), respectively.",
+          "discussion": "残存するエラーは声紋を抽出するには音声長が短い短行に集中しており、データ拡充やモデル拡大の効果限界（負の結果）も併せて報告されている。",
+          "discussionEn": "Remaining errors concentrate on short lines lacking sufficient audio duration for robust voiceprints, with negative results bounding further improvement avenues.",
+          "abstractJa": "多人数ポップグループのファンは、曲の各行を歌っているメンバーを一行ずつアノテーションするが、従来の音声ダイアライゼーション（Speech Diarization）はこの設定に適用できない。市販のダイアライザーは4〜8人グループの楽曲において1〜2人の話者しか検出できない。本研究では、楽曲と歌詞行のタイミングが与えられた際に、グループの事前知識なしに行を歌手ごとにグループ化する「行レベルの歌手ダイアライゼーション」を研究する。第三者アノテーターにより検証されたクラウドソースアノテーションに基づくK-pop 43曲（1,740行、1曲あたり3〜8人の歌手）のベンチマーク「ColorCoded-SD」を調整・スコアリングツールと共に公開するとともに、未見の歌手での評価のためにIdolSongsJpコーパスのソロ歌唱から行ラベルを導出した。リードボーカル単離、カラオケ分離器、歌唱に適合させた話者埋め込み、および2つの訓練不要な楽曲レベルデコーダ（行順序に対するSticky Viterbiパスとグループ楽曲の非教師ありリンク）を組み合わせることで、標準パイプライン（ボーカル分離、話者埋め込み、曲ごとのクラスタリング）と比較してB-cubed F1がColorCoded-SDで+0.058（p=0.001）、IdolSongsJpで+0.066（p=0.003）向上した。リードの単離は分離器がリード声を残す箇所で最も効果的な単一要因であり（同等行で+0.04〜+0.06）、歌手のドライスタジオテイクを使用すると2つの異なるエンコーダが不可分となった。残るエラーは、声紋を得るには音声が短すぎる短い行に集中している。さらに、今後の改善の方向性を限定づける負の結果（訓練データの増加・クリーン化、重み編集、楽曲コンテキストモデル、ターゲット歌手抽出）についても報告する。",
+          "nextReads": [
+            {
+              "label": "pyannote.audio: neural building blocks for speaker diarization (2019)",
+              "arxivId": "1911.01255",
+              "url": "https://arxiv.org/abs/1911.01255",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        },
+        {
+          "id": "2611.29411v1",
+          "date": "Nov 22",
+          "title": "Who Plays What: Same-Instrument Music Separation from Video",
+          "titleJa": "誰が何を演奏しているか：ビデオからの同一楽器音源分離",
+          "authors": [
+            "Abhinaba Roy",
+            "Ambuj Mehrish",
+            "Sebastiano Vascon",
+            "Dorien Herremans"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "When two musicians in an ensemble play the same instrument, they sound alike and their instruments look alike. Audio-only separators, and audio-visual separators that rely on appearance, cannot tell them apart. What still differs is how each player moves, and when. We study same-instrument per-player separation: a user clicks one musician in a video and receives that musician's sound alone, even when other players in the video play the same instrument. Our model follows the clicked player and describes them with high level video features and the velocities of body and hand keypoints. A pretrained music separator attends to these tokens through cross-attention. Earlier motion-based separators were scored only on synthetic mixtures of solo videos. We give the first per-player evaluation of same-instrument separation on real ensemble recordings. On 58 players in URMP, each sharing an instrument with at least one other player in the piece, our model reaches a median SDR of 5.3 dB, while four released separators, audio-only and audio-visual, stay at or below 0.3 dB. The gap is wider on same-instrument duets, and our model also beats the audio-visual baselines on their own MUSIC benchmark. Tests show that the gain comes from movement: replacing the video with a still frame removes it, and so does shifting the video by a fraction of a second against the audio.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD",
+            "cs.CV"
+          ],
+          "url": "https://arxiv.org/abs/2611.29411v1",
+          "category": "separation",
+          "task": "音源分離",
+          "taskEn": "Audio Source Separation",
+          "proposedMethod": null,
+          "datasets": [
+            "URMP",
+            "MUSIC"
+          ],
+          "what": "映像中で同一の楽器を演奏するアンサンブルから、指定された単一の演奏者の音を選択的に分離抽出するマルチモーダル音源分離手法を提案した論文である。",
+          "whatEn": "This paper presents a multimodal audio-visual source separation method to isolate the sound of a specific musician playing in an ensemble, even when others play the same instrument.",
+          "novel": "見た目や音色が酷似する同一楽器の演奏者同士を区別するため、演奏者の身体・手のキーポイント速度と高次ビデオ特徴量を交差注意（cross-attention）で音源分離器に導入した点、および実世界の同一楽器アンサンブル録音での演奏者単位の評価を初めて実施した点。",
+          "novelEn": "The authors introduce a motion-driven approach using body/hand keypoint velocities via cross-attention and present the first per-player evaluation of same-instrument separation on real ensemble video recordings.",
+          "method": "ユーザが指定した演奏者を追跡し、高次ビデオ特徴量と身体・手のキーポイント速度を用いて表現を作成、事前学習済み音楽分離器がクロスアテンションを介してこれらのトークンを参照する構造を提示した。",
+          "methodEn": "The model tracks a clicked musician, representing them through high-level video features and body/hand keypoint velocities, which a pretrained music separator attends to using cross-attention.",
+          "validation": "URMPデータセットの同一楽器を含む演奏者（58名）で中間SDR 5.3 dBを達成し、ベースライン（0.3 dB以下）を大幅に上回った。また、静止画への置換や時間シフト実験により動き情報が分離性能に必須であることを検証した。",
+          "validationEn": "On 58 URMP players sharing instruments, the model achieved a median SDR of 5.3 dB compared to <= 0.3 dB for baselines, and ablation tests confirmed performance gains were directly tied to video motion.",
+          "discussion": "アブストラクトには特定の制限事項（極端な遮蔽やキーポイント追跡失敗時の影響など）に関する明示的な言及はない。",
+          "discussionEn": "The abstract does not explicitly detail limitations such as tracking failures or extreme visual occlusion scenarios.",
+          "abstractJa": "アンサンブルにおいて2人の演奏者が同じ楽器を演奏する場合、その音も見た目も酷似している。オーディオのみの分離器や外観に頼るオーディオビジュアル分離器では、彼らを区別することができない。依然として異なるのは、各演奏者がどのように、そしていつ動くかである。本研究では、演奏者ごとの同一楽器分離を研究する。ユーザがビデオ内の1人の演奏者をクリックすると、ビデオ内の他の演奏者が同じ楽器を演奏している場合でも、その演奏者の音だけが出力される。提案モデルはクリックされた演奏者を追跡し、高次のビデオ特徴量と身体および手のキーポイントの速度によってその演奏者を記述する。事前学習済みの音楽分離器は、クロスアテンションを通じてこれらのトークンを参照する。従来の運動ベースの分離器は、ソロビデオの人工的な混合データでのみ評価されていた。我々は、実際のアンサンブル録音における同一楽器分離の初の演奏者単位の評価を提供する。楽曲内で少なくとも1人の他の演奏者と楽器を共有しているURMPの58人の演奏者において、提案モデルは5.3 dBの中央値SDRに達したのに対し、公開されている4つの分離器（オーディオのみおよびオーディオビジュアル）は0.3 dB以下にとどまった。この差は同一楽器のデュエットでより広がり、提案モデルは独自のMUSICベンチマークにおいてもオーディオビジュアルのベースラインを上回った。テストによると、この利点は動きから得られることが示された。ビデオを静止画に置き換えると利点が失われ、ビデオをオーディオに対してわずかに時間をずらした場合も同様であった。",
+          "nextReads": [
+            {
+              "label": "Looking to Listen at the Cocktail Party: A Speaker-Independent Audio-Visual Model for Speech Separation (2018)",
+              "arxivId": "1804.03619",
+              "url": "https://arxiv.org/abs/1804.03619",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "The Sound of Pixels (2018)",
+              "arxivId": "1804.03160",
+              "url": "https://arxiv.org/abs/1804.03160",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": 0,
+          "projectPage": null
+        }
+      ]
+    },
+    {
+      "id": "anomaly",
+      "label": "異音検知",
+      "labelEn": "Anomalous Sound Detection",
+      "color": "#fb923c",
+      "papers": [
+        {
+          "id": "2611.31043v1",
+          "date": "Nov 23",
+          "title": "What Do Sound Event Embeddings Reveal? Auditing Speaker Leakage in Audio Representations",
+          "titleJa": "音響イベント埋め込みは何を明かすのか？オーディオ表現における話者漏洩の監査",
+          "authors": [
+            "Bhawana Chhaglani"
+          ],
+          "org": "",
+          "orgSource": null,
+          "abstract": "Pretrained audio embeddings are increasingly used as intermediate representations for sound event detection (SED) and other always-on acoustic sensing tasks. While these representations are selected for their utility on downstream tasks, they may also retain sensitive information unrelated to their intended purpose, creating privacy risks even when raw audio is not exposed. In this work, we present an empirical framework for auditing privacy leakage from pretrained audio embeddings using two complementary approaches. First, we quantify representation-level leakage by measuring statistical dependence between an audio embedding and a representation specialized for encoding sensitive information. Second, we measure attack-level leakage by training lightweight adversarial probes to recover sensitive attributes directly from the embedding. We apply this framework to four widely used audio representations (CLAP, PANNs, AST, and YAMNet) and evaluate leakage of speaker identity and gender. We found that speaker identification balanced accuracy ranges from $0.43$ to $0.72$, while gender information is also strongly recoverable. Moreover, representation-level and attack-based measurements exhibit consistent trends, with CLAP leaking the most and YAMNet leaking the lest speaker identity. These results demonstrate that intermediate audio representations are not inherently privacy-preserving interfaces and motivate privacy leakage as an explicit criterion, alongside downstream utility, when selecting representations for acoustic sensing systems.",
+          "comment": null,
+          "journalRef": null,
+          "categories": [
+            "cs.SD"
+          ],
+          "url": "https://arxiv.org/abs/2611.31043v1",
+          "category": "anomaly",
+          "task": "プライバシー監査",
+          "taskEn": "Privacy Auditing",
+          "proposedMethod": null,
+          "datasets": [],
+          "what": "音響イベント検出などの常時動作音響センシングで利用される事前学習済みオーディオ埋め込みから、話者IDや性別などのプライバシー情報がどの程度漏洩するかを評価した研究。",
+          "whatEn": "A study introducing an empirical framework to audit privacy leakage (specifically speaker identity and gender) from pretrained audio embeddings used in acoustic sensing tasks.",
+          "novel": "表現レベルの統計的依存関係の測定と敵対的プローブによる攻撃レベルの漏洩測定を組み合わせた包括的なプライバシー監査フレームワークを提案した点。",
+          "novelEn": "The author proposes a dual-approach empirical framework combining representation-level statistical dependency measurement with attack-level adversarial probing.",
+          "method": "CLAP、PANNs、AST、YAMNetの4つの事前学習済みオーディオ表現を対象に、話者識別精度と性別情報の復元可能性を定量的に測定した。",
+          "methodEn": "The framework was applied to four popular audio representations (CLAP, PANNs, AST, YAMNet) to evaluate the leakages of speaker identity and gender.",
+          "validation": "話者識別における平衡精度が0.43から0.72の範囲に達し、CLAPが最も話者情報を漏洩し、YAMNetが最も少ないなどの一貫した傾向を実証した。",
+          "validationEn": "Validation showed speaker identification balanced accuracy ranged from 0.43 to 0.72, with CLAP leaking the most speaker identity and YAMNet the least.",
+          "discussion": "中間オーディオ表現は本質的にプライバシーを保護するインタフェースではないため、モデル選択時にはタスク性能だけでなくプライバシー漏洩も明示的な評価指標とすべきだと指摘している。",
+          "discussionEn": "The study highlights that intermediate audio representations are not naturally privacy-preserving and calls for privacy criteria in model selection, though abstract does not specify explicit defense techniques.",
+          "abstractJa": "事前学習済みのオーディオ埋め込みは、音響イベント検出（SED）をはじめとする常時動作型の音響センシングタスクの中間表現として利用が増加しています。これらの表現はダウンストリームタスクでの有用性に基づいて選ばれますが、生のオーディオ信号が露出していない場合でも、本来の目的とは無関係な機密情報を保持しておりプライバシー上のリスクを引き起こす可能性があります。本研究では、事前学習済みオーディオ埋め込みからのプライバシー漏洩を監査するための実証的フレームワークを提案します。本手法は、埋め込みと特定情報に特化した表現との統計的依存関係を測定する「表現レベルの漏洩評価」と、敵対的プローブを訓練して埋め込みから直接機密属性を復元する「攻撃レベルの漏洩評価」の2つの相補的なアプローチで構成されます。広く使用されている4つのオーディオ表現（CLAP、PANNs、AST、YAMNet）に本フレームワークを適用し、話者IDと性別の漏洩を評価しました。その結果、話者識別の平衡精度は0.43から0.72の範囲となり、性別情報も強く復元可能であることが判明しました。また、CLAPが最も話者IDを漏洩し、YAMNetが最も少ないなど、両評価手法で一致した傾向が得られました。これらの結果は、中間オーディオ表現が本質的にプライバシーを保全するインタフェースではないことを示しており、音響センシングシステムにおける表現選択の際、タスク有用性とともにプライバシー漏洩を明示的な基準とすることを促すものです。",
+          "nextReads": [
+            {
+              "label": "CLAP: Learning Audio Concepts From Natural Language Supervision (2022)",
+              "arxivId": "2206.04769",
+              "url": "https://arxiv.org/abs/2206.04769",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "PANNs: Large-Scale Pretrained Audio Neural Networks for Audio Pattern Recognition (2019)",
+              "arxivId": "1912.10211",
+              "url": "https://arxiv.org/abs/1912.10211",
+              "verified": true,
+              "source": "arxiv_api"
+            },
+            {
+              "label": "AST: Audio Spectrogram Transformer (2021)",
+              "arxivId": "2104.01778",
+              "url": "https://arxiv.org/abs/2104.01778",
+              "verified": true,
+              "source": "arxiv_api"
+            }
+          ],
+          "citationCount": null,
+          "githubRepo": null,
+          "upvotes": null,
+          "projectPage": null
+        }
+      ]
+    }
+  ],
+  "trend": [
+    "BiSAT等の音響・意味トークン統合手法やMusicListenBench・SLP-Benchによる評価など、音声言語モデルの高度化と精密な検証が進んでいます。",
+    "ASVspoof 5やXEUSを用いた生成音声・歌声ディープフェイク検出の解析や心理音響設計CAPTCHAなど、セキュリティとプライバシー研究が強化されています。",
+    "行レベルの歌手ダイアライゼーションや同種楽器分離、バイノーラル音声を復元するBiSAなど、高度なマルチモーダル・音響分離技術が発展しています。"
+  ],
+  "trendEn": [
+    "Speech language models are advancing in representation and validation through unified semantic-acoustic tokenization like BiSAT and targeted benchmarks such as MusicListenBench and SLP-Bench.",
+    "Security and privacy research is expanding through layer- and head-level analyses of self-supervised backbones like XEUS and ASVspoof 5 alongside psychoacoustic CAPTCHA designs.",
+    "Multimodal and source separation technologies are making strides with line-level singer diarization, same-instrument music separation, and spatial speech recovery via BiSA."
+  ]
+}
