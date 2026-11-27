@@ -126,6 +126,20 @@ describe('share helpers', () => {
     expect(buildShareText(p, 'ja')).toBe('訳\nT\nhttps://arxiv.org/abs/1')
     expect(buildShareText(p, 'en')).toBe('T\nhttps://arxiv.org/abs/1')
   })
+  it('appends non-empty analysis sections, verified related papers and the abstract', () => {
+    const full = { ...p, what: '①概要本文', whatEn: 'Overview text', method: '手法本文', abstract: 'Abs', abstractJa: '抄録',
+      nextReads: [{ label: 'Unverified', url: 'u0' }, { label: 'Rel', url: 'https://arxiv.org/abs/2', verified: true }] }
+    expect(buildShareText(full, 'ja')).toBe([
+      '訳\nT\nhttps://arxiv.org/abs/1',
+      '1. 概要（抄録ベース）\n概要本文',
+      '3. 抄録で説明される技術・手法\n手法本文',
+      '6. 検証済みの関連論文候補\n- Rel https://arxiv.org/abs/2',
+      'AIによる抄録和訳（未校閲）\n抄録',
+    ].join('\n\n'))
+    const en = buildShareText(full, 'en')
+    expect(en).toContain('1. Overview (abstract-based)\nOverview text')
+    expect(en).toContain('Original abstract\nAbs')
+  })
   it('builds an X intent URL', () => {
     const u = new URL(buildXShareUrl(p, 'en'))
     expect(u.searchParams.get('text')).toBe('T')
